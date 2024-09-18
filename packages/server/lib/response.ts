@@ -5,28 +5,31 @@ import * as send from "send";
 import { Buffer } from "safe-buffer";
 
 import * as http from "node:http";
+import * as https from "node:https";
 import * as http2 from "node:http2";
 
 const {
+    HTTP_STATUS_OK,
     HTTP_STATUS_NOT_FOUND,
     HTTP_STATUS_INTERNAL_SERVER_ERROR
 } = http2.constants;
 
 import { CookieOptions } from "../interfaces/cookies-options.interface";
 
+import { Server } from "./server";
+
 export class Response {
-    public req: http.IncomingMessage | http2.Http2ServerRequest;
-    public res: http.ServerResponse | http2.Http2ServerResponse;
     public buffer: Buffer;
-    public statusCode: number = 200;
+    public statusCode: number = HTTP_STATUS_OK;
     public accept;
     public headers: any = {};
     public sended: boolean = false;
 
-    constructor(req, res){
-        this.req = req;
-        this.res = res;
-
+    constructor(
+        public readonly app: Server,
+        private readonly req: http.IncomingMessage | http2.Http2ServerRequest, 
+        private readonly res: http.ServerResponse | http2.Http2ServerResponse
+    ){
         this.accept = accepts(req);
         const self = this;
 
@@ -127,7 +130,7 @@ export class Response {
 
             stream.on('error', (err) => {
                 if (fn) return fn(err);
-                this.res.writeHead(404);
+                this.res.writeHead(HTTP_STATUS_NOT_FOUND);
                 return this.res.end('File not found');
             });
         

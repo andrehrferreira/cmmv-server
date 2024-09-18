@@ -26,7 +26,7 @@ const {
 
 export class Server {
     private isHTTP2: boolean = false;
-    private socket: http.Server | https.Server | http2.Http2Server | http2.Http2SecureServer;
+    public socket: http.Server | https.Server | http2.Http2Server | http2.Http2SecureServer;
     private options: http.ServerOptions | https.ServerOptions | http2.ServerOptions | http2.SecureServerOptions;
     private middlewares: Set<ServerMiddleware> = new Set<ServerMiddleware>();
     private middlewaresArr: Array<ServerMiddleware> = [];
@@ -64,7 +64,7 @@ export class Server {
     }
 
     private async processRequest(req, res) {        
-        const route = await this.router.process(req, res);
+        const route = await this.router.process(this.socket, req, res);
 
         try {   
             const processMiddleware = async (index: number, after: boolean = false) => {

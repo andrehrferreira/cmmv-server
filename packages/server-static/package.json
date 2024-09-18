@@ -1,7 +1,7 @@
 {
-    "name": "@cmmv/compression",
+    "name": "@cmmv/server-static",
     "version": "0.0.1",
-    "description": "CMMV (@compression)",
+    "description": "CMMV (@server-static)",
     "publishConfig": {
         "access": "public"
     },

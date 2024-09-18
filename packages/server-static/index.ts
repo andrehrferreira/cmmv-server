@@ -13,7 +13,6 @@ import * as http from "node:http";
 import * as url from "node:url";
 import { stat } from "node:fs";
 import { join, resolve } from "node:path";
-import { parse } from "node:url";
 import { promisify } from "node:util";
 
 import * as send from "send";
@@ -21,10 +20,8 @@ import * as encodeUrl from "encodeurl";
 import * as escapeHtml from "escape-html";
 import * as parseUrl from "parseurl";
 
-const statAsync = promisify(stat);
-
 export interface StaticOptions {
-    root: string;
+    root?: string;
     maxAge?: number;
     cacheControl?: boolean;
     dotfiles?: "allow" | "deny" | "ignore";
@@ -35,6 +32,7 @@ export interface StaticOptions {
     lastModified?: boolean;
     etag?: boolean;
     extensions?: any;
+    acceptRanges?: boolean;
     setHeaders?: (res, path, stat) => void;
 }
 
@@ -76,24 +74,27 @@ export class ServerStaticMiddleware {
         this.rootResolve = resolve(root);
 
         this.options = {
-            etag: options?.etag || true,
-            maxAge: options?.maxAge || 0,
-            cacheControl: options?.cacheControl !== false,
-            dotfiles: options?.dotfiles || "ignore",
-            index: options?.index !== undefined ? options.index : "index.html",
-            fallthrough: options?.fallthrough || false,
-            redirect: options?.redirect || false,
-            immutable: options?.immutable || false,
-            lastModified: options?.lastModified || true,
-            extensions: options?.lastModified || false,
-            root: options?.root || resolve(root),
-            setHeaders: options?.setHeaders || null,
-        };
+            etag: options?.etag ?? true,
+            maxAge: options?.maxAge ?? 0,
+            cacheControl: options?.cacheControl ?? true,
+            dotfiles: options?.dotfiles ?? "ignore",
+            index: (options?.index || options?.index === false) ? options?.index : "index.html",
+            fallthrough: options?.fallthrough !== false,
+            redirect: options?.redirect !== false,
+            immutable: options?.immutable ?? false,
+            lastModified: options?.lastModified ?? true,
+            extensions: options?.extensions || false,
+            root: resolve(root),
+            acceptRanges: options?.acceptRanges ?? true,
+            setHeaders: options?.setHeaders ?? null,
+        };    
     }
 
     async process(req: http.IncomingMessage, res: http.ServerResponse, next: Function) {
         try {
-            const pathname = url.parse(req.url, true).pathname;
+            let pathname = parseUrl(req).pathname;
+            const originalUrl = parseUrl.original(req);
+            const decodedPath = decodeURIComponent(pathname);
 
             const onDirectory = this.options.redirect
                 ? this.createRedirectDirectoryListener()
@@ -110,26 +111,26 @@ export class ServerStaticMiddleware {
                 return;
             }
 
+            if (decodedPath.includes('..')) {
+                res.statusCode = 403;
+                res.end('Forbidden');
+                return;
+            }
+
             let forwardError = !this.options.fallthrough;
 
-            if(pathname.startsWith("/")){
-                const parsedUrl = parse(req.url);
-                const filePath = join(this.rootResolve, decodeURIComponent(parsedUrl.pathname));
-                let fileStat;
-
-                try {
-                    fileStat = await statAsync(filePath);
-                } catch (err) {
-                    return next();
-                }
-
+            if(pathname?.startsWith("/")){
+                if (pathname === '/' && originalUrl.pathname.substr(-1) !== '/') 
+                    pathname = ''
+                
                 const stream = send(req, pathname, this.options);
-
-                if(this.options.setHeaders && typeof this.options.setHeaders === "function")
-                    this.options.setHeaders(res, pathname, fileStat);
 
                 stream.on('directory', onDirectory);
 
+                if (this.options.setHeaders) {
+                    stream.on('headers', this.options.setHeaders)
+                }
+              
                 if (this.options.fallthrough) {
                     stream.on('file', function onFile () {
                         forwardError = true
@@ -151,7 +152,6 @@ export class ServerStaticMiddleware {
                 next();
             }
         } catch (err) {
-            console.error(err);
             next();
         }
     }
@@ -197,3 +197,7 @@ export default function serveStatic(root: string, options?: StaticOptions) {
     
     return new ServerStaticMiddleware(root, options);
 }
+function statAsync(indexPath: string) {
+    throw new Error("Function not implemented.");
+}
+
