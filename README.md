@@ -23,7 +23,7 @@
 Install the ``@cmmv/server`` package via npm:
 
 ```bash
-$ npm install @cmmv/server
+$ npm install @cmmv/server @cmmv/server-static
 ```
 
 ## Quick Start

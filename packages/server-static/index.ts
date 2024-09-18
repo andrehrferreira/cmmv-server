@@ -21,10 +21,6 @@ import * as encodeUrl from "encodeurl";
 import * as escapeHtml from "escape-html";
 import * as parseUrl from "parseurl";
 
-import { 
-    ServerMiddleware 
-} from "@cmmv/server/abstracts/middleware.abstract";
-
 const statAsync = promisify(stat);
 
 export interface StaticOptions {
@@ -67,7 +63,7 @@ function collapseLeadingSlashes (str) {
     return i > 1 ? '/' + str.substr(i) : str
 }
 
-export class ServerStaticMiddleware extends ServerMiddleware {
+export class ServerStaticMiddleware {
     public middlewareName: string = "server-static";
 
     private root: string;
@@ -75,8 +71,7 @@ export class ServerStaticMiddleware extends ServerMiddleware {
     private options: StaticOptions;
 
     constructor(root: string, options?: StaticOptions) {
-        super();
-
+        
         this.root = root;
         this.rootResolve = resolve(root);
 
