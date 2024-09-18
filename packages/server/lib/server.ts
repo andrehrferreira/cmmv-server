@@ -29,7 +29,7 @@ export class Server {
     private socket: http.Server | https.Server | http2.Http2Server | http2.Http2SecureServer;
     private options: http.ServerOptions | https.ServerOptions | http2.ServerOptions | http2.SecureServerOptions;
     private middlewares: Set<ServerMiddleware> = new Set<ServerMiddleware>();
-    private staticServer: ServerMiddleware | null = null;
+    private staticServer: ServerStaticMiddleware | null = null;
     private router: Router = new Router();
 
     constructor(options?: ServerOptions){
@@ -117,10 +117,10 @@ export class Server {
         return new ServerStaticMiddleware(root, options);
     }
 
-    public use(app: ServerMiddleware | Router): void {
+    public use(app: ServerMiddleware | Router | ServerStaticMiddleware): void {
         if(app instanceof Router) {
             this.router = app;
-        } else if (app.middlewareName === 'server-static') {
+        } else if (app instanceof ServerStaticMiddleware) {
             this.staticServer = app;  
         } else {
             this.middlewares.add(app);
