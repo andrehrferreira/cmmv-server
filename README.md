@@ -15,26 +15,15 @@
 
 ## Description
 
-CMMV (Contract-Model-Model-View) is a minimalistic and modular framework for building scalable applications in TypeScript. Inspired by modern design patterns, CMMV uses contracts to define the entire application, from ORM entities to REST controllers and WebSocket endpoints, allowing for a highly structured and maintainable codebase.
+``@cmmv/server`` is inspired by the popular [Express.js](https://expressjs.com/pt-br/) framework but has been entirely rewritten in TypeScript with performance improvements in mind. The project integrates common plugins like ``body-parser``, ``compression``, ``cookie-parser``, ``cors``, ``multer``, ``serve-static``, and ``session`` out of the box. Additionally, it plans to support any Express.js-compatible plugin in the near future.
 
-## Philosophy
-
-CMMV aims to simplify the development process by leveraging TypeScript's powerful type system and decorators. It eliminates the need for heavy frontend frameworks by focusing on direct control over data binding and interactions, while maintaining flexibility through modular design.
-
-## Features
-
-- **Contract-Driven Development:** Use TypeScript contracts to define models, controllers, and more.
-- **Modular Architecture:** Compose your application using modules, making it easy to manage and scale.
-- **RPC & REST Support:** Integrated support for both binary RPC via WebSocket and traditional REST APIs.
-- **Express Integration:** Seamless integration with Express for a familiar and robust HTTP server environment.
-- **Extensible:** Highly customizable and easy to extend with your own modules and components.
 
 ## Installation
 
-CMMV is available as a collection of npm packages. To install the core package, use npm:
+Install the ``@cmmv/server`` package via npm:
 
 ```bash
-$ npm install @cmmv/core @cmmv/http @cmmv/protobuf @cmmv/ws @cmmv/view @cmmv/repository
+$ npm install @cmmv/server
 ```
 
 ## Quick Start
@@ -42,29 +31,57 @@ $ npm install @cmmv/core @cmmv/http @cmmv/protobuf @cmmv/ws @cmmv/view @cmmv/rep
 Below is a simple example of how to create a new CMMV application:
 
 ```typescript
-import { Application } from "@cmmv/core";
-import { ExpressAdapter, ExpressModule } from "@cmmv/http";
-import { ProtobufModule } from "@cmmv/protobuf";
-import { WSModule, WSAdapter } from "@cmmv/ws";
-import { ViewModule } from "@cmmv/view";
-import { RepositoryModule, Repository } from "@cmmv/repository";
-import { ApplicationModule } from "./app.module";
+import { readFileSync } from 'node:fs';
 
-Application.create({
-    httpAdapter: ExpressAdapter,    
-    wsAdapter: WSAdapter,
-    modules: [
-        ExpressModule,
-        ProtobufModule,
-        WSModule,
-        ViewModule,
-        RepositoryModule,
-        ApplicationModule
-    ],
-    services: [Repository],
-    contracts: [...]
+import server from "@cmmv/server";
+import compression from "@cmmv/compression";
+
+/*
+//HTTP 1.1
+const app = server();
+*/
+
+/*
+//HTTPS 1.1
+const app = server({ 
+    key: readFileSync("./cert/private-key.pem"),
+    cert: readFileSync("./cert/certificate.pem"),
+    passphrase: "1234"
+});
+*/
+
+//HTTP/2
+const app = server({
+    http2: true,
+    key: readFileSync("./cert/private-key.pem"),
+    cert: readFileSync("./cert/certificate.pem"),
+    passphrase: "1234"
+});
+
+const host = "127.0.0.1";
+const port = 3000;
+
+app.use(compression());
+app.use(app.static("public"));
+
+app.get("/", (req, res) => {
+    res.send("Hello World");
+});
+
+app.get("/test", (req, res) => res.sendFile("./public/test.html"));
+
+app.listen(3000, host, () => {
+    console.log(`Listen on http://${host}:${port}`)
 });
 ```
+
+## Features
+
+* **Performance Optimized:** Faster and more efficient with improvements over Express.js.
+* **Built-in Plugins:** Includes commonly used middleware like ``compression``, ``body-parser``, ``cookie-parser``, and more.
+* **TypeScript First:** Fully written in TypeScript for better type safety and developer experience.
+* **Express.js Compatibility:** Plans to support Express.js-compatible plugins.
+* **HTTP/2 Support:** Native support for HTTP/2, improving speed and connection performance.
 
 ## Documentation
 

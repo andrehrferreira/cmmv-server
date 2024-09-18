@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 
 import CmmvServer from "@cmmv/server";
 import Compression from "@cmmv/compression";
-import ServerStatic from "@cmmv/server-static";
 
 /*const app = CmmvServer({
     key: readFileSync("./cert/private-key.pem"),
