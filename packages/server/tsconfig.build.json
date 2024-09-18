@@ -1,0 +1,15 @@
+{
+    "extends": "../tsconfig.build.json",
+    "compilerOptions": {
+        "outDir": ".",
+        "rootDir": ".",
+        "paths": {
+            "@cmmv/server-static": ["../server-static"],
+            "@cmmv/server-static/*": ["../server-static/*"]
+        }
+    },
+    "exclude": ["node_modules", "dist"],
+    "references": [
+        { "path": "../server-static/tsconfig.build.json" }
+    ]
+}

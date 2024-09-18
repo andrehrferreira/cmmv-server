@@ -1,0 +1,11 @@
+{
+    "watch": ["src", "packages"],
+    "ext": "ts,js,cjs",
+    "ignore": [
+        "src/**/*.spec.ts", "src/services", 
+        "src/models", "src/controllers", 
+        "src/protos", "src/app.module.ts", 
+        "src/gateways", "src/entities"
+    ],
+    "exec": "node -r @swc-node/register ./src/index.ts" 
+}

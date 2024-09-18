@@ -1,0 +1,8 @@
+{
+    "files": [],
+    "references": [
+        { "path": "./compression/tsconfig.build.json" },
+        { "path": "./server/tsconfig.build.json" },
+        { "path": "./server-static/tsconfig.build.json" }
+    ]
+}

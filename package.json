@@ -1,0 +1,173 @@
+{
+	"name": "@cmmv/server",
+	"version": "0.0.1",
+	"description": "Contract-Model-Model-View (CMMV) - Minimalistic Node.js Server Framework",
+	"scripts": {
+		"prebuild": "rimraf dist && npm run clean",
+		"postbuild": "npm run packages:move",
+		"build": "rm -rf ./packages/**/*.tsbuildinfo && NODE_ENV=build tsc -b -v packages",
+		"build:dev": "tsc -b -v packages --watch",
+		"prebuild:prod": "npm run clean",
+		"build:prod": "rm -rf ./packages/**/*.tsbuildinfo && tsc -b -v packages",
+		"prod:packages": "tsc -b -v packages",
+		"build:test": "rm -rf ./packages/**/*.tsbuildinfo && tsc -b -v packages",
+		"benchmarks": "node -r @swc-node/register ./tools/benchmarks/check-benchmarks.js",
+		"dev": "NODE_ENV=dev nodemon",
+		"clean:tsfiles": "find ./src -type f \\( -name '*.d.ts' -o -name '*.js' \\) -exec rm -f {} +",
+		"clean:packages": "find ./packages -name 'node_modules' -prune -o -type f \\( -name '*.d.ts' -o -name '*.js' \\) -exec rm -f {} +",
+		"clean": "npm run clean:tsfiles && npm run clean:packages > /dev/null 2>&1",
+		"format": "prettier \"**/*.ts\" \"packages/**/*.json\" --ignore-path ./.prettierignore --write && git status",
+		"test": "npm run build:test && npm run packages:move && mocha && npm run clean",
+		"test:dev": "mocha -w --watch-files \"packages\" packages/**/*.spec.js",
+		"test:cov": "nyc mocha packages/**/*.spec.ts --reporter spec",
+		"lint": "concurrently 'npm run lint:packages' 'npm run lint:spec'",
+		"lint:fix": "concurrently 'npm run lint:packages -- --fix' 'npm run lint:spec -- --fix'",
+		"lint:packages": "eslint 'packages/**/**.ts' --no-ignore",
+		"lint:spec": "eslint 'packages/**/**.spec.ts' --no-ignore",
+		"prerelease": "gulp copy-misc",
+		"packages:move": "gulp move",
+		"changelog": "lerna-changelog",
+		"release:lerna": "./node_modules/.bin/lerna publish --force-publish --exact -m \"chore: chore(@cmmv) publish %s release\"",
+		"release": "npm run build:prod && npm run packages:move && npm run release:lerna && npm run clean",
+		"prepare": "husky",
+		"coverage": "nyc report --reporter=text-lcov | coveralls -v"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andrehrferreira/cmmv-server.git"
+	},
+	"author": "Andre Ferreira",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/andrehrferreira/cmmv-server/issues"
+	},
+	"homepage": "https://cmmv.io",
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"node": ">= 18.0.0"
+	},
+	"mocha": {
+		"require": [
+			"node_modules/reflect-metadata/Reflect.js",
+			"hooks/mocha-init-hook.js"
+		],
+		"exit": true
+	},
+	"changelog": {
+		"labels": {
+			"type: feature :tada:": "Features",
+			"type: bug :sob:": "Bug fixes",
+			"type: enhancement :wolf:": "Enhancements",
+			"type: docs :page_facing_up:": "Docs",
+			"type: code style": "Code style tweaks",
+			"dependencies": "Dependencies"
+		}
+	},
+	"lint-staged": {
+		"**/*.ts": [
+			"prettier --ignore-path ./.prettierignore --write"
+		],
+		"packages/**/*.json": [
+			"prettier --ignore-path ./.prettierignore --write"
+		]
+	},
+	"devDependencies": {
+		"@codechecks/client": "^0.0.55",
+		"@commitlint/cli": "^19.5.0",
+		"@commitlint/config-angular": "^19.5.0",
+		"@commitlint/config-conventional": "^19.5.0",
+		"@hapi/hapi": "^21.3.10",
+		"@swc-node/core": "^1.13.3",
+		"@swc-node/register": "^1.10.9",
+		"@swc/core": "^1.7.26",
+		"@types/bytes": "^3.1.4",
+		"@types/cache-manager": "^4.0.6",
+		"@types/chai": "^4.3.19",
+		"@types/chai-as-promised": "^8.0.0",
+		"@types/jest": "^29.5.13",
+		"@types/mocha": "^10.0.8",
+		"@types/node": "^22.5.4",
+		"@types/sinon": "^17.0.3",
+		"@types/supertest": "^6.0.2",
+		"@typescript-eslint/eslint-plugin": "7.18.0",
+		"@typescript-eslint/parser": "7.18.0",
+		"bytes": "^3.1.2",
+		"chai": "^5.1.1",
+		"chai-as-promised": "^8.0.0",
+		"concurrently": "^9.0.1",
+		"coveralls": "^3.1.1",
+		"delete-empty": "^3.0.0",
+		"esbuild": "^0.23.1",
+		"esbuild-register": "^3.6.0",
+		"eslint": "8.57.0",
+		"eslint-config-prettier": "9.1.0",
+		"eslint-plugin-import": "2.29.1",
+		"esm": "^3.2.25",
+		"express": ">=5.0.0-beta.1",
+		"fastify": "^4.28.1",
+		"gulp": "^5.0.0",
+		"gulp-clean": "^0.4.0",
+		"h3": "^1.12.0",
+		"hapi": "^18.1.0",
+		"husky": "^9.1.6",
+		"jest": "^29.7.0",
+		"koa": "^2.15.3",
+		"lerna": "^8.1.8",
+		"lerna-changelog": "^2.2.0",
+		"lint-staged": "^15.2.10",
+		"listhen": "^1.7.2",
+		"markdown-table": "^3.0.3",
+		"mocha": "^10.7.3",
+		"nitropack": "^2.9.7",
+		"nodemon": "^3.1.5",
+		"nyc": "^17.0.0",
+		"prettier": "^3.3.3",
+		"sinon": "^19.0.2",
+		"supertest": "^7.0.0",
+		"terser": "^5.32.0",
+		"ts-node": "^10.9.2",
+		"tsconfig-paths": "^4.2.0",
+		"typescript": "^5.6.2",
+		"wrk": "^1.2.1"
+	},
+	"dependencies": {
+		"dotenv": "^16.4.5",
+		"fast-glob": "^3.3.2",
+		"reflect-metadata": "^0.2.2",
+		"rxjs": "^7.8.1",
+		"uuid": "^10.0.0"
+	},
+	"nyc": {
+		"include": [
+			"packages/**/*.ts"
+		],
+		"exclude": [
+			"**/*.js",
+			"**/*.d.ts",
+			"**/*.spec.ts",
+			"packages/**/tests/**/*.ts"
+		],
+		"extension": [
+			".ts"
+		],
+		"require": [
+			"ts-node/register"
+		],
+		"reporter": [
+			"text-summary",
+			"html"
+		],
+		"sourceMap": true,
+		"instrument": true
+	},
+	"peerDependencies": {
+		"eslint": "^8.57.0",
+		"eslint-plugin-import": "^2.30.0"
+	},
+	"resolutions": {
+		"eslint": "^8.57.0",
+		"eslint-plugin-import": "^2.30.0"
+	}
+}

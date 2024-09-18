@@ -1,0 +1,29 @@
+{
+    "name": "@cmmv/compression",
+    "version": "0.0.1",
+    "description": "CMMV (@compression)",
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/andrehrferreira/cmmv-server.git"
+    },
+    "author": "Andre Ferreira",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/andrehrferreira/cmmv-server/issues"
+    },
+    "homepage": "https://cmmv.io",
+    "dependencies": {
+        "accepts": "^1.3.8",
+        "compressible": "^2.0.18",
+        "encodeurl": "^2.0.0",
+        "escape-html": "^1.0.3",
+        "on-headers": "^1.0.2",
+        "parseurl": "^1.3.3",
+        "safe-buffer": "^5.2.1",
+        "send": "^0.19.0",
+        "vary": "^1.1.2"
+    }
+}
