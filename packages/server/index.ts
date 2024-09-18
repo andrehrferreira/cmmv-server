@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { CmmvServer } from "./lib/server";
 
 export * from "./abstracts";

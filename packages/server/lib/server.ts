@@ -29,6 +29,7 @@ export class Server {
     private socket: http.Server | https.Server | http2.Http2Server | http2.Http2SecureServer;
     private options: http.ServerOptions | https.ServerOptions | http2.ServerOptions | http2.SecureServerOptions;
     private middlewares: Set<ServerMiddleware> = new Set<ServerMiddleware>();
+    private middlewaresArr: Array<ServerMiddleware> = [];
     private staticServer: ServerStaticMiddleware | null = null;
     private router: Router = new Router();
 
@@ -40,12 +41,12 @@ export class Server {
             new DefaultServerOptions(options).ToOptions() ;
 
         if(!this.isHTTP2){
-            this.socket = (options.key && options.cert) ? 
+            this.socket = (options && options?.key && options?.cert) ? 
                 https.createServer(this.options as https.ServerOptions, (req, res) => this.onListener(req, res)) :
                 http.createServer(this.options as http.ServerOptions, (req, res) => this.onListener(req, res));
         }
         else {
-            this.socket = (options.key && options.cert) ? 
+            this.socket = (options && options?.key && options?.cert) ? 
                 http2.createSecureServer(this.options as http2.SecureServerOptions, (req, res) => this.onListener(req, res)) :
                 http2.createServer(this.options as http2.ServerOptions, (req, res) => this.onListener(req, res));
         }
@@ -62,14 +63,13 @@ export class Server {
         }
     }
 
-    private async processRequest(req, res) {
-        const middlewares = Array.from(this.middlewares);
+    private async processRequest(req, res) {        
         const route = await this.router.process(req, res);
 
         try {   
             const processMiddleware = async (index: number, after: boolean = false) => {
-                if (index < middlewares.length && route) {
-                    const middleware = middlewares[index];
+                if (index < this.middlewaresArr.length && route) {
+                    const middleware = this.middlewaresArr[index];
 
                     if(!route.response.sended){
                         if(middleware.afterProcess === after)
@@ -100,7 +100,18 @@ export class Server {
                 }
             };
 
-            await processMiddleware(0);
+            if(this.middlewaresArr.length > 0)
+                processMiddleware(0);
+            else {
+                if (route) {       
+                    await route?.fn(route.request, route.response); 
+                    res.writeHead(route.response.statusCode);
+                    res.end(route.response.buffer);                   
+                } else {
+                    res.writeHead(HTTP_STATUS_NOT_FOUND);
+                    res.end("Not Found");
+                } 
+            }
         }
         catch(err){
             console.error(err);
@@ -124,6 +135,7 @@ export class Server {
             this.staticServer = app;  
         } else {
             this.middlewares.add(app);
+            this.middlewaresArr = Array.from(this.middlewares);
         }
     }
 

@@ -3,6 +3,10 @@ const { spawn } = require('child_process');
 const { join } = require('path');
 const { table } = require('console');
 
+module.default = async function checkBenchmarks() {
+  await getBenchmarks();
+}
+
 const wrk = (options) =>
   new Promise((resolve, reject) =>
     wrkPkg(options, (err, result) =>
