@@ -11,14 +11,15 @@
 
 import * as http from "node:http";
 import * as url from "node:url";
-import { stat } from "node:fs";
-import { join, resolve } from "node:path";
-import { promisify } from "node:util";
+import * as zlib from "node:zlib";
+import { resolve } from "node:path";
 
 import * as send from "send";
 import * as encodeUrl from "encodeurl";
 import * as escapeHtml from "escape-html";
 import * as parseUrl from "parseurl";
+
+const compression = require('compression');
 
 export interface StaticOptions {
     root?: string;
@@ -122,15 +123,17 @@ export class ServerStaticMiddleware {
             if(pathname?.startsWith("/")){
                 if (pathname === '/' && originalUrl.pathname.substr(-1) !== '/') 
                     pathname = ''
+
+                const compressInstance = compression({ level: 6 });
+                //compressInstance(req as any, res as any, next as any);
                 
                 const stream = send(req, pathname, this.options);
 
                 stream.on('directory', onDirectory);
 
-                if (this.options.setHeaders) {
+                if (this.options.setHeaders) 
                     stream.on('headers', this.options.setHeaders)
-                }
-              
+                              
                 if (this.options.fallthrough) {
                     stream.on('file', function onFile () {
                         forwardError = true
@@ -154,6 +157,26 @@ export class ServerStaticMiddleware {
         } catch (err) {
             next();
         }
+    }
+
+    async compressData(inputBuffer: Buffer, compressionStream: zlib.Gzip | zlib.Deflate): Promise<Buffer> {
+        return new Promise<Buffer>((resolve, reject) => {
+            const chunks: Buffer[] = [];
+    
+            compressionStream.on("data", (chunk) => {
+                chunks.push(chunk);
+            });
+    
+            compressionStream.on("end", () => {
+                resolve(Buffer.concat(chunks));
+            });
+    
+            compressionStream.on("error", (err) => {
+                reject(err);
+            });
+    
+            compressionStream.end(inputBuffer);
+        });
     }
 
     createNotFoundDirectoryListener () {

@@ -155,8 +155,16 @@ export class Response {
         }
     }
 
+    public setHeader(field: string, value?: string){
+        this.set(field, value);
+    }
+
     public remove(field: string){
         delete this.headers[field];
+    }
+
+    public removeHeader(field: string){
+        this.remove(field);
     }
 
     public status(code: number) : Response {
@@ -172,5 +180,5 @@ export class Response {
     public vary(field: string) : Response {
         vary(this.res, field);
         return this;
-    }
+    } 
 }

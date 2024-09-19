@@ -17,7 +17,10 @@ import { Buffer } from "safe-buffer";
 
 import * as zlib from "node:zlib";
 
-import { Request, Response, ServerMiddleware } from "@cmmv/server";
+import { 
+    Request, Response, 
+    ServerMiddleware 
+} from "@cmmv/server";
 
 class CMMVCompression extends ServerMiddleware {
     public middlewareName: string = "Compression";
@@ -31,9 +34,13 @@ class CMMVCompression extends ServerMiddleware {
         this.options = options;
     }
 
-    async process(req: Request, res: Response, next?: Function) {
-
-        if (this.filter(req, res) && this.shouldTransform(req, res)) {
+    async process(
+        req: Request, 
+        res: Response, 
+        next?: Function
+    ) {
+        if (this.filter(res) && this.shouldTransform(res)) {
+            
             vary(res.httpResponse, 'Accept-Encoding');
 
             const encoding = res.get('Content-Encoding') || 'identity';
@@ -45,26 +52,38 @@ class CMMVCompression extends ServerMiddleware {
                 return;
 
             const accept = accepts(req.httpRequest);
-            let method = accept.encoding(['gzip', 'deflate', 'identity']);
+            let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
-            if (method === 'deflate' && accept.encoding(['gzip'])) 
-                method = accept.encoding(['gzip', 'identity']);
+            if (method === 'gzip' && accept.encoding(['br'])) 
+                method = 'br';
             
-            if (!method || method === 'identity')
-                return;
+            if (!method || method === 'identity') return;
+    
+            const stream = this.createCompressionStream(method);
 
-            const stream = method === 'gzip'
-                ? zlib.createGzip(this.options)
-                : zlib.createDeflate(this.options);
+            if (!stream) return;
 
             res.set('Content-Encoding', method)
             res.remove('Content-Length');
 
             const compressedBuffer = await this.compressData(res.buffer, stream);
-            res.buffer = compressedBuffer;
+            res.buffer = compressedBuffer;   
         }
         
         next();
+    }
+
+    createCompressionStream(method: string) {
+        switch (method) {
+            case 'br':
+                return zlib.createBrotliCompress(this.options);
+            case 'gzip':
+                return zlib.createGzip(this.options);
+            case 'deflate':
+                return zlib.createDeflate(this.options);
+            default:
+                return null;
+        }
     }
 
     async compressData(inputBuffer: Buffer, compressionStream: zlib.Gzip | zlib.Deflate): Promise<Buffer> {
@@ -87,14 +106,14 @@ class CMMVCompression extends ServerMiddleware {
         });
     }
     
-    filter(req: Request, res: Response){
+    filter(res: Response){
         const type = res.get('Content-Type');
         return !(type === undefined || !compressible(type));
     }
 
-    shouldTransform(req: Request, res: Response){
+    shouldTransform(res: Response){
         const cacheControl = res.get('Cache-Control');
-        return !cacheControl || !/(?:^|,)\s*?no-transform\s*?(?:,|$)/.test(cacheControl)
+        return !cacheControl || !/(?:^|,)\s*?no-transform\s*?(?:,|$)/.test(cacheControl as string);
     }
 }
 
