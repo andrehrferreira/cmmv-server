@@ -12,7 +12,7 @@ const { HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND } = http2.constants;
 
 import { CookieOptions } from '../interfaces';
 
-import { IRespose } from '@cmmv/server-abstract';
+import { IRespose } from '@cmmv/server-common';
 
 import { ServerApplication } from './application';
 

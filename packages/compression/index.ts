@@ -18,12 +18,12 @@ import { Buffer } from 'safe-buffer';
 import * as http from 'node:http';
 import * as zlib from 'node:zlib';
 
-import { ServerMiddleware, INext } from '@cmmv/server-abstract';
+import { ServerMiddleware, INext } from '@cmmv/server-common';
 
 import { Request, Response } from '@cmmv/server';
 
 class CMMVCompression extends ServerMiddleware {
-    public middlewareName: string = 'Compression';
+    public middlewareName: string = 'compression';
 
     public override afterProcess: boolean = true;
 
@@ -40,20 +40,32 @@ class CMMVCompression extends ServerMiddleware {
 
             const encoding = res.get('Content-Encoding') || 'identity';
 
-            if (encoding !== 'identity') return;
+            if (encoding !== 'identity') {
+                next();
+                return;
+            }
 
-            if (req.method === 'HEAD') return;
+            if (req.method === 'HEAD') {
+                next();
+                return;
+            }
 
             const accept = accepts(req.httpRequest as http.IncomingMessage);
             let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
             if (method === 'gzip' && accept.encoding(['br'])) method = 'br';
 
-            if (!method || method === 'identity') return;
+            if (!method || method === 'identity') {
+                next();
+                return;
+            }
 
             const stream = this.createCompressionStream(method);
 
-            if (!stream) return;
+            if (!stream) {
+                next();
+                return;
+            }
 
             res.set('Content-Encoding', method);
             res.remove('Content-Length');
@@ -62,10 +74,11 @@ class CMMVCompression extends ServerMiddleware {
                 res.buffer,
                 stream,
             );
+
             res.buffer = compressedBuffer;
         }
 
-        next(req, res);
+        next();
     }
 
     createCompressionStream(method: string) {

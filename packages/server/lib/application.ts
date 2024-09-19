@@ -7,7 +7,7 @@ import * as querystring from 'qs';
 import * as formidable from 'formidable';
 import { EventEmitter } from 'events';
 
-import { ServerMiddleware, IServerApplication } from '@cmmv/server-abstract';
+import { ServerMiddleware, IServerApplication } from '@cmmv/server-common';
 
 import { StaticOptions, ServerStaticMiddleware } from '@cmmv/server-static';
 
@@ -213,13 +213,17 @@ export class ServerApplication implements IServerApplication {
                     const middleware = this.middlewaresArr[index];
 
                     if (!route.response.sended) {
-                        if (middleware.afterProcess === after)
+                        if (middleware.afterProcess === after) {
                             middleware.process(
                                 route.request,
                                 route.response,
-                                () => processMiddleware(index + 1, after),
+                                () => {
+                                    processMiddleware(index + 1, after);
+                                },
                             );
-                        else processMiddleware(index + 1, after);
+                        } else {
+                            processMiddleware(index + 1, after);
+                        }
                     }
                 } else if (route) {
                     if (!route.response.sended) {
@@ -246,7 +250,10 @@ export class ServerApplication implements IServerApplication {
 
             if (this.middlewaresArr.length > 0) processMiddleware(0);
             else {
+                console.log(route);
                 if (route) {
+                    console.log('aki');
+
                     await this.runFunctions(
                         route.fn,
                         route.request,
@@ -404,7 +411,11 @@ export class ServerApplication implements IServerApplication {
         callback?: Function,
     ) {}
 
-    public listen(port: number, host?: string, callback?: () => void): void {
+    public listen(
+        port: number,
+        host: string = '0.0.0.0',
+        callback?: () => void,
+    ): void {
         this.socket.listen(
             {
                 port,

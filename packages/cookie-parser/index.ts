@@ -1,5 +1,4 @@
 import * as Cookies from 'cookies';
-import * as onHeaders from 'on-headers';
 import { Buffer } from 'safe-buffer';
 
 import {
@@ -7,7 +6,9 @@ import {
     IRequest,
     IRespose,
     INext,
-} from '@cmmv/server-abstract';
+} from '@cmmv/server-common';
+
+const onHeaders = require('on-headers');
 
 interface CookieParserOptions {
     name?: string;

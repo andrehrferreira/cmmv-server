@@ -5,7 +5,7 @@ import * as url from 'node:url';
 
 import * as cookie from 'cookie';
 
-import { IRequest } from '@cmmv/server-abstract';
+import { IRequest } from '@cmmv/server-common';
 
 import { ServerApplication } from './application';
 

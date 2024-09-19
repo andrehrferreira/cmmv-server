@@ -10,6 +10,6 @@ export abstract class ServerMiddleware {
     abstract process(
         req: IRequest | http.IncomingMessage,
         res: IRespose | http.ServerResponse,
-        next?: INext,
+        next?: INext | Function,
     );
 }

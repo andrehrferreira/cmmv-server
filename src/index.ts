@@ -10,24 +10,24 @@ import compression from '@cmmv/compression';
 });*/
 
 const app = cmmv({
-    http2: true,
+    /*http2: true,
     key: readFileSync('./cert/private-key.pem'),
     cert: readFileSync('./cert/certificate.pem'),
-    passphrase: '1234',
+    passphrase: '1234',*/
 });
 
-const host = '127.0.0.1';
+const host = '0.0.0.0';
 const port = 3000;
 
 app.use(json({ limit: '50mb' }));
 app.use(compression());
 app.use(serverStatic('public'));
 
-/*app.get("/", (req, res) => {
-    res.send("Hello World");
+app.get('/', (req, res) => {
+    res.send('Hello World');
 });
 
-app.post("/test", (req, res) => {
+/*app.post("/test", (req, res) => {
     console.log(req.body);
     res.send("Ok");
 });

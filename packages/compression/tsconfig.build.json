@@ -4,15 +4,15 @@
         "outDir": ".",
         "rootDir": ".",
         "paths": {
-            "@cmmv/server-abstract": ["../server-abstract"],
-            "@cmmv/server-abstract/*": ["../server-abstract/*"],
+            "@cmmv/server-common": ["../server-common"],
+            "@cmmv/server-common/*": ["../server-common/*"],
             "@cmmv/server": ["../server"],
             "@cmmv/server/*": ["../server/*"]
         }
     },
     "exclude": ["node_modules", "dist"],
     "references": [
-        { "path": "../server-abstract/tsconfig.build.json" },
+        { "path": "../server-common/tsconfig.build.json" },
         { "path": "../server/tsconfig.build.json" }
     ]
 }

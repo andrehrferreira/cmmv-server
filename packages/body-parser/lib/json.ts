@@ -22,7 +22,7 @@ import {
     IRequest,
     IRespose,
     INext,
-} from '@cmmv/server-abstract';
+} from '@cmmv/server-common';
 
 export interface BodyParserJSONOptions {
     limit?: number | string;

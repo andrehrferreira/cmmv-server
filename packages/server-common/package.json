@@ -1,7 +1,7 @@
 {
-    "name": "@cmmv/server-abstract",
+    "name": "@cmmv/server-common",
     "version": "0.0.1",
-    "description": "CMMV (@server-abstract)",
+    "description": "CMMV (@server-common)",
     "publishConfig": {
         "access": "public"
     },
