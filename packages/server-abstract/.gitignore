@@ -1,9 +1,6 @@
-/dist
-/node_modules
-/admin
-/secure
-/http
-/backup
+# compiled output
+dist
+node_modules
 
 # Logs
 logs
@@ -13,7 +10,6 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-yarn.lock
 
 # OS
 .DS_Store
@@ -37,15 +33,3 @@ yarn.lock
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-
-# Settings
-.env
-
-# SQLite
-*.sqlite
-
-# Gsuite
-googleapis.json
-newrelic.js
-
-http

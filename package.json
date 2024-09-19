@@ -12,7 +12,7 @@
 		"prod:packages": "tsc -b -v packages",
 		"build:test": "rm -rf ./packages/**/*.tsbuildinfo && tsc -b -v packages",
 		"benchmarks": "node -r @swc-node/register ./tools/benchmarks/benchmarks.js",
-		"dev": "NODE_ENV=dev nodemon",
+		"dev": "NODE_ENV=dev nodemon --quiet",
 		"clean:tsfiles": "find ./src -type f \\( -name '*.d.ts' -o -name '*.js' \\) -exec rm -f {} +",
 		"clean:packages": "find ./packages -name 'node_modules' -prune -o -type f \\( -name '*.d.ts' -o -name '*.js' \\) -exec rm -f {} +",
 		"clean": "npm run clean:tsfiles && npm run clean:packages > /dev/null 2>&1",
@@ -32,6 +32,18 @@
 		"prepare": "husky",
 		"coverage": "nyc report --reporter=text-lcov | coveralls -v"
 	},
+	"keywords": [
+		"cmmv",
+		"framework",
+		"web",
+		"http",
+		"http2",
+		"rest",
+		"restful",
+		"router",
+		"app",
+		"api"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/andrehrferreira/cmmv-server.git"
@@ -82,6 +94,7 @@
 		"@swc-node/core": "^1.13.3",
 		"@swc-node/register": "^1.10.9",
 		"@swc/core": "^1.7.26",
+		"@types/accepts": "^1.3.7",
 		"@types/bytes": "^3.1.4",
 		"@types/cache-manager": "^4.0.6",
 		"@types/chai": "^4.3.19",
@@ -89,8 +102,11 @@
 		"@types/jest": "^29.5.13",
 		"@types/mocha": "^10.0.8",
 		"@types/node": "^22.5.4",
+		"@types/on-headers": "^1.0.3",
+		"@types/send": "^0.17.4",
 		"@types/sinon": "^17.0.3",
 		"@types/supertest": "^6.0.2",
+		"@types/vary": "^1.1.3",
 		"@typescript-eslint/eslint-plugin": "7.18.0",
 		"@typescript-eslint/parser": "7.18.0",
 		"bytes": "^3.1.2",
@@ -133,11 +149,28 @@
 		"wrk": "^1.2.1"
 	},
 	"dependencies": {
+		"accepts": "^1.3.8",
+		"content-type": "^1.0.5",
+		"cookie": "^0.6.0",
 		"dotenv": "^16.4.5",
+		"encodeurl": "^2.0.0",
+		"escape-html": "^1.0.3",
+		"etag": "^1.8.1",
 		"fast-glob": "^3.3.2",
+		"http-errors": "^2.0.0",
+		"merge-descriptors": "^2.0.0",
+		"mime-types": "^2.1.35",
+		"on-finished": "^2.4.1",
+		"parseurl": "^1.3.3",
+		"qs": "^6.13.0",
 		"reflect-metadata": "^0.2.2",
 		"rxjs": "^7.8.1",
-		"uuid": "^10.0.0"
+		"safe-buffer": "^5.2.1",
+		"send": "^0.19.0",
+		"type-is": "^1.6.18",
+		"utils-merge": "^1.0.1",
+		"uuid": "^10.0.0",
+		"vary": "^1.1.2"
 	},
 	"nyc": {
 		"include": [

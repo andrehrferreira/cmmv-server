@@ -1,18 +1,21 @@
-import * as http from "node:http";
-import * as https from "node:https";
-import * as http2 from "node:http2";
-import * as url from "node:url";
+import * as http from 'node:http';
+import * as https from 'node:https';
+import * as http2 from 'node:http2';
+import * as url from 'node:url';
 
-import * as cookie from "cookie";
+import * as cookie from 'cookie';
 
-import { Server } from "./server";
+import { IRequest } from '@cmmv/server-abstract';
 
-export class Request {
+import { ServerApplication } from './application';
+
+export class Request implements IRequest {
     constructor(
-        public readonly app: Server,
-        private readonly req: http.IncomingMessage | http2.Http2ServerRequest, 
-        public readonly res: http.ServerResponse | http2.Http2ServerResponse
-    ){}
+        public readonly app: ServerApplication,
+        public readonly req: http.IncomingMessage | http2.Http2ServerRequest,
+        public readonly res: http.ServerResponse | http2.Http2ServerResponse,
+        public readonly body: any,
+    ) {}
 
     get httpRequest() {
         return this.req;
@@ -28,10 +31,6 @@ export class Request {
 
     get baseUrl() {
         return this.req['baseUrl'] || '';
-    }
-
-    get body() {
-        return this.req['body'];
     }
 
     get cookies() {
@@ -51,7 +50,9 @@ export class Request {
     }
 
     get ips() {
-        return (this.req.headers['x-forwarded-for'] as string || '').split(',').map(ip => ip.trim());
+        return ((this.req.headers['x-forwarded-for'] as string) || '')
+            .split(',')
+            .map(ip => ip.trim());
     }
 
     get originalUrl() {
@@ -59,12 +60,10 @@ export class Request {
     }
 
     get protocol() {
-        if (this.app.socket instanceof https.Server)          
-            return 'https';
+        if (this.app.socket instanceof https.Server) return 'https';
 
-        if (this.req.headers[":scheme"] === "https")          
-            return 'https';
-        
+        if (this.req.headers[':scheme'] === 'https') return 'https';
+
         return 'http';
     }
 
@@ -88,9 +87,9 @@ export class Request {
     get xhr() {
         const requestedWith = this.req.headers['x-requested-with'];
 
-        if (typeof requestedWith === 'string') 
+        if (typeof requestedWith === 'string')
             return requestedWith.toLowerCase() === 'xmlhttprequest';
-        
+
         return false;
     }
 }

@@ -15,6 +15,7 @@ export interface ServerOptions {
     key?: Buffer;
     cert?: Buffer;
     passphrase?: string;
+    allowHTTP1?: boolean;
 }
 
 export class DefaultServerOptions implements ServerOptions {
@@ -33,9 +34,11 @@ export class DefaultServerOptions implements ServerOptions {
     public key?: Buffer;
     public cert?: Buffer;
     public passphrase?: string;
+    public allowHTTP1?: boolean;
 
-    constructor(options?: ServerOptions){
-        this.connectionsCheckingInterval = options?.connectionsCheckingInterval || 3000;
+    constructor(options?: ServerOptions) {
+        this.connectionsCheckingInterval =
+            options?.connectionsCheckingInterval || 3000;
         this.headersTimeout = options?.headersTimeout || 6000;
         this.insecureHTTPParser = options?.insecureHTTPParser || false;
         this.joinDuplicateHeaders = options?.joinDuplicateHeaders || false;
@@ -46,13 +49,15 @@ export class DefaultServerOptions implements ServerOptions {
         this.noDelay = options?.noDelay || true;
         this.requestTimeout = options?.requestTimeout || 300000;
         this.requireHostHeader = options?.requireHostHeader || true;
-        this.rejectNonStandardBodyWrites = options?.rejectNonStandardBodyWrites || false;
+        this.rejectNonStandardBodyWrites =
+            options?.rejectNonStandardBodyWrites || false;
         this.key = options?.key || undefined;
         this.cert = options?.cert || undefined;
         this.passphrase = options?.passphrase || undefined;
+        this.allowHTTP1 = options?.allowHTTP1 || true;
     }
 
-    public ToOptions() : Object {
+    public ToOptions(): Object {
         return {
             connectionsCheckingInterval: this.connectionsCheckingInterval,
             headersTimeout: this.headersTimeout,
@@ -68,8 +73,9 @@ export class DefaultServerOptions implements ServerOptions {
             rejectNonStandardBodyWrites: this.rejectNonStandardBodyWrites,
             key: this.key,
             cert: this.cert,
-            passphrase: this.passphrase
-        }
+            passphrase: this.passphrase,
+            allowHTTP1: this.allowHTTP1,
+        };
     }
 }
 
@@ -77,24 +83,28 @@ export interface ServerHTTP2Options {
     key?: Buffer;
     cert?: Buffer;
     passphrase?: string;
+    allowHTTP1?: boolean;
 }
 
-export class DefaultServerHTTP2Options implements ServerHTTP2Options{
+export class DefaultServerHTTP2Options implements ServerHTTP2Options {
     public key?: Buffer;
-    public cert?: Buffer;    
+    public cert?: Buffer;
     public passphrase?: string;
+    public allowHTTP1?: boolean;
 
-    constructor(options?: ServerOptions){
+    constructor(options?: ServerOptions) {
         this.key = options?.key || undefined;
         this.cert = options?.cert || undefined;
         this.passphrase = options?.passphrase || undefined;
+        this.allowHTTP1 = options?.allowHTTP1 || true;
     }
 
-    public ToOptions() : Object {
+    public ToOptions(): Object {
         return {
             key: this.key,
             cert: this.cert,
-            passphrase: this.passphrase
-        }
+            passphrase: this.passphrase,
+            allowHTTP1: this.allowHTTP1,
+        };
     }
 }

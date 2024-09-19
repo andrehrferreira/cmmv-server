@@ -1,6 +1,7 @@
 {
     "watch": ["src", "packages"],
     "ext": "ts,js,cjs",
+    "verbose": false,
     "ignore": [
         "src/**/*.spec.ts", "src/services", 
         "src/models", "src/controllers", 

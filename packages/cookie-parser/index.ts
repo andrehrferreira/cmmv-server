@@ -2,10 +2,12 @@ import * as Cookies from 'cookies';
 import * as onHeaders from 'on-headers';
 import { Buffer } from 'safe-buffer';
 
-import { 
-    ServerMiddleware, 
-    Request, Response 
-} from '@cmmv/server';
+import {
+    ServerMiddleware,
+    IRequest,
+    IRespose,
+    INext,
+} from '@cmmv/server-abstract';
 
 interface CookieParserOptions {
     name?: string;
@@ -17,7 +19,7 @@ interface CookieParserOptions {
 }
 
 export class CookieParserMiddleware extends ServerMiddleware {
-    public middlewareName: string = "cookie-parser";
+    public middlewareName: string = 'cookie-parser';
     private options: CookieParserOptions;
 
     constructor(options: CookieParserOptions) {
@@ -27,19 +29,25 @@ export class CookieParserMiddleware extends ServerMiddleware {
         this.options.overwrite = this.options.overwrite !== false;
         this.options.httpOnly = this.options.httpOnly !== false;
         this.options.signed = this.options.signed !== false;
-        if (!this.options.keys && this.options.secret) this.options.keys = [this.options.secret];
-        if (this.options.signed && !this.options.keys) throw new Error('.keys required.');
+        if (!this.options.keys && this.options.secret)
+            this.options.keys = [this.options.secret];
+        if (this.options.signed && !this.options.keys)
+            throw new Error('.keys required.');
     }
 
-    async process(req: Request, res: Response, next: Function) {
-        const cookies = new Cookies(req.httpRequest, res.httpResponse, { keys: this.options.keys });
+    async process(req: IRequest, res: IRespose, next: INext) {
+        const cookies = new Cookies(req.httpRequest, res.httpResponse, {
+            keys: this.options.keys,
+        });
         let session: any;
 
         Object.defineProperty(req, 'session', {
             configurable: true,
             enumerable: true,
-            get: () => session || (session = this.getSession(cookies, this.options.name)),
-            set: (val) => session = val ? this.setSession(val) : false
+            get: () =>
+                session ||
+                (session = this.getSession(cookies, this.options.name)),
+            set: val => (session = val ? this.setSession(val) : false),
         });
 
         onHeaders(res.httpResponse, () => this.saveSession(cookies, session));

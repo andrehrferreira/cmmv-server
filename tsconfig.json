@@ -30,6 +30,8 @@
         "types": ["node", "mocha"],
         "paths": {
             "*": ["node_modules/*", "packages/*"],
+            "@cmmv/server-abstract": ["packages/server-abstract"],
+            "@cmmv/server-abstract/*": ["packages/server-abstract/*"],
             "@cmmv/server": ["packages/server"],
             "@cmmv/server/*": ["packages/server/*"],
             "@cmmv/body-parser": ["packages/body-parser"],

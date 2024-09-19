@@ -1,8 +1,10 @@
 {
     "files": [],
     "references": [
+        { "path": "./body-parser/tsconfig.build.json" },
         { "path": "./compression/tsconfig.build.json" },
         { "path": "./server/tsconfig.build.json" },
+        { "path": "./server-abstract/tsconfig.build.json" },
         { "path": "./server-static/tsconfig.build.json" }
     ]
 }
