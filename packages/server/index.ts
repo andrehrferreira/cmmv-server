@@ -33,6 +33,7 @@ export const application = CmmvServer;
 export const json = bodyParserJSON;
 export const serverStatic = ss;
 export const Router = router;
+export const Route = router;
 
 export const req = Request;
 export const res = Response;

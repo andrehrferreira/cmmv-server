@@ -11,7 +11,12 @@ export class Router {
     public router: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
     public params: Map<string, Function> = new Map<string, Function>();
 
-    constructor() {
+    public stack: Map<FindMyWay.HTTPMethod, Array<Function>> = new Map<
+        FindMyWay.HTTPMethod,
+        Array<Function>
+    >();
+
+    constructor(private path: string = '') {
         if (!this.router) {
             this.router = FindMyWay({
                 caseSensitive: false,
@@ -68,24 +73,34 @@ export class Router {
 
     private mergeRoutes(
         method: FindMyWay.HTTPMethod,
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        if (!this.router.hasRoute(method, path))
-            this.router.on(method, path, (req, res) => {}, { callbacks });
-        else {
-            const handler = this.router.findRoute(method, path);
-            this.router.off(method, path);
-            this.router.on(method, path, (req, res) => {}, {
-                callbacks: [...handler.store.callbacks, ...callbacks],
-            });
+        if (typeof path !== 'function') {
+            const finalPath = this.path ? this.path + path : path;
+
+            if (!this.router.hasRoute(method, finalPath))
+                this.router.on(method, finalPath, (req, res) => {}, {
+                    callbacks,
+                });
+            else {
+                const handler = this.router.findRoute(method, finalPath);
+                this.router.off(method, finalPath);
+                this.router.on(method, finalPath, (req, res) => {}, {
+                    callbacks: [...handler.store.callbacks, ...callbacks],
+                });
+            }
+        } else {
+            const stack = this.stack.get(method);
+            stack.push(path);
+            this.stack.set(method, stack);
         }
     }
 
     public get(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -95,7 +110,7 @@ export class Router {
     }
 
     public post(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -104,7 +119,7 @@ export class Router {
     }
 
     public put(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -113,7 +128,7 @@ export class Router {
     }
 
     public delete(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -122,7 +137,7 @@ export class Router {
     }
 
     public head(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -131,7 +146,7 @@ export class Router {
     }
 
     public patch(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -140,7 +155,7 @@ export class Router {
     }
 
     public checkout(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -149,7 +164,7 @@ export class Router {
     }
 
     public copy(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -158,7 +173,7 @@ export class Router {
     }
 
     public lock(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -167,7 +182,7 @@ export class Router {
     }
 
     public merge(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -176,7 +191,7 @@ export class Router {
     }
 
     public mkactivity(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -185,7 +200,7 @@ export class Router {
     }
 
     public mkcol(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -194,7 +209,7 @@ export class Router {
     }
 
     public move(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -203,7 +218,7 @@ export class Router {
     }
 
     public 'm-search'(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -212,7 +227,7 @@ export class Router {
     }
 
     public notify(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -221,7 +236,7 @@ export class Router {
     }
 
     public options(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -230,7 +245,7 @@ export class Router {
     }
 
     public purge(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -239,7 +254,7 @@ export class Router {
     }
 
     public report(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -248,7 +263,7 @@ export class Router {
     }
 
     public search(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -257,7 +272,7 @@ export class Router {
     }
 
     public subscribe(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -266,7 +281,7 @@ export class Router {
     }
 
     public trace(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -275,7 +290,7 @@ export class Router {
     }
 
     public unlock(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -284,7 +299,7 @@ export class Router {
     }
 
     public unsubscribe(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -317,10 +332,9 @@ export class Router {
             return null;
         }
 
-        const route = this.router.find(
-            req.method as FindMyWay.HTTPMethod,
-            req.url,
-        );
+        const method = req.method as FindMyWay.HTTPMethod;
+
+        const route = this.router.find(method, req.url);
 
         if (
             route &&
@@ -334,7 +348,19 @@ export class Router {
 
             const response = new Response(socket, req, res);
 
+            if (this.stack.has(method)) {
+                //compatibility Expressjs
+                const stack = this.stack.get(method);
+
+                if (Array.isArray(stack)) {
+                    route.store.callbacks = Array.isArray(route.store.callbacks)
+                        ? [...stack, ...route.store.callbacks]
+                        : [...stack];
+                }
+            }
+
             if (request.params) {
+                //compatibility Expressjs
                 for (const key in request.params) {
                     if (this.params.has(key)) {
                         route.store.callbacks.unshift((req, res, next) => {
@@ -361,5 +387,15 @@ export class Router {
         }
 
         return null;
+    }
+
+    public dispatch(req, res, done) {
+        //compatibility Expressjs
+        if (this.stack.has(req.method)) {
+            //compatibility Expressjs
+            const stack = this.stack.get(req.method);
+        } else {
+            done();
+        }
     }
 }

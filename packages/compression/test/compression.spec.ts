@@ -65,30 +65,30 @@ describe('compression()', function () {
             .expect('Vary', 'Accept-Encoding', done);
     });
 
-    /*it('should set Vary even if Accept-Encoding is not set', function (done) {
+    it('should set Vary even if Accept-Encoding is not set', function (done) {
         var server = createServer({ threshold: 1000 }, function (req, res) {
-          res.setHeader('Content-Type', 'text/plain')
-          res.end('hello, world')
-        })
-    
+            res.setHeader('Content-Type', 'text/plain');
+            res.end('hello, world');
+        });
+
         request(server)
-          .get('/')
-          .expect('Vary', 'Accept-Encoding')
-          .expect(shouldNotHaveHeader('Content-Encoding'))
-          .expect(200, done)
-    })
-    
+            .get('/')
+            .expect('Vary', 'Accept-Encoding')
+            .expect(shouldNotHaveHeader('Content-Encoding'))
+            .expect(200, done);
+    });
+
     it('should not set Vary if Content-Type does not pass filter', function (done) {
         var server = createServer(null, function (req, res) {
-            res.setHeader('Content-Type', 'image/jpeg')
-            res.end()
-        })
+            res.setHeader('Content-Type', 'image/jpeg');
+            res.end();
+        });
 
         request(server)
             .get('/')
             .expect(shouldNotHaveHeader('Vary'))
-            .expect(200, done)
-    })*/
+            .expect(200, done);
+    });
 });
 
 function createServer(opts, fn) {

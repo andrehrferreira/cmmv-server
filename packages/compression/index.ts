@@ -24,7 +24,11 @@ import { ServerMiddleware, INext } from '@cmmv/server-common';
 
 import { Request, Response } from '@cmmv/server';
 
-type CompressOptions = zlib.ZlibOptions & { threshold?: number };
+type CompressOptions = zlib.ZlibOptions & {
+    threshold?: number;
+    cacheEnabled?: boolean;
+    cacheTimeout?: number;
+};
 
 class CMMVCompression extends ServerMiddleware {
     public middlewareName: string = 'compression';
@@ -37,23 +41,16 @@ class CMMVCompression extends ServerMiddleware {
     private cacheEnabled: boolean;
     private cacheTimeout: number;
 
-    constructor(
-        options?: CompressOptions,
-        cacheEnabled = true,
-        cacheTimeout = 15000,
-    ) {
+    constructor(options?: CompressOptions) {
         super();
         this.options = options || {};
 
         this.options.threshold =
-            options && options.threshold
+            (options && options.threshold) || options?.threshold === 0
                 ? bytes.parse(options.threshold)
                 : 1024;
 
         if (this.options.threshold == null) this.options.threshold = 1024;
-
-        this.cacheEnabled = cacheEnabled;
-        this.cacheTimeout = cacheTimeout;
     }
 
     async process(req: Request, res: Response, next?: INext) {
@@ -66,6 +63,8 @@ class CMMVCompression extends ServerMiddleware {
             next();
             return;
         } else if (this.filter(res) && this.shouldTransform(res)) {
+            vary(res.httpResponse as http.ServerResponse, 'Accept-Encoding');
+
             const encoding = res.get('Content-Encoding') || 'identity';
 
             if (res.buffer.length < this.options.threshold) {
@@ -83,14 +82,15 @@ class CMMVCompression extends ServerMiddleware {
                 return;
             }
 
-            vary(res.httpResponse as http.ServerResponse, 'Accept-Encoding');
-
             const hashKey = this.generateHash(method, res.buffer);
 
-            if (this.cacheEnabled && this.cache.has(hashKey)) {
+            if (this.options.cacheEnabled && this.cache.has(hashKey)) {
                 const cacheEntry = this.cache.get(hashKey);
 
-                if (Date.now() - cacheEntry.timestamp < this.cacheTimeout) {
+                if (
+                    Date.now() - cacheEntry.timestamp <
+                    this.options.cacheTimeout
+                ) {
                     res.set('Content-Encoding', method);
                     res.remove('Content-Length');
                     res.buffer = cacheEntry.buffer;
@@ -181,7 +181,7 @@ class CMMVCompression extends ServerMiddleware {
         const now = Date.now();
 
         this.cache.forEach((value, key) => {
-            if (now - value.timestamp >= this.cacheTimeout)
+            if (now - value.timestamp >= this.options.cacheTimeout)
                 this.cache.delete(key);
         });
     }
