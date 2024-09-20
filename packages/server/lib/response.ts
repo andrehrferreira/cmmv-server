@@ -22,6 +22,7 @@ export class Response implements IRespose {
     public accept;
     public headers: any = {};
     public sended: boolean = false;
+    public uuid: string;
 
     constructor(
         public readonly app: ServerApplication,
@@ -29,6 +30,7 @@ export class Response implements IRespose {
         public readonly res: http.ServerResponse | http2.Http2ServerResponse,
     ) {
         this.accept = accepts(req as http.IncomingMessage);
+        this.uuid = res.getHeader('Req-UUID') as string;
         const self = this;
 
         onHeaders(

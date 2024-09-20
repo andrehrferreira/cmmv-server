@@ -23,6 +23,11 @@ app.use(json({ limit: '50mb' }));
 app.use(compression());
 app.use(serverStatic('public'));
 
+app.get('/docs/:id', (req, res) => {
+    console.log(req.params);
+    res.send('Ok');
+});
+
 app.get('/', (req, res) => {
     res.send('Hello World');
 });

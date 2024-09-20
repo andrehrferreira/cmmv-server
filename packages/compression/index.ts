@@ -17,8 +17,9 @@ import { Buffer } from 'safe-buffer';
 
 import * as http from 'node:http';
 import * as zlib from 'node:zlib';
+import * as crypto from 'node:crypto';
 
-import { ServerMiddleware, INext } from '@cmmv/server-common';
+import { ServerMiddleware, INext, Telemetry } from '@cmmv/server-common';
 
 import { Request, Response } from '@cmmv/server';
 
@@ -28,24 +29,39 @@ class CMMVCompression extends ServerMiddleware {
     public override afterProcess: boolean = true;
 
     private options: zlib.ZlibOptions;
+    private cache: Map<string, { buffer: Buffer; timestamp: number }> =
+        new Map();
+    private cacheEnabled: boolean;
+    private cacheTimeout: number;
 
-    constructor(options?: zlib.ZlibOptions) {
+    constructor(
+        options?: zlib.ZlibOptions,
+        cacheEnabled = true,
+        cacheTimeout = 15000,
+    ) {
         super();
         this.options = options;
+        this.cacheEnabled = cacheEnabled;
+        this.cacheTimeout = cacheTimeout;
     }
 
     async process(req: Request, res: Response, next?: INext) {
+        const uuid = res.uuid;
+        Telemetry.start('Compress Data', uuid);
+
         if (this.filter(res) && this.shouldTransform(res)) {
             vary(res.httpResponse as http.ServerResponse, 'Accept-Encoding');
 
             const encoding = res.get('Content-Encoding') || 'identity';
 
             if (encoding !== 'identity') {
+                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
             }
 
             if (req.method === 'HEAD') {
+                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
             }
@@ -56,13 +72,32 @@ class CMMVCompression extends ServerMiddleware {
             if (method === 'gzip' && accept.encoding(['br'])) method = 'br';
 
             if (!method || method === 'identity') {
+                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
+            }
+
+            const hashKey = this.generateHash(method, res.buffer);
+
+            if (this.cacheEnabled && this.cache.has(hashKey)) {
+                const cacheEntry = this.cache.get(hashKey);
+
+                if (Date.now() - cacheEntry.timestamp < this.cacheTimeout) {
+                    res.set('Content-Encoding', method);
+                    res.remove('Content-Length');
+                    res.buffer = cacheEntry.buffer;
+                    Telemetry.end('Compress Data', uuid);
+                    next();
+                    return;
+                } else {
+                    this.cache.delete(hashKey);
+                }
             }
 
             const stream = this.createCompressionStream(method);
 
             if (!stream) {
+                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
             }
@@ -78,6 +113,7 @@ class CMMVCompression extends ServerMiddleware {
             res.buffer = compressedBuffer;
         }
 
+        Telemetry.end('Compress Data', uuid);
         next();
     }
 
@@ -128,6 +164,21 @@ class CMMVCompression extends ServerMiddleware {
             !cacheControl ||
             !/(?:^|,)\s*?no-transform\s*?(?:,|$)/.test(cacheControl as string)
         );
+    }
+
+    generateHash(encoding: string, body: Buffer): string {
+        const hash = crypto.createHash('md5');
+        hash.update(encoding + body.toString('base64'));
+        return hash.digest('hex');
+    }
+
+    flush() {
+        const now = Date.now();
+
+        this.cache.forEach((value, key) => {
+            if (now - value.timestamp >= this.cacheTimeout)
+                this.cache.delete(key);
+        });
     }
 }
 

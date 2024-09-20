@@ -7,9 +7,13 @@ import * as querystring from 'qs';
 import * as formidable from 'formidable';
 import { EventEmitter } from 'events';
 
-import { ServerMiddleware, IServerApplication } from '@cmmv/server-common';
+import {
+    ServerMiddleware,
+    IServerApplication,
+    Telemetry,
+} from '@cmmv/server-common';
 
-import { StaticOptions, ServerStaticMiddleware } from '@cmmv/server-static';
+import { ServerStaticMiddleware } from '@cmmv/server-static';
 
 import { Router } from './router';
 import { Request } from './request';
@@ -17,7 +21,6 @@ import { Response } from './response';
 
 import {
     ServerOptions,
-    ServerHTTP2Options,
     DefaultServerOptions,
     DefaultServerHTTP2Options,
 } from '../interfaces';
@@ -82,9 +85,13 @@ export class ServerApplication implements IServerApplication {
         }
     }
 
-    private async onListener(req, res) {
+    private async onListener(
+        req: http.IncomingMessage | http2.Http2ServerRequest,
+        res: http.ServerResponse | http2.Http2ServerResponse,
+    ) {
         const path = req.url;
         const hasFileExtension = /\.\w+$/.test(path);
+        res.setHeader('Req-UUID', Telemetry.generateId());
 
         if (hasFileExtension && this.staticServer) {
             this.staticServer.process(req, res, err =>
@@ -105,6 +112,8 @@ export class ServerApplication implements IServerApplication {
         const contentType = req.headers['content-type'];
 
         if (bodyMethods.includes(method)) {
+            Telemetry.start('Body Parser', res.getHeader('Req-UUID') as string);
+
             let body = '';
 
             req.on('data', chunk => {
@@ -116,6 +125,12 @@ export class ServerApplication implements IServerApplication {
                     const decompressedBody = await this.decompressBody(
                         body,
                         req,
+                        res,
+                    );
+
+                    Telemetry.end(
+                        'Body Parser',
+                        res.getHeader('Req-UUID') as string,
                     );
 
                     switch (contentType) {
@@ -157,7 +172,9 @@ export class ServerApplication implements IServerApplication {
         }
     }
 
-    async decompressBody(body: string, req): Promise<string> {
+    async decompressBody(body: string, req, res): Promise<string> {
+        Telemetry.start('Decompress Body', res.getHeader('Req-UUID') as string);
+
         const encoding = (
             req.headers['content-encoding'] || 'identity'
         ).toLowerCase();
@@ -173,12 +190,19 @@ export class ServerApplication implements IServerApplication {
                 steam = zlib.createDeflate();
         }
 
-        if (steam) return await this.compressData(Buffer.from(body), steam);
+        if (steam) {
+            const data = await this.decompressData(Buffer.from(body), steam);
+            Telemetry.end(
+                'Decompress Body',
+                res.getHeader('Req-UUID') as string,
+            );
+            return data;
+        }
 
         return body;
     }
 
-    async compressData(
+    async decompressData(
         inputBuffer: Buffer,
         compressionStream: zlib.Gzip | zlib.Deflate | zlib.BrotliCompress,
     ): Promise<string> {
@@ -203,6 +227,7 @@ export class ServerApplication implements IServerApplication {
 
     private async processRequest(req, res, body: any) {
         const route = await this.router.process(this, req, res, body);
+        Telemetry.start('Process Request', res.getHeader('Req-UUID') as string);
 
         try {
             const processMiddleware = async (
@@ -235,6 +260,11 @@ export class ServerApplication implements IServerApplication {
                             );
                             processMiddleware(0, true);
                         } else if (route) {
+                            const uuid = res.getHeader('Req-UUID') as string;
+                            Telemetry.end('Process Request', uuid);
+                            Telemetry.table(uuid);
+                            Telemetry.clearTelemetry(uuid);
+
                             res.writeHead(route.response.statusCode);
                             res.end(route.response.buffer);
                         } else {
@@ -250,15 +280,18 @@ export class ServerApplication implements IServerApplication {
 
             if (this.middlewaresArr.length > 0) processMiddleware(0);
             else {
-                console.log(route);
                 if (route) {
-                    console.log('aki');
+                    const uuid = res.getHeader('Req-UUID') as string;
+                    Telemetry.end('Process Request', uuid);
+                    Telemetry.table(uuid);
+                    Telemetry.clearTelemetry(uuid);
 
                     await this.runFunctions(
                         route.fn,
                         route.request,
                         route.response,
                     );
+
                     res.writeHead(route.response.statusCode);
                     res.end(route.response.buffer);
                 } else {
@@ -308,7 +341,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public all(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -319,7 +352,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public get(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -334,7 +367,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public post(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -343,7 +376,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public put(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -352,7 +385,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public delete(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -361,7 +394,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public head(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
@@ -370,7 +403,7 @@ export class ServerApplication implements IServerApplication {
     }
 
     public patch(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >

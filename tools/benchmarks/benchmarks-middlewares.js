@@ -93,7 +93,7 @@ async function run() {
 		'Latency Max': result.latencyMax,
 	}));
 
-	tableData.sort((a, b) => b['Requests/sec'] - a['Requests/sec']);
+	tableData.sort((a, b) => b['Reqs/sec'] - a['Reqs/sec']);
 
 	console.table(tableData);
 }

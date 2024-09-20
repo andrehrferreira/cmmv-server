@@ -15,6 +15,7 @@ export class Request implements IRequest {
         public readonly req: http.IncomingMessage | http2.Http2ServerRequest,
         public readonly res: http.ServerResponse | http2.Http2ServerResponse,
         public readonly body: any,
+        public readonly params?: { [k: string]: string | undefined },
     ) {}
 
     get httpRequest() {

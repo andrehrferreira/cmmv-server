@@ -23,9 +23,9 @@ export class DefaultServerOptions implements ServerOptions {
     public headersTimeout: number = 6000;
     public insecureHTTPParser: boolean = false;
     public joinDuplicateHeaders: boolean = false;
-    public keepAlive: boolean = false;
+    public keepAlive: boolean = true;
     public keepAliveInitialDelay: number = 0;
-    public keepAliveTimeout: number = 0;
+    public keepAliveTimeout: number = 5000;
     public maxHeaderSize: number = 16384;
     public noDelay: boolean = true;
     public requestTimeout: number = 300000;
@@ -42,7 +42,7 @@ export class DefaultServerOptions implements ServerOptions {
         this.headersTimeout = options?.headersTimeout || 6000;
         this.insecureHTTPParser = options?.insecureHTTPParser || false;
         this.joinDuplicateHeaders = options?.joinDuplicateHeaders || false;
-        this.keepAlive = options?.keepAlive || false;
+        this.keepAlive = options?.keepAlive || true;
         this.keepAliveInitialDelay = options?.keepAliveInitialDelay || 0;
         this.keepAliveTimeout = options?.keepAliveTimeout || 5000;
         this.maxHeaderSize = options?.maxHeaderSize || 16384;

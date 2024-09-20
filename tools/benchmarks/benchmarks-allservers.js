@@ -20,7 +20,8 @@ const sleep = (time) =>
 const BENCHMARK_PATH = join(process.cwd(), 'benchmarks');
 
 const LIBS = [
-	'cmmv-simple:5001', 'http:5002', 'express-simple:5003'
+	'cmmv-simple:5001', 'http:5002', 'express-simple:5003',
+	'fastify:5004', 'hapi:5005', 'koa:5006', 'resfity:5007'
 ];
 
 async function runBenchmarkOfLib(lib) {
@@ -94,7 +95,7 @@ async function run() {
 		'Latency Max': result.latencyMax,
 	}));
 
-  	tableData.sort((a, b) => b['Requests/sec'] - a['Requests/sec']);
+  	tableData.sort((a, b) => b['Reqs/sec'] - a['Reqs/sec']);
 
   	console.table(tableData);
 }

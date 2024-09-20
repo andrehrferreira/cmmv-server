@@ -10,6 +10,7 @@
  */
 
 import * as http from 'node:http';
+import * as http2 from 'node:http2';
 import * as url from 'node:url';
 import * as zlib from 'node:zlib';
 import { resolve } from 'node:path';
@@ -100,8 +101,8 @@ export class ServerStaticMiddleware {
     }
 
     async process(
-        req: http.IncomingMessage,
-        res: http.ServerResponse,
+        req: http.IncomingMessage | http2.Http2ServerRequest,
+        res: http.ServerResponse | http2.Http2ServerResponse,
         next: Function,
     ) {
         try {

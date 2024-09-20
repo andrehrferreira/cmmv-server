@@ -7,4 +7,4 @@ app.use(async ctx => {
   ctx.body = 'Hello world';
 });
 
-app.listen(3000);
+app.listen(5006);

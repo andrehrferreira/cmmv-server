@@ -1,6 +1,9 @@
+import { IncomingMessage, ServerResponse } from 'http';
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import * as url from 'node:url';
-import * as http from 'node:http';
-import * as http2 from 'node:http2';
+
+import * as qs from 'qs';
+import * as FindMyWay from 'find-my-way';
 
 import { BiIndexMap } from '../utils';
 import { Request } from './request';
@@ -8,264 +11,262 @@ import { Response } from './response';
 import { ServerApplication } from './application';
 
 export class Router {
-    private index: BiIndexMap = new BiIndexMap();
+    public router: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
+
+    constructor() {
+        if (!this.router) {
+            this.router = FindMyWay({
+                caseSensitive: false,
+                ignoreTrailingSlash: true,
+                ignoreDuplicateSlashes: true,
+                allowUnsafeRegex: true,
+            });
+        }
+    }
+
+    public isHttp2Request(
+        req: IncomingMessage | Http2ServerRequest,
+    ): req is Http2ServerRequest {
+        return (req as Http2ServerRequest).stream !== undefined;
+    }
 
     public all(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('get', path, callbacks);
-        this.index.set('post', path, callbacks);
-        this.index.set('put', path, callbacks);
-        this.index.set('delete', path, callbacks);
-        this.index.set('head', path, callbacks);
-        this.index.set('patch', path, callbacks);
-        this.index.set('checkout', path, callbacks);
-        this.index.set('copy', path, callbacks);
-        this.index.set('lock', path, callbacks);
-        this.index.set('merge', path, callbacks);
-        this.index.set('mkactivity', path, callbacks);
-        this.index.set('mkcol', path, callbacks);
-        this.index.set('move', path, callbacks);
-        this.index.set('m-search', path, callbacks);
-        this.index.set('notify', path, callbacks);
-        this.index.set('options', path, callbacks);
-        this.index.set('purge', path, callbacks);
-        this.index.set('report', path, callbacks);
-        this.index.set('search', path, callbacks);
-        this.index.set('subscribe', path, callbacks);
-        this.index.set('trace', path, callbacks);
-        this.index.set('unlock', path, callbacks);
-        this.index.set('unsubscribe', path, callbacks);
+        this.router.on('GET', path, (req, res) => {}, { callbacks });
     }
 
     public get(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('get', path, callbacks);
+        this.router.on('GET', path, (req, res) => {}, { callbacks });
     }
 
     public post(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('post', path, callbacks);
+        this.router.on('POST', path, null, { callbacks });
     }
 
     public put(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('put', path, callbacks);
+        this.router.on('PUT', path, null, { callbacks });
     }
 
     public delete(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('delete', path, callbacks);
+        this.router.on('DELETE', path, null, { callbacks });
     }
 
     public head(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('head', path, callbacks);
+        this.router.on('HEAD', path, null, { callbacks });
     }
 
     public patch(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('patch', path, callbacks);
+        this.router.on('PATCH', path, null, { callbacks });
     }
 
     public checkout(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('checkout', path, callbacks);
+        this.router.on('CHECKOUT', path, null, { callbacks });
     }
 
     public copy(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('copy', path, callbacks);
+        this.router.on('COPY', path, null, { callbacks });
     }
 
     public lock(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('lock', path, callbacks);
+        this.router.on('LOCK', path, null, { callbacks });
     }
 
     public merge(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('merge', path, callbacks);
+        this.router.on('MERGE', path, null, { callbacks });
     }
 
     public mkactivity(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('mkactivity', path, callbacks);
+        this.router.on('MKACTIVITY', path, null, { callbacks });
     }
 
     public mkcol(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('mkcol', path, callbacks);
+        this.router.on('MKCOL', path, null, { callbacks });
     }
 
     public move(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('move', path, callbacks);
+        this.router.on('MOVE', path, null, { callbacks });
     }
 
     public 'm-search'(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('m-search', path, callbacks);
+        this.router.on('M-SEARCH', path, null, { callbacks });
     }
 
     public notify(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('notify', path, callbacks);
+        this.router.on('NOTIFY', path, null, { callbacks });
     }
 
     public options(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('options', path, callbacks);
+        this.router.on('OPTIONS', path, null, { callbacks });
     }
 
     public purge(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('purge', path, callbacks);
+        this.router.on('PURGE', path, null, { callbacks });
     }
 
     public report(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('report', path, callbacks);
+        this.router.on('REPORT', path, null, { callbacks });
     }
 
     public search(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('search', path, callbacks);
+        this.router.on('SEARCH', path, null, { callbacks });
     }
 
     public subscribe(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('subscribe', path, callbacks);
+        this.router.on('SUBSCRIBE', path, null, { callbacks });
     }
 
     public trace(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('trace', path, callbacks);
+        this.router.on('TRACE', path, null, { callbacks });
     }
 
     public unlock(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('unlock', path, callbacks);
+        this.router.on('UNLOCK', path, null, { callbacks });
     }
 
     public unsubscribe(
-        path: string | RegExp,
+        path: string,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.index.set('unsubscribe', path, callbacks);
+        this.router.on('UNSUBSCRIBE', path, null, { callbacks });
     }
 
     public async process(
         socket: ServerApplication,
-        req: http.IncomingMessage | http2.Http2ServerRequest,
-        res: http.ServerResponse | http2.Http2ServerResponse,
+        req: IncomingMessage | Http2ServerRequest,
+        res: ServerResponse | Http2ServerResponse,
         body: any,
     ): Promise<{
         request: Request;
         response: Response;
         fn: Array<(req: Request, res: Response, next?: Function) => void>;
     } | null> {
-        const method = req.method.toLowerCase();
-        const parsedUrl = url.parse(req.url, true);
-        const fn = await this.index.get(method, parsedUrl.pathname);
+        const route = this.router.find(
+            req.method as FindMyWay.HTTPMethod,
+            req.url,
+        );
 
-        if (fn && fn.length > 0) {
-            const request = new Request(socket, req, res, body);
+        if (route.store.callbacks && route.store.callbacks.length > 0) {
+            const request = new Request(socket, req, res, body, {
+                ...route.params,
+            });
             const response = new Response(socket, req, res);
-            return { request, response, fn };
+            return { request, response, fn: route.store.callbacks };
         }
 
         return null;

@@ -24,7 +24,7 @@ export class Telemetry extends Singleton {
                 telemetry.records.set(requestId, []);
 
             telemetry.records.get(requestId)?.push({
-                id: telemetry.generateId(),
+                id: Telemetry.generateId(),
                 label,
                 startTime: Date.now(),
             });
@@ -66,19 +66,19 @@ export class Telemetry extends Singleton {
         return Telemetry.getInstance().records;
     }
 
-    private generateId(): string {
+    public static generateId(): string {
         return (Math.random() + 1).toString(36).substring(7);
     }
 
-    public table(requestId?: string) {
+    public static table(requestId?: string) {
         const telemetry = Telemetry.getInstance();
-        const serverMetric = telemetry.records[requestId];
+        const serverMetric = telemetry.records.get(requestId);
 
         let metrics = {};
 
         if (serverMetric?.length > 0) {
-            serverMetric.forEach(([key, item]) => {
-                serverMetric[item.label] = {
+            serverMetric.forEach(item => {
+                metrics[item.label] = {
                     start: item.startTime,
                     end: item.endTime || Date.now(),
                     duration: (item.endTime || Date.now()) - item.startTime,
