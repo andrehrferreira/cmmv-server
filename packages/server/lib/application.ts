@@ -57,8 +57,8 @@ export class ServerApplication implements IServerApplication {
     private scope: Map<string, any> = new Map<string, any>();
     private namesProtected: Set<string> = new Set<string>();
 
+    //compatibility Expressjs
     get locals() {
-        //compatibility Expressjs
         const obj: { [key: string]: any } = {};
 
         this.scope.forEach((value, key) => {
@@ -68,11 +68,12 @@ export class ServerApplication implements IServerApplication {
         return obj;
     }
 
+    //compatibility Expressjs
     get settings() {
-        //compatibility Expressjs
         return this.scope.has('settings') ? this.scope.get('settings') : {};
     }
 
+    //compatibility Expressjs
     get param() {
         return this.router.param.bind(this.router);
     }

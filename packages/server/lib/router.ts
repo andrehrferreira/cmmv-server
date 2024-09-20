@@ -24,6 +24,8 @@ export class Router {
                 ignoreDuplicateSlashes: true,
                 allowUnsafeRegex: true,
             });
+
+            this.stack = new Map<FindMyWay.HTTPMethod, Array<Function>>();
         }
     }
 
@@ -43,11 +45,15 @@ export class Router {
     }
 
     public all(
-        path: string,
+        path: string | Function,
         ...callbacks: Array<
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
+        this.acl(path, ...callbacks);
+        this.bind(path, ...callbacks);
+        this.connect(path, ...callbacks);
+        this.link(path, ...callbacks);
         this.get(path, ...callbacks);
         this.post(path, ...callbacks);
         this.put(path, ...callbacks);
@@ -58,15 +64,23 @@ export class Router {
         this.lock(path, ...callbacks);
         this.merge(path, ...callbacks);
         this.mkactivity(path, ...callbacks);
+        this.mkcalendar(path, ...callbacks);
         this.mkcol(path, ...callbacks);
         this.move(path, ...callbacks);
         this['m-search'](path, ...callbacks);
         this.notify(path, ...callbacks);
         this.options(path, ...callbacks);
+        this.propfind(path, ...callbacks);
+        this.proppatch(path, ...callbacks);
         this.purge(path, ...callbacks);
+        this.rebind(path, ...callbacks);
+        this.report(path, ...callbacks);
+        this.source(path, ...callbacks);
         this.search(path, ...callbacks);
         this.subscribe(path, ...callbacks);
         this.trace(path, ...callbacks);
+        this.unbind(path, ...callbacks);
+        this.unlink(path, ...callbacks);
         this.unlock(path, ...callbacks);
         this.unsubscribe(path, ...callbacks);
     }
@@ -93,10 +107,46 @@ export class Router {
                 });
             }
         } else {
-            const stack = this.stack.get(method);
+            const stack = this.stack.has(method) ? this.stack.get(method) : [];
             stack.push(path);
             this.stack.set(method, stack);
         }
+    }
+
+    public acl(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('ACL', path, ...callbacks);
+    }
+
+    public bind(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('BIND', path, ...callbacks);
+    }
+
+    public connect(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('CONNECT', path, ...callbacks);
+    }
+
+    public link(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('LINK', path, ...callbacks);
     }
 
     public get(
@@ -199,6 +249,15 @@ export class Router {
         this.mergeRoutes('MKACTIVITY', path, ...callbacks);
     }
 
+    public mkcalendar(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('MKCALENDAR', path, ...callbacks);
+    }
+
     public mkcol(
         path: string | Function,
         ...callbacks: Array<
@@ -244,6 +303,24 @@ export class Router {
         this.mergeRoutes('OPTIONS', path, ...callbacks);
     }
 
+    public propfind(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('PROPFIND', path, ...callbacks);
+    }
+
+    public proppatch(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('PROPPATCH', path, ...callbacks);
+    }
+
     public purge(
         path: string | Function,
         ...callbacks: Array<
@@ -251,6 +328,15 @@ export class Router {
         >
     ) {
         this.mergeRoutes('PURGE', path, ...callbacks);
+    }
+
+    public rebind(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('REBIND', path, ...callbacks);
     }
 
     public report(
@@ -269,6 +355,33 @@ export class Router {
         >
     ) {
         this.mergeRoutes('SEARCH', path, ...callbacks);
+    }
+
+    public source(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('SOURCE', path, ...callbacks);
+    }
+
+    public unbind(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('UNBIND', path, ...callbacks);
+    }
+
+    public unlink(
+        path: string | Function,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        this.mergeRoutes('UNLINK', path, ...callbacks);
     }
 
     public subscribe(
@@ -389,12 +502,73 @@ export class Router {
         return null;
     }
 
+    /**
+     * dispatch req, res into this route
+     *
+     * @see https://github.com/pillarjs/router/blob/master/lib/route.js#L100
+     * @private
+     */
     public dispatch(req, res, done) {
         //compatibility Expressjs
-        if (this.stack.has(req.method)) {
-            //compatibility Expressjs
-            const stack = this.stack.get(req.method);
+        let method = req.method.toUpperCase() as FindMyWay.HTTPMethod;
+
+        if (this.stack.has(method)) {
+            let stack = this.stack.get(method);
+
+            if (method === 'HEAD' && !this.router.hasRoute('HEAD', req.url))
+                method = 'GET';
+
+            const route = this.router.find(method, req.url);
+
+            if (route) {
+                if (route && route.store && route.store.callbacks) {
+                    if (Array.isArray(route.store.callbacks))
+                        stack = [...stack, ...route.store.callbacks];
+                }
+            }
+
+            const defer =
+                typeof setImmediate === 'function'
+                    ? setImmediate
+                    : function (fn) {
+                          process.nextTick(fn.bind.apply(fn, arguments));
+                      };
+
+            let idx = 0;
+            let sync = 0;
+
+            if (stack.length === 0) return done();
+
+            req.route = this;
+
+            next();
+
+            function next(err?: string) {
+                if (err && err === 'route') return done();
+
+                if (err && err === 'router') return done(err);
+
+                if (idx >= stack.length) return done(err);
+
+                if (++sync > 100) return defer(() => next(err));
+
+                let layer;
+                let match;
+
+                while (match !== true && idx < stack.length) {
+                    layer = stack[idx++];
+                    match = !layer.method || layer.method === method;
+                }
+
+                if (match !== true) return done(err);
+
+                if (err) layer(err, req, res, next);
+                else layer(req, res, next);
+
+                sync = 0;
+            }
         } else {
+            console.log(method);
             done();
         }
     }
