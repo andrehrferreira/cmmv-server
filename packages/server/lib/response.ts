@@ -30,7 +30,6 @@ export class Response implements IRespose {
         public readonly res: http.ServerResponse | http2.Http2ServerResponse,
     ) {
         this.accept = accepts(req as http.IncomingMessage);
-        this.uuid = res.getHeader('Req-UUID') as string;
         const self = this;
 
         onHeaders(
@@ -59,6 +58,9 @@ export class Response implements IRespose {
 
     public end(data?: string, encoding?: string) {
         this.buffer = data ? Buffer.from(data, encoding) : Buffer.from('');
+
+        if (!this.headers['Content-Encoding'])
+            this.setHeader('Content-Length', this.buffer.length.toString());
     }
 
     public format(object: Object) {}
@@ -107,6 +109,9 @@ export class Response implements IRespose {
 
                 this.buffer = new Buffer(body);
             }
+
+            if (!this.headers['Content-Encoding'])
+                this.setHeader('Content-Length', this.buffer.length.toString());
         }
     }
 

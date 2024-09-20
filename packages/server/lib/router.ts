@@ -1,13 +1,11 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Http2ServerRequest, Http2ServerResponse, constants } from 'http2';
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 
 import * as FindMyWay from 'find-my-way';
 
 import { Request } from './request';
 import { Response } from './response';
 import { ServerApplication } from './application';
-
-const { HTTP_STATUS_OK } = constants;
 
 export class Router {
     public router: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;

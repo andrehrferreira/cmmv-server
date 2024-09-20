@@ -8,11 +8,7 @@ import * as querystring from 'qs';
 import * as formidable from 'formidable';
 import { EventEmitter } from 'events';
 
-import {
-    ServerMiddleware,
-    IServerApplication,
-    Telemetry,
-} from '@cmmv/server-common';
+import { ServerMiddleware, IServerApplication } from '@cmmv/server-common';
 
 import { ServerStaticMiddleware } from '@cmmv/server-static';
 
@@ -133,6 +129,13 @@ export class ServerApplication implements IServerApplication {
                           (req, res) => this.onListener(req, res),
                       );
         }
+
+        const gracefulShutdown = () => {
+            this.socket.close(() => process.exit(0));
+        };
+
+        process.on('SIGTERM', gracefulShutdown);
+        process.on('SIGINT', gracefulShutdown);
     }
 
     private async onListener(
@@ -140,7 +143,7 @@ export class ServerApplication implements IServerApplication {
         res: http.ServerResponse | http2.Http2ServerResponse,
     ) {
         const hasFileExtension = /\.\w+$/.test(req.url);
-        res.setHeader('Req-UUID', Telemetry.generateId());
+        //res.setHeader('Req-UUID', Telemetry.generateId());
 
         if (hasFileExtension && this.staticServer) {
             this.staticServer.process(req, res, err =>
@@ -162,14 +165,9 @@ export class ServerApplication implements IServerApplication {
             const contentType = req.headers['content-type'];
 
             if (bodyMethods.includes(method)) {
-                Telemetry.start(
-                    'Body Parser',
-                    res.getHeader('Req-UUID') as string,
-                );
-
                 let body = '';
 
-                req.on('data', chunk => {
+                req.on('data', async chunk => {
                     body += chunk.toString();
                 });
 
@@ -179,11 +177,6 @@ export class ServerApplication implements IServerApplication {
                             body,
                             req,
                             res,
-                        );
-
-                        Telemetry.end(
-                            'Body Parser',
-                            res.getHeader('Req-UUID') as string,
                         );
 
                         switch (contentType) {
@@ -237,8 +230,6 @@ export class ServerApplication implements IServerApplication {
     }
 
     async decompressBody(body: string, req, res): Promise<string> {
-        Telemetry.start('Decompress Body', res.getHeader('Req-UUID') as string);
-
         const encoding = (
             req.headers['content-encoding'] || 'identity'
         ).toLowerCase();
@@ -256,10 +247,6 @@ export class ServerApplication implements IServerApplication {
 
         if (steam) {
             const data = await this.decompressData(Buffer.from(body), steam);
-            Telemetry.end(
-                'Decompress Body',
-                res.getHeader('Req-UUID') as string,
-            );
             return data;
         }
 
@@ -293,120 +280,127 @@ export class ServerApplication implements IServerApplication {
         mixin(original, newScope, false);
     }
 
-    private async processRequest(req, res, body: any) {
-        const route = await this.router.process(this, req, res, body);
-        Telemetry.start('Process Request', res.getHeader('Req-UUID') as string);
+    async processRequest(req, res, body: any) {
+        this.router
+            .process(this, req, res, body)
+            .then(async route => {
+                try {
+                    const processMiddleware = async (
+                        index: number,
+                        after: boolean = false,
+                    ) => {
+                        if (index < this.middlewaresArr.length && route) {
+                            const middleware = this.middlewaresArr[index];
 
-        try {
-            const processMiddleware = async (
-                index: number,
-                after: boolean = false,
-            ) => {
-                if (index < this.middlewaresArr.length && route) {
-                    const middleware = this.middlewaresArr[index];
-
-                    if (!route.response.sended) {
-                        if (
-                            middleware instanceof ServerMiddleware &&
-                            middleware?.afterProcess === after
-                        ) {
-                            middleware.process(
-                                route.request,
-                                route.response,
-                                () => processMiddleware(index + 1, after),
-                            );
-                        } else if (typeof middleware === 'function') {
-                            if (middleware.length === 4) {
-                                //compatibility Expressjs
-                                middleware(null, route, route, () =>
-                                    processMiddleware(index + 1, after),
-                                );
-                            } else {
-                                middleware(route, route, () =>
-                                    processMiddleware(index + 1, after),
-                                );
-                            }
-                        } else {
-                            processMiddleware(index + 1, after);
-                        }
-                    }
-                } else if (route) {
-                    if (!route.response.sended) {
-                        if (!after) {
-                            await this.runFunctions(
-                                route.fn,
-                                route.request,
-                                route.response,
-                            );
-
-                            if (!route.response.sended)
-                                processMiddleware(0, true);
-                            else {
-                                res.writeHead(route.response.statusCode);
-                                res.end(
-                                    route.head === true
-                                        ? ''
-                                        : route.response.buffer,
-                                );
+                            if (!route.response.sended) {
+                                if (
+                                    middleware instanceof ServerMiddleware &&
+                                    middleware?.afterProcess === after
+                                ) {
+                                    middleware.process(
+                                        route.request,
+                                        route.response,
+                                        () =>
+                                            processMiddleware(index + 1, after),
+                                    );
+                                } else if (typeof middleware === 'function') {
+                                    if (middleware.length === 4) {
+                                        //compatibility Expressjs
+                                        middleware(null, route, route, () =>
+                                            processMiddleware(index + 1, after),
+                                        );
+                                    } else {
+                                        middleware(route, route, () =>
+                                            processMiddleware(index + 1, after),
+                                        );
+                                    }
+                                } else {
+                                    processMiddleware(index + 1, after);
+                                }
                             }
                         } else if (route) {
-                            const uuid = res.getHeader('Req-UUID') as string;
-                            Telemetry.end('Process Request', uuid);
-                            Telemetry.table(uuid);
-                            Telemetry.clearTelemetry(uuid);
+                            if (!route.response.sended) {
+                                if (!after) {
+                                    await this.runFunctions(
+                                        route.fn,
+                                        route.request,
+                                        route.response,
+                                    );
 
-                            res.writeHead(route.response.statusCode);
-                            res.end(
-                                route.head === true
-                                    ? ''
-                                    : route.response.buffer,
-                            );
+                                    if (!route.response.sended)
+                                        processMiddleware(0, true);
+                                    else {
+                                        res.writeHead(
+                                            route.response.statusCode,
+                                        );
+                                        res.end(
+                                            route.head === true
+                                                ? ''
+                                                : route.response.buffer,
+                                        );
+                                    }
+                                } else if (route) {
+                                    res.writeHead(route.response.statusCode);
+                                    res.end(
+                                        route.head === true
+                                            ? ''
+                                            : route.response.buffer,
+                                    );
+                                } else {
+                                    res.writeHead(HTTP_STATUS_NOT_FOUND);
+                                    res.end('Not Found');
+                                }
+                            }
                         } else {
                             res.writeHead(HTTP_STATUS_NOT_FOUND);
                             res.end('Not Found');
                         }
-                    }
-                } else {
-                    res.writeHead(HTTP_STATUS_NOT_FOUND);
-                    res.end('Not Found');
-                }
-            };
+                    };
 
-            if (route) {
-                this.bindCustomContext(route.request.req, this._request); //compatibility Expressjs
-                this.bindCustomContext(route.response.res, this._response); //compatibility Expressjs
-
-                if (this.middlewaresArr.length > 0) processMiddleware(0);
-                else {
                     if (route) {
-                        const uuid = res.getHeader('Req-UUID') as string;
-                        Telemetry.end('Process Request', uuid);
-                        Telemetry.table(uuid);
-                        Telemetry.clearTelemetry(uuid);
+                        this.bindCustomContext(
+                            route.request.req,
+                            this._request,
+                        ); //compatibility Expressjs
+                        this.bindCustomContext(
+                            route.response.res,
+                            this._response,
+                        ); //compatibility Expressjs
 
-                        await this.runFunctions(
-                            route.fn,
-                            route.request,
-                            route.response,
-                        );
+                        if (this.middlewaresArr.length > 0)
+                            processMiddleware(0);
+                        else {
+                            if (route) {
+                                await this.runFunctions(
+                                    route.fn,
+                                    route.request,
+                                    route.response,
+                                );
 
-                        res.writeHead(route.response.statusCode);
-                        res.end(route.head ? '' : route.response.buffer);
+                                res.writeHead(route.response.statusCode);
+                                res.end(
+                                    route.head ? '' : route.response.buffer,
+                                );
+                            } else {
+                                res.writeHead(HTTP_STATUS_NOT_FOUND);
+                                res.end('Not Found');
+                            }
+                        }
                     } else {
                         res.writeHead(HTTP_STATUS_NOT_FOUND);
                         res.end('Not Found');
                     }
-                }
-            } else {
-                res.writeHead(HTTP_STATUS_NOT_FOUND);
-                res.end('Not Found');
-            }
-        } catch (err) {
-            if (process.env.NODE_ENV === 'dev') console.error(err);
+                } catch (err) {
+                    if (process.env.NODE_ENV === 'dev') console.error(err);
 
-            res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-            res.end(err.message);
-        }
+                    res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+                    res.end(err.message);
+                }
+            })
+            .catch(err => {
+                res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+                res.end(err.message);
+            });
     }
 
     private async runFunctions(

@@ -13,67 +13,77 @@
 import * as compressible from 'compressible';
 import * as vary from 'vary';
 import * as accepts from 'accepts';
+import * as bytes from 'bytes';
 import { Buffer } from 'safe-buffer';
 
 import * as http from 'node:http';
 import * as zlib from 'node:zlib';
 import * as crypto from 'node:crypto';
 
-import { ServerMiddleware, INext, Telemetry } from '@cmmv/server-common';
+import { ServerMiddleware, INext } from '@cmmv/server-common';
 
 import { Request, Response } from '@cmmv/server';
+
+type CompressOptions = zlib.ZlibOptions & { threshold?: number };
 
 class CMMVCompression extends ServerMiddleware {
     public middlewareName: string = 'compression';
 
     public override afterProcess: boolean = true;
 
-    private options: zlib.ZlibOptions;
+    private options: CompressOptions;
     private cache: Map<string, { buffer: Buffer; timestamp: number }> =
         new Map();
     private cacheEnabled: boolean;
     private cacheTimeout: number;
 
     constructor(
-        options?: zlib.ZlibOptions,
+        options?: CompressOptions,
         cacheEnabled = true,
         cacheTimeout = 15000,
     ) {
         super();
-        this.options = options;
+        this.options = options || {};
+
+        this.options.threshold =
+            options && options.threshold
+                ? bytes.parse(options.threshold)
+                : 1024;
+
+        if (this.options.threshold == null) this.options.threshold = 1024;
+
         this.cacheEnabled = cacheEnabled;
         this.cacheTimeout = cacheTimeout;
     }
 
     async process(req: Request, res: Response, next?: INext) {
-        const uuid = res.uuid;
-        Telemetry.start('Compress Data', uuid);
-
         const accept = accepts(req.httpRequest as http.IncomingMessage);
         let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
         if (method === 'gzip' && accept.encoding(['br'])) method = 'br';
 
         if (req.method === 'HEAD') {
-            Telemetry.end('Compress Data', uuid);
             next();
             return;
         } else if (this.filter(res) && this.shouldTransform(res)) {
-            vary(res.httpResponse as http.ServerResponse, 'Accept-Encoding');
-
             const encoding = res.get('Content-Encoding') || 'identity';
 
+            if (res.buffer.length < this.options.threshold) {
+                next();
+                return;
+            }
+
             if (encoding !== 'identity') {
-                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
             }
 
             if (!method || method === 'identity') {
-                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
             }
+
+            vary(res.httpResponse as http.ServerResponse, 'Accept-Encoding');
 
             const hashKey = this.generateHash(method, res.buffer);
 
@@ -84,7 +94,6 @@ class CMMVCompression extends ServerMiddleware {
                     res.set('Content-Encoding', method);
                     res.remove('Content-Length');
                     res.buffer = cacheEntry.buffer;
-                    Telemetry.end('Compress Data', uuid);
                     next();
                     return;
                 } else {
@@ -95,7 +104,6 @@ class CMMVCompression extends ServerMiddleware {
             const stream = this.createCompressionStream(method);
 
             if (!stream) {
-                Telemetry.end('Compress Data', uuid);
                 next();
                 return;
             }
@@ -111,7 +119,6 @@ class CMMVCompression extends ServerMiddleware {
             res.buffer = compressedBuffer;
         }
 
-        Telemetry.end('Compress Data', uuid);
         next();
     }
 
@@ -180,6 +187,6 @@ class CMMVCompression extends ServerMiddleware {
     }
 }
 
-export default function (options?: zlib.ZlibOptions) {
+export default function (options?: CompressOptions) {
     return new CMMVCompression(options);
 }

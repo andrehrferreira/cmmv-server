@@ -28,3 +28,5 @@ fastify.listen({ port: 6004 }, (err, address) => {
     }
     fastify.log.info(`Server listening at ${address}`);
 });
+
+console.log(process.env);
