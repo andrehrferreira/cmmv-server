@@ -2,6 +2,7 @@ import * as http from 'node:http';
 import * as https from 'node:https';
 import * as http2 from 'node:http2';
 import * as zlib from 'node:zlib';
+import * as net from 'node:net';
 
 import * as querystring from 'qs';
 import * as formidable from 'formidable';
@@ -25,25 +26,34 @@ import {
     DefaultServerHTTP2Options,
 } from '../interfaces';
 
-const { HTTP_STATUS_NOT_FOUND, HTTP_STATUS_INTERNAL_SERVER_ERROR } =
-    http2.constants;
+const {
+    HTTP_STATUS_NOT_FOUND,
+    HTTP_STATUS_INTERNAL_SERVER_ERROR,
+    HTTP_STATUS_BAD_GATEWAY,
+} = http2.constants;
 
 const mixin = require('merge-descriptors');
 
+type Socket =
+    | http.Server
+    | https.Server
+    | http2.Http2Server
+    | http2.Http2SecureServer;
+
 export class ServerApplication implements IServerApplication {
     private isHTTP2: boolean = false;
-    public socket:
-        | http.Server
-        | https.Server
-        | http2.Http2Server
-        | http2.Http2SecureServer;
-    private options:
+    public socket: Socket;
+    private opts:
         | http.ServerOptions
         | https.ServerOptions
         | http2.ServerOptions
         | http2.SecureServerOptions;
-    private middlewares: Set<ServerMiddleware> = new Set<ServerMiddleware>();
-    private middlewaresArr: Array<ServerMiddleware> = [];
+
+    private middlewares: Set<ServerMiddleware | Function> = new Set<
+        ServerMiddleware | Function
+    >();
+
+    private middlewaresArr: Array<ServerMiddleware | Function> = [];
     private staticServer: ServerStaticMiddleware | null = null;
     private router: Router = new Router();
     public parent: ServerApplication = null;
@@ -51,35 +61,75 @@ export class ServerApplication implements IServerApplication {
     private scope: Map<string, any> = new Map<string, any>();
     private namesProtected: Set<string> = new Set<string>();
 
-    constructor(options?: ServerOptions) {
-        this.isHTTP2 = options?.http2 === true || false;
+    get locals() {
+        //compatibility Expressjs
+        const obj: { [key: string]: any } = {};
 
-        this.options = this.isHTTP2
-            ? new DefaultServerHTTP2Options(options).ToOptions()
-            : new DefaultServerOptions(options).ToOptions();
+        this.scope.forEach((value, key) => {
+            obj[key] = value;
+        });
+
+        return obj;
+    }
+
+    get settings() {
+        //compatibility Expressjs
+        return this.scope.has('settings') ? this.scope.get('settings') : {};
+    }
+
+    get param() {
+        return this.router.param.bind(this.router);
+    }
+
+    //compatibility Expressjs
+    private _request = {};
+    private _response = {};
+
+    get request() {
+        return this._request as any;
+    }
+
+    set request(value) {
+        this._request = value;
+    }
+
+    get response() {
+        return this._response as any;
+    }
+
+    set response(value) {
+        this._response = value;
+    }
+
+    constructor(opts?: ServerOptions) {
+        this.isHTTP2 = opts?.http2 === true || false;
+
+        this.opts = this.isHTTP2
+            ? new DefaultServerHTTP2Options(opts).ToOptions()
+            : new DefaultServerOptions(opts).ToOptions();
 
         if (!this.isHTTP2) {
             this.socket =
-                options && options?.key && options?.cert
+                opts && opts?.key && opts?.cert
                     ? https.createServer(
-                          this.options as https.ServerOptions,
+                          this.opts as https.ServerOptions,
                           (req, res) => this.onListener(req, res),
                       )
                     : http.createServer(
-                          this.options as http.ServerOptions,
+                          this.opts as http.ServerOptions,
                           (req, res) => this.onListener(req, res),
                       );
         } else {
-            (this.options as http2.SecureServerOptions).allowHTTP1 = true;
+            (this.opts as http2.SecureServerOptions).allowHTTP1 = true;
 
             this.socket =
-                options && options?.key && options?.cert
+                opts && opts?.key && opts?.cert
                     ? http2.createSecureServer(
-                          this.options as http2.SecureServerOptions,
+                          this.opts as http2.SecureServerOptions,
                           (req, res) => this.onListener(req, res),
                       )
                     : http2.createServer(
-                          this.options as http2.ServerOptions,
+                          this.opts as http2.ServerOptions,
                           (req, res) => this.onListener(req, res),
                       );
         }
@@ -106,68 +156,83 @@ export class ServerApplication implements IServerApplication {
         res: http.ServerResponse | http2.Http2ServerResponse,
         next: (req: any, res: any, body: any) => void,
     ) {
-        const method = req.method?.toUpperCase();
-        const bodyMethods = ['POST', 'PUT', 'PATCH'];
-        const contentType = req.headers['content-type'];
+        try {
+            const method = req.method?.toUpperCase();
+            const bodyMethods = ['POST', 'PUT', 'PATCH'];
+            const contentType = req.headers['content-type'];
 
-        if (bodyMethods.includes(method)) {
-            Telemetry.start('Body Parser', res.getHeader('Req-UUID') as string);
+            if (bodyMethods.includes(method)) {
+                Telemetry.start(
+                    'Body Parser',
+                    res.getHeader('Req-UUID') as string,
+                );
 
-            let body = '';
+                let body = '';
 
-            req.on('data', chunk => {
-                body += chunk.toString();
-            });
+                req.on('data', chunk => {
+                    body += chunk.toString();
+                });
 
-            req.on('end', async () => {
-                try {
-                    const decompressedBody = await this.decompressBody(
-                        body,
-                        req,
-                        res,
-                    );
+                req.on('end', async () => {
+                    try {
+                        const decompressedBody = await this.decompressBody(
+                            body,
+                            req,
+                            res,
+                        );
 
-                    Telemetry.end(
-                        'Body Parser',
-                        res.getHeader('Req-UUID') as string,
-                    );
+                        Telemetry.end(
+                            'Body Parser',
+                            res.getHeader('Req-UUID') as string,
+                        );
 
-                    switch (contentType) {
-                        case 'application/json':
-                            next(req, res, JSON.parse(decompressedBody));
-                            break;
-                        case 'application/x-www-form-urlencoded':
-                            next(req, res, querystring.parse(decompressedBody));
-                            break;
-                        case 'multipart/form-data':
-                            const form = new formidable.IncomingForm();
-                            form.parse(req, (err, fields, files) => {
-                                if (err) {
-                                    res.writeHead(400, {
-                                        'Content-Type': 'application/json',
-                                    });
-                                    res.end(
-                                        JSON.stringify({
-                                            error: 'Invalid form data',
-                                        }),
-                                    );
-                                    return;
-                                }
-                                next(req, res, { fields, files });
-                            });
-                            break;
-                        default:
-                            next(req, res, null);
-                            break;
+                        switch (contentType) {
+                            case 'application/json':
+                                next(req, res, JSON.parse(decompressedBody));
+                                break;
+                            case 'application/x-www-form-urlencoded':
+                                next(
+                                    req,
+                                    res,
+                                    querystring.parse(decompressedBody),
+                                );
+                                break;
+                            case 'multipart/form-data':
+                                const form = new formidable.IncomingForm();
+                                form.parse(req, (err, fields, files) => {
+                                    if (err) {
+                                        res.writeHead(400, {
+                                            'Content-Type': 'application/json',
+                                        });
+                                        res.end(
+                                            JSON.stringify({
+                                                error: 'Invalid form data',
+                                            }),
+                                        );
+                                        return;
+                                    }
+                                    next(req, res, { fields, files });
+                                });
+                                break;
+                            default:
+                                next(req, res, null);
+                                break;
+                        }
+                    } catch (err) {
+                        if (process.env.NODE_ENV === 'dev') console.error(err);
+
+                        res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+                        res.end(err.message);
                     }
-                } catch (err) {
-                    console.log(err);
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Invalid JSON format' }));
-                }
-            });
-        } else {
-            next(req, res, null);
+                });
+            } else {
+                next(req, res, null);
+            }
+        } catch (err) {
+            if (process.env.NODE_ENV === 'dev') console.error(err);
+
+            res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            res.end(err.message);
         }
     }
 
@@ -224,6 +289,10 @@ export class ServerApplication implements IServerApplication {
         });
     }
 
+    bindCustomContext(original, newScope) {
+        mixin(original, newScope, false);
+    }
+
     private async processRequest(req, res, body: any) {
         const route = await this.router.process(this, req, res, body);
         Telemetry.start('Process Request', res.getHeader('Req-UUID') as string);
@@ -237,14 +306,26 @@ export class ServerApplication implements IServerApplication {
                     const middleware = this.middlewaresArr[index];
 
                     if (!route.response.sended) {
-                        if (middleware.afterProcess === after) {
+                        if (
+                            middleware instanceof ServerMiddleware &&
+                            middleware?.afterProcess === after
+                        ) {
                             middleware.process(
                                 route.request,
                                 route.response,
-                                () => {
-                                    processMiddleware(index + 1, after);
-                                },
+                                () => processMiddleware(index + 1, after),
                             );
+                        } else if (typeof middleware === 'function') {
+                            if (middleware.length === 4) {
+                                //compatibility Expressjs
+                                middleware(null, route, route, () =>
+                                    processMiddleware(index + 1, after),
+                                );
+                            } else {
+                                middleware(route, route, () =>
+                                    processMiddleware(index + 1, after),
+                                );
+                            }
                         } else {
                             processMiddleware(index + 1, after);
                         }
@@ -257,7 +338,17 @@ export class ServerApplication implements IServerApplication {
                                 route.request,
                                 route.response,
                             );
-                            processMiddleware(0, true);
+
+                            if (!route.response.sended)
+                                processMiddleware(0, true);
+                            else {
+                                res.writeHead(route.response.statusCode);
+                                res.end(
+                                    route.head === true
+                                        ? ''
+                                        : route.response.buffer,
+                                );
+                            }
                         } else if (route) {
                             const uuid = res.getHeader('Req-UUID') as string;
                             Telemetry.end('Process Request', uuid);
@@ -265,7 +356,11 @@ export class ServerApplication implements IServerApplication {
                             Telemetry.clearTelemetry(uuid);
 
                             res.writeHead(route.response.statusCode);
-                            res.end(route.response.buffer);
+                            res.end(
+                                route.head === true
+                                    ? ''
+                                    : route.response.buffer,
+                            );
                         } else {
                             res.writeHead(HTTP_STATUS_NOT_FOUND);
                             res.end('Not Found');
@@ -277,29 +372,38 @@ export class ServerApplication implements IServerApplication {
                 }
             };
 
-            if (this.middlewaresArr.length > 0) processMiddleware(0);
-            else {
-                if (route) {
-                    const uuid = res.getHeader('Req-UUID') as string;
-                    Telemetry.end('Process Request', uuid);
-                    Telemetry.table(uuid);
-                    Telemetry.clearTelemetry(uuid);
+            if (route) {
+                this.bindCustomContext(route.request.req, this._request); //compatibility Expressjs
+                this.bindCustomContext(route.response.res, this._response); //compatibility Expressjs
 
-                    await this.runFunctions(
-                        route.fn,
-                        route.request,
-                        route.response,
-                    );
+                if (this.middlewaresArr.length > 0) processMiddleware(0);
+                else {
+                    if (route) {
+                        const uuid = res.getHeader('Req-UUID') as string;
+                        Telemetry.end('Process Request', uuid);
+                        Telemetry.table(uuid);
+                        Telemetry.clearTelemetry(uuid);
 
-                    res.writeHead(route.response.statusCode);
-                    res.end(route.response.buffer);
-                } else {
-                    res.writeHead(HTTP_STATUS_NOT_FOUND);
-                    res.end('Not Found');
+                        await this.runFunctions(
+                            route.fn,
+                            route.request,
+                            route.response,
+                        );
+
+                        res.writeHead(route.response.statusCode);
+                        res.end(route.head ? '' : route.response.buffer);
+                    } else {
+                        res.writeHead(HTTP_STATUS_NOT_FOUND);
+                        res.end('Not Found');
+                    }
                 }
+            } else {
+                res.writeHead(HTTP_STATUS_NOT_FOUND);
+                res.end('Not Found');
             }
         } catch (err) {
-            console.error(err);
+            if (process.env.NODE_ENV === 'dev') console.error(err);
+
             res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
             res.end(err.message);
         }
@@ -311,9 +415,8 @@ export class ServerApplication implements IServerApplication {
         res: Response,
     ) {
         const runFn = async (index: number) => {
-            if (index < fns.length) {
+            if (fns && index < fns.length)
                 fns[index](req, res, () => runFn(index + 1));
-            }
         };
 
         await runFn(0);
@@ -321,7 +424,12 @@ export class ServerApplication implements IServerApplication {
 
     //Methods
     public use(
-        app: ServerMiddleware | Router | ServerStaticMiddleware | string,
+        app:
+            | ServerMiddleware
+            | Router
+            | ServerStaticMiddleware
+            | Function
+            | string,
         parent?: ServerApplication,
     ): void {
         if (app instanceof Router) {
@@ -336,6 +444,14 @@ export class ServerApplication implements IServerApplication {
         } else if (app instanceof ServerMiddleware) {
             this.middlewares.add(app);
             this.middlewaresArr = Array.from(this.middlewares);
+        } else if (typeof app === 'function') {
+            console.warn(
+                'The use of generic middlewares was maintained for compatibility but its use is not recommended, change to ServerMiddleware',
+            );
+            this.middlewares.add(app);
+            this.middlewaresArr = Array.from(this.middlewares);
+        } else {
+            throw Error('Invalid use middleware');
         }
     }
 
@@ -410,10 +526,23 @@ export class ServerApplication implements IServerApplication {
         if (callbacks.length > 0) this.router.patch(path, ...callbacks);
     }
 
+    public options(
+        path: string,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        if (callbacks.length > 0) this.router.options(path, ...callbacks);
+    }
+
     //Scope
     public set(name: string, value: any): boolean {
+        if (!this.scope.has('settings')) this.scope.set('settings', {});
+
         if (!this.namesProtected.has(name)) {
-            this.scope.set(name, value);
+            const settings = this.scope.get('settings');
+            settings[name] = value;
+            this.scope.set('settings', settings);
             return true;
         }
 
@@ -445,21 +574,29 @@ export class ServerApplication implements IServerApplication {
 
     public listen(
         port: number,
-        host: string = '0.0.0.0',
-        callback?: () => void,
-    ): void {
-        this.socket.listen(
-            {
-                port,
-                host,
-            },
-            callback,
-        );
+        hostOrCallback?: string | ((err?: Error) => void),
+        callback?: (err?: Error) => void,
+    ): Socket {
+        const host =
+            typeof hostOrCallback === 'string' ? hostOrCallback : '127.0.0.1';
+        const cb =
+            typeof hostOrCallback === 'function' ? hostOrCallback : callback;
+        this.socket.listen({ port, host, backlog: true }, cb);
+        return this.socket;
+    }
+
+    public close(callback?: (err?: Error) => void) {
+        this.socket.close(callback);
+    }
+
+    public Router(): new () => Router {
+        //compatibility Expressjs
+        return Router;
     }
 
     //Events
-    public on(name: string, callback: Function) {}
-    public emit(name: string, value?: any) {}
+    public on(name: string, callback: Function) {} //compatibility Expressjs
+    public emit(name: string, value?: any) {} //compatibility Expressjs
 }
 
 export const CmmvServer = (options?: ServerOptions) => {

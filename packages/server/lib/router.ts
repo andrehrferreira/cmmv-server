@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Http2ServerRequest, Http2ServerResponse } from 'http2';
+import { Http2ServerRequest, Http2ServerResponse, constants } from 'http2';
 
 import * as FindMyWay from 'find-my-way';
 
@@ -7,8 +7,11 @@ import { Request } from './request';
 import { Response } from './response';
 import { ServerApplication } from './application';
 
+const { HTTP_STATUS_OK } = constants;
+
 export class Router {
     public router: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
+    public params: Map<string, Function> = new Map<string, Function>();
 
     constructor() {
         if (!this.router) {
@@ -18,6 +21,15 @@ export class Router {
                 ignoreDuplicateSlashes: true,
                 allowUnsafeRegex: true,
             });
+        }
+    }
+
+    public param(valueOrObject: string | string[], cb) {
+        //compatibility Expressjs
+        if (typeof valueOrObject === 'string')
+            this.params.set(valueOrObject, cb);
+        else if (Array.isArray(valueOrObject)) {
+            valueOrObject.forEach(item => this.params.set(item, cb));
         }
     }
 
@@ -33,7 +45,45 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('GET', path, (req, res) => {}, { callbacks });
+        this.get(path, ...callbacks);
+        this.post(path, ...callbacks);
+        this.put(path, ...callbacks);
+        this.delete(path, ...callbacks);
+        this.patch(path, ...callbacks);
+        this.checkout(path, ...callbacks);
+        this.copy(path, ...callbacks);
+        this.lock(path, ...callbacks);
+        this.merge(path, ...callbacks);
+        this.mkactivity(path, ...callbacks);
+        this.mkcol(path, ...callbacks);
+        this.move(path, ...callbacks);
+        this['m-search'](path, ...callbacks);
+        this.notify(path, ...callbacks);
+        this.options(path, ...callbacks);
+        this.purge(path, ...callbacks);
+        this.search(path, ...callbacks);
+        this.subscribe(path, ...callbacks);
+        this.trace(path, ...callbacks);
+        this.unlock(path, ...callbacks);
+        this.unsubscribe(path, ...callbacks);
+    }
+
+    private mergeRoutes(
+        method: FindMyWay.HTTPMethod,
+        path: string,
+        ...callbacks: Array<
+            (req: Request, res: Response, next?: Function) => void
+        >
+    ) {
+        if (!this.router.hasRoute(method, path))
+            this.router.on(method, path, (req, res) => {}, { callbacks });
+        else {
+            const handler = this.router.findRoute(method, path);
+            this.router.off(method, path);
+            this.router.on(method, path, (req, res) => {}, {
+                callbacks: [...handler.store.callbacks, ...callbacks],
+            });
+        }
     }
 
     public get(
@@ -42,7 +92,8 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('GET', path, (req, res) => {}, { callbacks });
+        this.mergeRoutes('GET', path, ...callbacks);
+        this.mergeRoutes('HEAD', path, ...callbacks);
     }
 
     public post(
@@ -51,7 +102,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('POST', path, null, { callbacks });
+        this.mergeRoutes('POST', path, ...callbacks);
     }
 
     public put(
@@ -60,7 +111,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('PUT', path, null, { callbacks });
+        this.mergeRoutes('PUT', path, ...callbacks);
     }
 
     public delete(
@@ -69,7 +120,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('DELETE', path, null, { callbacks });
+        this.mergeRoutes('DELETE', path, ...callbacks);
     }
 
     public head(
@@ -78,7 +129,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('HEAD', path, null, { callbacks });
+        this.mergeRoutes('HEAD', path, ...callbacks);
     }
 
     public patch(
@@ -87,7 +138,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('PATCH', path, null, { callbacks });
+        this.mergeRoutes('PATCH', path, ...callbacks);
     }
 
     public checkout(
@@ -96,7 +147,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('CHECKOUT', path, null, { callbacks });
+        this.mergeRoutes('CHECKOUT', path, ...callbacks);
     }
 
     public copy(
@@ -105,7 +156,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('COPY', path, null, { callbacks });
+        this.mergeRoutes('COPY', path, ...callbacks);
     }
 
     public lock(
@@ -114,7 +165,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('LOCK', path, null, { callbacks });
+        this.mergeRoutes('LOCK', path, ...callbacks);
     }
 
     public merge(
@@ -123,7 +174,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('MERGE', path, null, { callbacks });
+        this.mergeRoutes('MERGE', path, ...callbacks);
     }
 
     public mkactivity(
@@ -132,7 +183,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('MKACTIVITY', path, null, { callbacks });
+        this.mergeRoutes('MKACTIVITY', path, ...callbacks);
     }
 
     public mkcol(
@@ -141,7 +192,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('MKCOL', path, null, { callbacks });
+        this.mergeRoutes('MKCOL', path, ...callbacks);
     }
 
     public move(
@@ -150,7 +201,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('MOVE', path, null, { callbacks });
+        this.mergeRoutes('MOVE', path, ...callbacks);
     }
 
     public 'm-search'(
@@ -159,7 +210,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('M-SEARCH', path, null, { callbacks });
+        this.mergeRoutes('M-SEARCH', path, ...callbacks);
     }
 
     public notify(
@@ -168,7 +219,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('NOTIFY', path, null, { callbacks });
+        this.mergeRoutes('NOTIFY', path, ...callbacks);
     }
 
     public options(
@@ -177,7 +228,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('OPTIONS', path, null, { callbacks });
+        this.mergeRoutes('OPTIONS', path, ...callbacks);
     }
 
     public purge(
@@ -186,7 +237,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('PURGE', path, null, { callbacks });
+        this.mergeRoutes('PURGE', path, ...callbacks);
     }
 
     public report(
@@ -195,7 +246,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('REPORT', path, null, { callbacks });
+        this.mergeRoutes('REPORT', path, ...callbacks);
     }
 
     public search(
@@ -204,7 +255,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('SEARCH', path, null, { callbacks });
+        this.mergeRoutes('SEARCH', path, ...callbacks);
     }
 
     public subscribe(
@@ -213,7 +264,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('SUBSCRIBE', path, null, { callbacks });
+        this.mergeRoutes('SUBSCRIBE', path, ...callbacks);
     }
 
     public trace(
@@ -222,7 +273,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('TRACE', path, null, { callbacks });
+        this.mergeRoutes('TRACE', path, ...callbacks);
     }
 
     public unlock(
@@ -231,7 +282,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('UNLOCK', path, null, { callbacks });
+        this.mergeRoutes('UNLOCK', path, ...callbacks);
     }
 
     public unsubscribe(
@@ -240,7 +291,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
-        this.router.on('UNSUBSCRIBE', path, null, { callbacks });
+        this.mergeRoutes('UNSUBSCRIBE', path, ...callbacks);
     }
 
     public async process(
@@ -252,18 +303,63 @@ export class Router {
         request: Request;
         response: Response;
         fn: Array<(req: Request, res: Response, next?: Function) => void>;
+        head?: boolean;
     } | null> {
+        if (req.method === 'OPTIONS') {
+            res.writeHead(204, {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods':
+                    'GET,HEAD,PUT,PATCH,POST,DELETE',
+                Vary: 'Access-Control-Request-Headers',
+                'Content-Length': '0',
+                Connection: 'close',
+                Date: new Date().toUTCString(),
+            });
+            res.end();
+            return null;
+        }
+
         const route = this.router.find(
             req.method as FindMyWay.HTTPMethod,
             req.url,
         );
 
-        if (route.store.callbacks && route.store.callbacks.length > 0) {
+        if (
+            route &&
+            route.store &&
+            route.store.callbacks &&
+            route.store.callbacks.length > 0
+        ) {
             const request = new Request(socket, req, res, body, {
                 ...route.params,
             });
+
             const response = new Response(socket, req, res);
-            return { request, response, fn: route.store.callbacks };
+
+            if (request.params) {
+                for (const key in request.params) {
+                    if (this.params.has(key)) {
+                        route.store.callbacks.unshift((req, res, next) => {
+                            const callback = this.params.get(key);
+                            callback(
+                                req,
+                                res,
+                                async () => {
+                                    next(req, res, next);
+                                },
+                                request.params[key],
+                            );
+                        });
+                    }
+                }
+            }
+
+            return {
+                request,
+                response,
+                fn: route.store.callbacks,
+                head: req.method === 'HEAD',
+            };
         }
 
         return null;

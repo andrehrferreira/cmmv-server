@@ -58,7 +58,7 @@ export class Response implements IRespose {
     public download(path: string, filename?: string) {}
 
     public end(data?: string, encoding?: string) {
-        this.buffer = Buffer.from(data, encoding);
+        this.buffer = data ? Buffer.from(data, encoding) : Buffer.from('');
     }
 
     public format(object: Object) {}
@@ -138,11 +138,18 @@ export class Response implements IRespose {
 
     public set(field: string | Object, value?: string): Response {
         if (typeof field == 'object') {
-            for (const key in field) this.headers[key] = field[key];
+            for (const key in field) {
+                if (!this.headers[key]) this.headers[key] = field[key];
+            }
         } else {
-            this.headers[field] = value;
+            if (!this.headers[field]) this.headers[field] = value;
         }
 
+        return this;
+    }
+
+    public header(field: string, value?: string): Response {
+        this.set(field, value);
         return this;
     }
 

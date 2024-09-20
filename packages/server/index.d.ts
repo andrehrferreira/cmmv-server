@@ -1,0 +1,14 @@
+export * from './interfaces';
+export * from './lib';
+import { default as ss } from '@cmmv/server-static';
+import { Router as router } from "./lib/router";
+import { Request, Response } from '.';
+import { ServerOptions } from './interfaces';
+declare const _default: (options?: ServerOptions) => import("./lib").ServerApplication;
+export default _default;
+export declare const application: (options?: ServerOptions) => import("./lib").ServerApplication;
+export declare const json: (options?: import("@cmmv/body-parser").BodyParserJSONOptions) => import("@cmmv/body-parser").CMMVBodyParserJSON;
+export declare const serverStatic: typeof ss;
+export declare const Router: typeof router;
+export declare const req: typeof Request;
+export declare const res: typeof Response;

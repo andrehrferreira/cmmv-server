@@ -1,6 +1,5 @@
 export * from './interfaces';
 export * from './lib';
-export * from './utils';
 
 /*!
  * CMMV
@@ -17,6 +16,7 @@ import { json as bodyParserJSON } from '@cmmv/body-parser';
 import { default as ss } from '@cmmv/server-static';
 import { EventEmitter } from 'events';
 import { CmmvServer } from './lib/application';
+import { Router as router } from './lib/router';
 
 import { Request, Response } from '.';
 import { ServerOptions } from './interfaces';
@@ -32,6 +32,7 @@ export default (options?: ServerOptions) => {
 export const application = CmmvServer;
 export const json = bodyParserJSON;
 export const serverStatic = ss;
+export const Router = router;
 
 export const req = Request;
 export const res = Response;

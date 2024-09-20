@@ -19,7 +19,8 @@ const sleep = (time) =>
 const BENCHMARK_PATH = join(process.cwd(), 'benchmarks');
 
 const LIBS = [
-	'cmmv-middlewares:6001', 'express-middlewares:6003'
+	'cmmv-middlewares:6001', 'express-middlewares:6003',
+	'fastify-middlewares:6004'
 ];
 
 async function runBenchmarkOfLib(lib) {

@@ -32,12 +32,12 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-/*app.post("/test", (req, res) => {
+app.post('/test', (req, res) => {
     console.log(req.body);
-    res.send("Ok");
+    res.send('Ok');
 });
 
-app.get("/test", (req, res) => res.sendFile("./public/test.html"));*/
+app.get('/test', (req, res) => res.sendFile('./public/test.html'));
 
 app.listen(3000, host, () => {
     console.log(`Listen on http://${host}:${port}`);
