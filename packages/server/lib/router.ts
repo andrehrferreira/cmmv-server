@@ -1,11 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import * as url from 'node:url';
 
-import * as qs from 'qs';
 import * as FindMyWay from 'find-my-way';
 
-import { BiIndexMap } from '../utils';
 import { Request } from './request';
 import { Response } from './response';
 import { ServerApplication } from './application';

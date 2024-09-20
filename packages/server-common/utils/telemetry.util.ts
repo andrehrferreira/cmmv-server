@@ -17,7 +17,7 @@ export class Telemetry extends Singleton {
     }
 
     public static start(label: string, requestId?: string): void {
-        if (requestId) {
+        if (requestId && process.env.NODE_ENV === 'dev') {
             const telemetry = Telemetry.getInstance();
 
             if (!telemetry.records.has(requestId))
@@ -32,7 +32,7 @@ export class Telemetry extends Singleton {
     }
 
     public static end(label: string, requestId?: string): void {
-        if (requestId) {
+        if (requestId && process.env.NODE_ENV === 'dev') {
             const telemetry = Telemetry.getInstance();
             const record = telemetry.records
                 .get(requestId)
@@ -43,7 +43,7 @@ export class Telemetry extends Singleton {
     }
 
     public static getTelemetry(requestId?: string): TelemetryRecord[] | null {
-        if (requestId) {
+        if (requestId && process.env.NODE_ENV === 'dev') {
             const telemetry = Telemetry.getInstance();
             return telemetry.records.get(requestId) || null;
         } else {
@@ -52,7 +52,7 @@ export class Telemetry extends Singleton {
     }
 
     public static clearTelemetry(requestId?: string): boolean {
-        if (requestId) {
+        if (requestId && process.env.NODE_ENV === 'dev') {
             const telemetry = Telemetry.getInstance();
 
             if (telemetry.records.has(requestId))
@@ -71,34 +71,34 @@ export class Telemetry extends Singleton {
     }
 
     public static table(requestId?: string) {
-        const telemetry = Telemetry.getInstance();
-        const serverMetric = telemetry.records.get(requestId);
+        if (process.env.NODE_ENV === 'dev') {
+            const telemetry = Telemetry.getInstance();
+            const serverMetric = telemetry.records.get(requestId);
 
-        let metrics = {};
+            let metrics = {};
 
-        if (serverMetric?.length > 0) {
-            serverMetric.forEach(item => {
-                metrics[item.label] = {
-                    start: item.startTime,
-                    end: item.endTime || Date.now(),
-                    duration: (item.endTime || Date.now()) - item.startTime,
+            if (serverMetric?.length > 0) {
+                serverMetric.forEach(item => {
+                    metrics[item.label] = {
+                        start: item.startTime,
+                        end: item.endTime || Date.now(),
+                        duration: (item.endTime || Date.now()) - item.startTime,
+                    };
+                });
+            }
+
+            metrics = { ...metrics };
+
+            let totalDuration = 0;
+            const summary = Object.keys(metrics).map(key => {
+                const duration = metrics[key].duration;
+                totalDuration += duration;
+                return {
+                    Process: key,
+                    Duration: `${duration.toFixed(2)} ms`,
                 };
             });
-        }
 
-        metrics = { ...metrics };
-
-        let totalDuration = 0;
-        const summary = Object.keys(metrics).map(key => {
-            const duration = metrics[key].duration;
-            totalDuration += duration;
-            return {
-                Process: key,
-                Duration: `${duration.toFixed(2)} ms`,
-            };
-        });
-
-        if (process.env.NODE_ENV === 'dev') {
             console.table(summary);
         }
     }

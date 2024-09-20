@@ -89,8 +89,7 @@ export class ServerApplication implements IServerApplication {
         req: http.IncomingMessage | http2.Http2ServerRequest,
         res: http.ServerResponse | http2.Http2ServerResponse,
     ) {
-        const path = req.url;
-        const hasFileExtension = /\.\w+$/.test(path);
+        const hasFileExtension = /\.\w+$/.test(req.url);
         res.setHeader('Req-UUID', Telemetry.generateId());
 
         if (hasFileExtension && this.staticServer) {
