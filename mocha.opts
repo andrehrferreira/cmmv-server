@@ -1,1 +1,1 @@
---ignore **/node_modules/** --trace-warnings
+--ignore **/node_modules/** --trace-warnings --exit
