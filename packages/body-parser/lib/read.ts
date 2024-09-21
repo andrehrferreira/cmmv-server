@@ -24,12 +24,10 @@ export function read(req, res, next, parse, options) {
     const opts = options;
     let stream;
 
-    // read options
     const encoding = opts.encoding !== null ? opts.encoding : null;
     const verify = opts.verify;
 
     try {
-        // get the content stream
         stream = contentstream(req, opts.inflate);
         length = stream.length;
         stream.length = undefined;
@@ -37,7 +35,6 @@ export function read(req, res, next, parse, options) {
         return next(err);
     }
 
-    // set raw-body options
     opts.length = length;
     opts.encoding = verify ? null : encoding;
 

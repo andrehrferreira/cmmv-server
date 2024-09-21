@@ -8,6 +8,7 @@
  */
 
 import * as http from 'node:http';
+import * as http2 from 'node:http2';
 
 import * as typeis from 'type-is';
 import * as bytes from 'bytes';
@@ -31,6 +32,7 @@ export interface BodyParserJSONOptions {
     strict?: boolean;
     type?: string;
     verify?: boolean | Function;
+    express?: boolean;
 }
 
 const FIRST_CHAR_REGEXP = /^[\x20\x09\x0a\x0d]*([^\x20\x09\x0a\x0d])/; // eslint-disable-line no-control-regex
@@ -55,33 +57,50 @@ export class CMMVBodyParserJSON extends ServerMiddleware {
             strict: options?.strict !== false,
             type: options?.type || 'application/json',
             verify: options?.verify || false,
+            express: options?.express || false,
         };
     }
 
-    async process(req: IRequest, res: IRespose, next?: INext) {
-        if (isFinished(req.httpRequest as http.IncomingMessage)) {
+    async process(
+        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
+        res: IRespose | http.ServerResponse | http2.Http2ServerResponse,
+        next?: INext,
+    ) {
+        const reqTest =
+            req instanceof http.IncomingMessage ||
+            req instanceof http2.Http2ServerRequest
+                ? req
+                : req.httpRequest;
+        const resTest =
+            res instanceof http.ServerResponse ||
+            res instanceof http2.Http2ServerResponse
+                ? res
+                : res.httpResponse;
+
+        if (isFinished(reqTest as http.IncomingMessage)) {
             next();
             return;
         }
 
-        if (!('body' in req.httpRequest)) req.httpRequest['body'] = undefined;
+        if (!('body' in reqTest)) reqTest['body'] = undefined;
 
-        if (!typeis.hasBody(req.httpRequest as http.IncomingMessage)) {
+        if (!typeis.hasBody(reqTest as http.IncomingMessage)) {
             next();
             return;
         }
 
         const shouldParse =
-            typeof this.options.type !== 'function'
+            typeof this.options?.type !== 'function'
                 ? this.typeChecker(this.options.type)
                 : this.options.type;
 
-        if (!shouldParse(req)) {
+        if (!shouldParse(reqTest)) {
             next();
             return;
         }
 
-        const charset = this.getCharset(req) || 'utf-8';
+        const charset = this.getCharset(reqTest) || 'utf-8';
+
         if (charset.slice(0, 4) !== 'utf-') {
             next(
                 createError(
@@ -96,7 +115,7 @@ export class CMMVBodyParserJSON extends ServerMiddleware {
             return;
         }
 
-        read(req.httpRequest, res.httpResponse, next, this.parse, {
+        read(reqTest, resTest, next, this.parse.bind(this), {
             encoding: charset,
             inflate: this.options.inflate,
             limit: this.options.limit,
@@ -183,10 +202,17 @@ export class CMMVBodyParserJSON extends ServerMiddleware {
      * @param {object} req
      * @api private
      */
-    private getCharset(req: IRequest) {
+    private getCharset(
+        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
+    ) {
         try {
             return (
-                contentType.parse(req.httpRequest).parameters.charset || ''
+                contentType.parse(
+                    req instanceof http.IncomingMessage ||
+                        req instanceof http2.Http2ServerRequest
+                        ? req
+                        : req.httpRequest,
+                ).parameters.charset || ''
             ).toLowerCase();
         } catch (e) {
             return undefined;

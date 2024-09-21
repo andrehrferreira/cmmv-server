@@ -16,6 +16,7 @@
     },
     "homepage": "https://cmmv.io",
     "dependencies": {
+        "async_hooks": "^1.0.0",
         "bytes": "^3.1.2",
         "content-type": "^1.0.5",
         "destroy": "^1.2.0",

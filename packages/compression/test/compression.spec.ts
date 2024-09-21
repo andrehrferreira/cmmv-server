@@ -1,3 +1,7 @@
+/**
+ * @see https://github.com/expressjs/compression/blob/master/test/compression.js
+ */
+
 import { strict as assert } from 'assert';
 
 import * as http from 'node:http';
