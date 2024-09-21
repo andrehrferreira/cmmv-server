@@ -1,3 +1,7 @@
+/**
+ * @see https://github.com/expressjs/express/blob/master/test/app.request.js
+ */
+
 import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
@@ -6,7 +10,7 @@ import { CmmvServer } from '..';
 
 describe('app', function () {
     describe('.request', function () {
-        it('should extend the request prototype', function (done) {
+        /*it('should extend the request prototype', function (done) {
             var app = CmmvServer();
 
             app.request.querystring = function () {
@@ -20,7 +24,7 @@ describe('app', function () {
             request(app.socket).get('/foo?name=tobi').expect('name=tobi', done);
         });
 
-        /*it('should only extend for the referenced app', function (done) {
+        it('should only extend for the referenced app', function (done) {
             var app1 = CmmvServer()
             var app2 = CmmvServer()
             var cb = after(2, done)

@@ -1,3 +1,7 @@
+/**
+ * @see https://github.com/expressjs/express/blob/master/test/app.head.js
+ */
+
 import { strict as assert } from 'assert';
 
 import * as request from 'supertest';

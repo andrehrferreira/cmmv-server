@@ -2,7 +2,6 @@ import * as http from 'node:http';
 import * as https from 'node:https';
 import * as http2 from 'node:http2';
 import * as zlib from 'node:zlib';
-import * as net from 'node:net';
 
 import * as querystring from 'qs';
 import * as formidable from 'formidable';
@@ -290,47 +289,70 @@ export class ServerApplication implements IServerApplication {
                         index: number,
                         after: boolean = false,
                     ) => {
-                        if (index < this.middlewaresArr.length && route) {
-                            const middleware = this.middlewaresArr[index];
+                        if (!res.headersSent) {
+                            if (index < this.middlewaresArr.length && route) {
+                                const middleware = this.middlewaresArr[index];
 
-                            if (!route.response.sended) {
-                                if (
-                                    middleware instanceof ServerMiddleware &&
-                                    middleware?.afterProcess === after
-                                ) {
-                                    middleware.process(
-                                        route.request,
-                                        route.response,
-                                        () =>
-                                            processMiddleware(index + 1, after),
-                                    );
-                                } else if (typeof middleware === 'function') {
-                                    if (middleware.length === 4) {
-                                        //compatibility Expressjs
-                                        middleware(null, route, route, () =>
-                                            processMiddleware(index + 1, after),
+                                if (!route.response.sended) {
+                                    if (
+                                        middleware instanceof
+                                            ServerMiddleware &&
+                                        middleware?.afterProcess === after
+                                    ) {
+                                        middleware.process(
+                                            route.request,
+                                            route.response,
+                                            () =>
+                                                processMiddleware(
+                                                    index + 1,
+                                                    after,
+                                                ),
                                         );
+                                    } else if (
+                                        typeof middleware === 'function'
+                                    ) {
+                                        if (middleware.length === 4) {
+                                            //compatibility Expressjs
+                                            middleware(null, route, route, () =>
+                                                processMiddleware(
+                                                    index + 1,
+                                                    after,
+                                                ),
+                                            );
+                                        } else {
+                                            middleware(route, route, () =>
+                                                processMiddleware(
+                                                    index + 1,
+                                                    after,
+                                                ),
+                                            );
+                                        }
                                     } else {
-                                        middleware(route, route, () =>
-                                            processMiddleware(index + 1, after),
-                                        );
+                                        processMiddleware(index + 1, after);
                                     }
-                                } else {
-                                    processMiddleware(index + 1, after);
                                 }
-                            }
-                        } else if (route) {
-                            if (!route.response.sended) {
-                                if (!after) {
-                                    await this.runFunctions(
-                                        route.fn,
-                                        route.request,
-                                        route.response,
-                                    );
+                            } else if (route) {
+                                if (!route.response.sended) {
+                                    if (!after) {
+                                        await this.runFunctions(
+                                            route.fn,
+                                            route.request,
+                                            route.response,
+                                        );
 
-                                    if (!route.response.sended)
-                                        processMiddleware(0, true);
-                                    else {
+                                        if (!route.response.sended)
+                                            processMiddleware(0, true);
+                                        else {
+                                            res.writeHead(
+                                                route.response.statusCode,
+                                            );
+                                            res.end(
+                                                route.head === true
+                                                    ? ''
+                                                    : route.response.buffer,
+                                            );
+                                        }
+                                    } else if (route) {
                                         res.writeHead(
                                             route.response.statusCode,
                                         );
@@ -339,22 +361,47 @@ export class ServerApplication implements IServerApplication {
                                                 ? ''
                                                 : route.response.buffer,
                                         );
+                                    } else {
+                                        res.writeHead(HTTP_STATUS_NOT_FOUND);
+                                        res.end('Not Found');
                                     }
-                                } else if (route) {
-                                    res.writeHead(route.response.statusCode);
-                                    res.end(
-                                        route.head === true
-                                            ? ''
-                                            : route.response.buffer,
-                                    );
-                                } else {
-                                    res.writeHead(HTTP_STATUS_NOT_FOUND);
-                                    res.end('Not Found');
                                 }
+                            } else if (
+                                this.middlewaresArr.length > 0 &&
+                                index < this.middlewaresArr.length
+                            ) {
+                                const middleware = this.middlewaresArr[index];
+
+                                if (typeof middleware === 'function') {
+                                    const request = new Request(
+                                        this,
+                                        req,
+                                        res,
+                                        body,
+                                    );
+                                    const response = new Response(
+                                        this,
+                                        req,
+                                        res,
+                                    );
+
+                                    if (!response.sended) {
+                                        mixin(request, this._request, false);
+                                        mixin(response, this._response, false);
+                                        middleware.call(
+                                            this,
+                                            request,
+                                            response,
+                                            processMiddleware(index + 1, after),
+                                        );
+
+                                        res.writeHead(response.statusCode);
+                                        res.end(response.buffer);
+                                    }
+                                } else processMiddleware(index + 1, after);
                             }
                         } else {
-                            res.writeHead(HTTP_STATUS_NOT_FOUND);
-                            res.end('Not Found');
+                            processMiddleware(index + 1, after);
                         }
                     };
 
@@ -387,6 +434,8 @@ export class ServerApplication implements IServerApplication {
                                 res.end('Not Found');
                             }
                         }
+                    } else if (this.middlewaresArr.length > 0) {
+                        processMiddleware(0);
                     } else {
                         res.writeHead(HTTP_STATUS_NOT_FOUND);
                         res.end('Not Found');
@@ -424,7 +473,8 @@ export class ServerApplication implements IServerApplication {
             | Router
             | ServerStaticMiddleware
             | Function
-            | string,
+            | string
+            | ServerApplication,
         parent?: ServerApplication,
     ): void {
         if (app instanceof Router) {
@@ -436,13 +486,16 @@ export class ServerApplication implements IServerApplication {
             typeof app === 'string'
         ) {
             this.parent = parent;
+        } else if (app instanceof ServerApplication) {
+            this.parent = app;
+            app.emit('mount', this);
         } else if (app instanceof ServerMiddleware) {
             this.middlewares.add(app);
             this.middlewaresArr = Array.from(this.middlewares);
         } else if (typeof app === 'function') {
-            console.warn(
+            /*console.warn(
                 'The use of generic middlewares was maintained for compatibility but its use is not recommended, change to ServerMiddleware',
-            );
+            );*/
             this.middlewares.add(app);
             this.middlewaresArr = Array.from(this.middlewares);
         } else {

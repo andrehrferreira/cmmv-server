@@ -1,3 +1,7 @@
+/**
+ * @see https://github.com/expressjs/express/blob/master/test/app.param.js
+ */
+
 import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
@@ -17,12 +21,12 @@ describe('app', function () {
             });
 
             app.get('/post/:id', function (req, res) {
-                var id = req.params.id;
+                const id = req.params.id;
                 res.send(typeof id + ':' + id);
             });
 
             app.get('/user/:uid', function (req, res) {
-                var id = req.params.id;
+                const id = req.params.id;
                 res.send(typeof id + ':' + id);
             });
 
@@ -49,7 +53,7 @@ describe('app', function () {
             });
 
             app.get('/user/:id', function (req, res) {
-                var id = req.params.id;
+                const id = req.params.id;
                 res.send(typeof id + ':' + id);
             });
 
@@ -127,6 +131,7 @@ describe('app', function () {
             app.get('/:user', function (req, res, next) {
                 next('route');
             });
+
             app.get('/:user', function (req, res) {
                 res.send(req.params.user);
             });
@@ -168,7 +173,7 @@ describe('app', function () {
             });
 
             app.get('/user/:name', function (req, res) {
-                var name = req.params.name;
+                const name = req.params.name;
                 res.send('' + name);
             });
 
@@ -183,7 +188,7 @@ describe('app', function () {
             });
 
             app.get('/user/:id', function (req, res) {
-                var id = req.params.id;
+                const id = req.params.id;
                 res.send('' + id);
             });
 
@@ -202,7 +207,7 @@ describe('app', function () {
             });
 
             app.get('/user/:id', function (req, res) {
-                var id = req.params.id;
+                const id = req.params.id;
                 res.send('' + id);
             });
 

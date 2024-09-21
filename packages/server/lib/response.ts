@@ -87,6 +87,8 @@ export class Response implements IRespose {
 
     public send(body?: string | Object | Buffer) {
         if (!this.sended) {
+            this.sended = true;
+
             if (typeof body === 'object') {
                 if (
                     !this.headers['Content-Type'] &&

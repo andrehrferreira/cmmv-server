@@ -66,7 +66,7 @@ describe('compression()', function () {
     });
 
     it('should set Vary even if Accept-Encoding is not set', function (done) {
-        var server = createServer({ threshold: 1000 }, function (req, res) {
+        const server = createServer({ threshold: 1000 }, function (req, res) {
             res.setHeader('Content-Type', 'text/plain');
             res.end('hello, world');
         });
@@ -79,7 +79,7 @@ describe('compression()', function () {
     });
 
     it('should not set Vary if Content-Type does not pass filter', function (done) {
-        var server = createServer(null, function (req, res) {
+        const server = createServer(null, function (req, res) {
             res.setHeader('Content-Type', 'image/jpeg');
             res.end();
         });
