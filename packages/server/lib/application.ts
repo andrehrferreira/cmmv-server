@@ -285,6 +285,14 @@ export class ServerApplication implements IServerApplication {
             .process(this, req, res, body)
             .then(async route => {
                 try {
+                    const hasAfterProcess = this.middlewaresArr.some(
+                        middleware => {
+                            if (middleware instanceof ServerMiddleware)
+                                return middleware.afterProcess === true;
+                            else return false;
+                        },
+                    );
+
                     const processMiddleware = async (
                         index: number,
                         after: boolean = false,
@@ -293,7 +301,7 @@ export class ServerApplication implements IServerApplication {
                             if (index < this.middlewaresArr.length && route) {
                                 const middleware = this.middlewaresArr[index];
 
-                                if (!route.response.sended) {
+                                if (!route.response.sended || after) {
                                     if (
                                         middleware instanceof
                                             ServerMiddleware &&
@@ -330,9 +338,13 @@ export class ServerApplication implements IServerApplication {
                                     } else {
                                         processMiddleware(index + 1, after);
                                     }
+                                } else {
+                                    console.error(
+                                        `Dont process ${(middleware as ServerMiddleware).middlewareName}`,
+                                    );
                                 }
                             } else if (route) {
-                                if (!route.response.sended) {
+                                if (!route.response.sended || hasAfterProcess) {
                                     if (!after) {
                                         await this.runFunctions(
                                             route.fn,
@@ -340,7 +352,10 @@ export class ServerApplication implements IServerApplication {
                                             route.response,
                                         );
 
-                                        if (!route.response.sended)
+                                        if (
+                                            !route.response.sended ||
+                                            hasAfterProcess
+                                        )
                                             processMiddleware(0, true);
                                         else {
                                             res.writeHead(
@@ -441,6 +456,7 @@ export class ServerApplication implements IServerApplication {
                         res.end('Not Found');
                     }
                 } catch (err) {
+                    console.log(err);
                     if (process.env.NODE_ENV === 'dev') console.error(err);
 
                     res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);

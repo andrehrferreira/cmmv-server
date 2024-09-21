@@ -20,7 +20,7 @@ const host = '0.0.0.0';
 const port = 3000;
 
 app.use(json({ limit: '50mb' }));
-app.use(compression());
+app.use(compression({ threshold: 0 }));
 app.use(serverStatic('public'));
 
 app.get('/docs/:id', (req, res) => {

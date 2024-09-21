@@ -9,11 +9,9 @@ import * as zlib from 'node:zlib';
 
 import * as request from 'supertest';
 
-import compression from '../index';
+import compression, { CMMVCompression } from '../index';
 
 import { Request, Response } from '@cmmv/server';
-
-const onHeaders = require('on-headers');
 
 describe('compression()', function () {
     it('should skip HEAD', function (done) {
@@ -97,19 +95,39 @@ describe('compression()', function () {
 
 function createServer(opts, fn) {
     const _compression = compression(opts);
+    const express = opts && opts.express === true;
+
     return http.createServer(async (req, res) => {
-        const request = new Request(null, req, res, null);
-        const response = new Response(null, req, res);
-        await fn(request, response);
-        let callFn = false;
+        if (!express) {
+            const request = new Request(null, req, res, null);
+            const response = new Response(null, req, res);
+            await fn(request, response);
+            let callFn = false;
 
-        await _compression.process(request, response, () => {
-            callFn = true;
-            res.writeHead(200);
-            res.end(response.buffer);
-        });
+            await (_compression as CMMVCompression).process(
+                request,
+                response,
+                () => {
+                    callFn = true;
+                    res.writeHead(response.statusCode);
+                    res.end(response.buffer);
+                },
+            );
 
-        if (!callFn) fn(req, res);
+            if (!callFn) fn(req, res);
+        } else if (typeof _compression === 'function') {
+            let callFn = false;
+
+            _compression(req, res, err => {
+                if (err) {
+                    res.statusCode = err.status || 500;
+                    res.end(err.message);
+                    return;
+                }
+
+                fn(req, res);
+            });
+        }
 
         return;
     });

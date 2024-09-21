@@ -23,4 +23,5 @@ export interface IRequest {
     stale: boolean;
     subdomains: string[];
     xhr: boolean;
+    getHeader(name?: string): string | null;
 }

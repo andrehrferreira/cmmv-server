@@ -9,4 +9,5 @@ export interface IRespose {
     readonly req: http.IncomingMessage | http2.Http2ServerRequest;
     readonly res: http.ServerResponse | http2.Http2ServerResponse;
     append(appendName: string, value: any);
+    getHeader(headerName: string);
 }

@@ -1,4 +1,5 @@
 import * as http from 'node:http';
+import * as http2 from 'node:http2';
 
 import { IRequest, IRespose } from '../interfaces';
 
@@ -8,8 +9,8 @@ export abstract class ServerMiddleware {
     public afterProcess: boolean = false;
     abstract middlewareName: string;
     abstract process(
-        req: IRequest | http.IncomingMessage,
-        res: IRespose | http.ServerResponse,
+        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
+        res: IRespose | http.ServerResponse | http2.Http2ServerResponse,
         next?: INext | Function,
     );
 }

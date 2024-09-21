@@ -69,6 +69,10 @@ export class Response implements IRespose {
         return this.headers[headerName];
     }
 
+    public getHeader(headerName: string) {
+        return this.headers[headerName];
+    }
+
     public json(body?: any) {}
 
     public jsonp(body?: any) {}

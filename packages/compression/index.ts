@@ -17,31 +17,36 @@ import * as bytes from 'bytes';
 import { Buffer } from 'safe-buffer';
 
 import * as http from 'node:http';
+import * as http2 from 'node:http2';
 import * as zlib from 'node:zlib';
 import * as crypto from 'node:crypto';
 
-import { ServerMiddleware, INext } from '@cmmv/server-common';
+import {
+    ServerMiddleware,
+    INext,
+    IRequest,
+    IRespose,
+} from '@cmmv/server-common';
 
 import { Request, Response } from '@cmmv/server';
 
-type CompressOptions = zlib.ZlibOptions & {
+export type CompressionOptions = zlib.ZlibOptions & {
     threshold?: number;
+    express?: boolean;
     cacheEnabled?: boolean;
     cacheTimeout?: number;
 };
 
-class CMMVCompression extends ServerMiddleware {
+export class CMMVCompression extends ServerMiddleware {
     public middlewareName: string = 'compression';
 
     public override afterProcess: boolean = true;
 
-    private options: CompressOptions;
+    private options: CompressionOptions;
     private cache: Map<string, { buffer: Buffer; timestamp: number }> =
         new Map();
-    private cacheEnabled: boolean;
-    private cacheTimeout: number;
 
-    constructor(options?: CompressOptions) {
+    constructor(options?: CompressionOptions) {
         super();
         this.options = options || {};
 
@@ -53,73 +58,124 @@ class CMMVCompression extends ServerMiddleware {
         if (this.options.threshold == null) this.options.threshold = 1024;
     }
 
-    async process(req: Request, res: Response, next?: INext) {
-        const accept = accepts(req.httpRequest as http.IncomingMessage);
-        let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
+    async process(
+        req: Request | http.IncomingMessage | http2.Http2ServerRequest,
+        res: Response | http.ServerResponse | http2.Http2ServerResponse,
+        next?: INext,
+    ) {
+        try {
+            const reqTest =
+                req instanceof http.IncomingMessage ||
+                req instanceof http2.Http2ServerRequest
+                    ? req
+                    : req.httpRequest;
+            const resTest =
+                res instanceof http.ServerResponse ||
+                res instanceof http2.Http2ServerResponse
+                    ? res
+                    : res.httpResponse;
 
-        if (method === 'gzip' && accept.encoding(['br'])) method = 'br';
+            const acceptHeader =
+                req instanceof Request
+                    ? req.getHeader('accept-encoding')
+                    : req.headers['accept-encoding'];
+            const accept = accepts(
+                (req instanceof Request
+                    ? req.httpRequest
+                    : req) as http.IncomingMessage,
+            );
+            let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
-        if (req.method === 'HEAD') {
-            next();
-            return;
-        } else if (this.filter(res) && this.shouldTransform(res)) {
-            vary(res.httpResponse as http.ServerResponse, 'Accept-Encoding');
+            if (method === 'gzip' && accept.encoding(['br'])) method = 'br';
 
-            const encoding = res.get('Content-Encoding') || 'identity';
+            console.log(this.filter(res), this.shouldTransform(res));
+            if (this.filter(res) && this.shouldTransform(res)) {
+                vary(resTest as http.ServerResponse, 'Accept-Encoding');
 
-            if (res.buffer.length < this.options.threshold) {
-                next();
-                return;
-            }
-
-            if (encoding !== 'identity') {
-                next();
-                return;
-            }
-
-            if (!method || method === 'identity') {
-                next();
-                return;
-            }
-
-            const hashKey = this.generateHash(method, res.buffer);
-
-            if (this.options.cacheEnabled && this.cache.has(hashKey)) {
-                const cacheEntry = this.cache.get(hashKey);
-
-                if (
-                    Date.now() - cacheEntry.timestamp <
-                    this.options.cacheTimeout
-                ) {
-                    res.set('Content-Encoding', method);
-                    res.remove('Content-Length');
-                    res.buffer = cacheEntry.buffer;
+                if (req.method === 'HEAD') {
                     next();
                     return;
+                }
+
+                const encoding =
+                    res.getHeader('Content-Encoding') || 'identity';
+                const contentLenght = res.getHeader('Content-Length');
+
+                if (
+                    (Number(contentLenght) < this.options.threshold &&
+                        !Number.isNaN(contentLenght)) ||
+                    (res instanceof Response &&
+                        res.buffer.length < this.options.threshold)
+                ) {
+                    next();
+                    return;
+                }
+
+                if (encoding !== 'identity') {
+                    next();
+                    return;
+                }
+
+                if (!method || method === 'identity') {
+                    next();
+                    return;
+                }
+
+                if (res instanceof Response) {
+                    const hashKey = this.generateHash(method, res.buffer);
+
+                    if (this.options.cacheEnabled && this.cache.has(hashKey)) {
+                        const cacheEntry = this.cache.get(hashKey);
+
+                        if (
+                            Date.now() - cacheEntry.timestamp <
+                            this.options.cacheTimeout
+                        ) {
+                            resTest.setHeader('Content-Encoding', method);
+                            resTest.removeHeader('Content-Length');
+
+                            if (res instanceof Response) {
+                                res.set('Content-Encoding', method);
+                                res.remove('Content-Length');
+                                res.buffer = cacheEntry.buffer;
+                            }
+
+                            next();
+                            return;
+                        } else {
+                            this.cache.delete(hashKey);
+                        }
+                    }
+                }
+
+                const stream = this.createCompressionStream(method);
+
+                if (!stream) {
+                    next();
+                    return;
+                }
+
+                if (res instanceof Response) {
+                    res.set('Content-Encoding', method);
+                    res.remove('Content-Length');
+
+                    const compressedBuffer = await this.compressData(
+                        res.buffer,
+                        stream,
+                    );
+
+                    res.buffer = compressedBuffer;
                 } else {
-                    this.cache.delete(hashKey);
+                    resTest.setHeader('Content-Encoding', method);
+                    resTest.removeHeader('Content-Length');
                 }
             }
 
-            const stream = this.createCompressionStream(method);
-
-            if (!stream) {
-                next();
-                return;
-            }
-
-            res.set('Content-Encoding', method);
-            res.remove('Content-Length');
-
-            const compressedBuffer = await this.compressData(
-                res.buffer,
-                stream,
-            );
-
-            res.buffer = compressedBuffer;
+            next();
+        } catch (err) {
+            console.error(err);
+            next();
         }
-
-        next();
     }
 
     createCompressionStream(method: string) {
@@ -158,13 +214,17 @@ class CMMVCompression extends ServerMiddleware {
         });
     }
 
-    filter(res: Response) {
-        const type = res.get('Content-Type');
+    filter(res: any) {
+        const type =
+            res.getHeader('Content-Type') || res.headers['Content-Type'];
+        console.log(type);
         return !(type === undefined || !compressible(type));
     }
 
-    shouldTransform(res: Response) {
-        const cacheControl = res.get('Cache-Control');
+    shouldTransform(res: any) {
+        const cacheControl =
+            res.getHeader('Cache-Control') || res.headers['Cache-Control'];
+        console.log(cacheControl);
         return (
             !cacheControl ||
             !/(?:^|,)\s*?no-transform\s*?(?:,|$)/.test(cacheControl as string)
@@ -187,6 +247,10 @@ class CMMVCompression extends ServerMiddleware {
     }
 }
 
-export default function (options?: CompressOptions) {
-    return new CMMVCompression(options);
+export default function (options?: CompressionOptions) {
+    const middleware = new CMMVCompression(options);
+
+    if (options?.express === true)
+        return (req, res, next) => middleware.process(req, res, next);
+    else return middleware;
 }

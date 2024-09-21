@@ -97,4 +97,8 @@ export class Request implements IRequest {
 
         return false;
     }
+
+    getHeader(name): string | null {
+        return this.req.headers[name] as string;
+    }
 }
