@@ -682,8 +682,8 @@ export class Router {
             }
         }
 
-        /* eslint-disable-next-line prefer-rest-params */
         const callbacks = flatten(
+            /* eslint-disable-next-line prefer-rest-params */
             Array.prototype.slice.call(arguments, offset),
         );
 

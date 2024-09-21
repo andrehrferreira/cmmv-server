@@ -36,6 +36,8 @@ export interface BodyParserUrlEncodedOptions {
     express?: boolean;
     interpretNumericEntities?: boolean;
     charsetSentinel?: boolean;
+    depth?: number;
+    parameterLimit?: number;
 }
 
 export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
@@ -59,6 +61,15 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
             express: options?.express || false,
             interpretNumericEntities: options?.interpretNumericEntities,
             charsetSentinel: options?.charsetSentinel,
+            depth: Boolean(options?.extended)
+                ? options.depth !== undefined
+                    ? options.depth
+                    : 32
+                : 0,
+            parameterLimit:
+                options.parameterLimit !== undefined
+                    ? options.parameterLimit
+                    : 1000,
         };
     }
 
@@ -97,8 +108,8 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
                 ? this.typeChecker(this.options.type)
                 : this.options.type;
 
-        function parse(buf) {
-            return buf;
+        function parse(body, encoding) {
+            return body.length ? queryparse(body, encoding) : {};
         }
 
         if (isFinished(reqTest as http.IncomingMessage)) {
@@ -175,8 +186,29 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
 
         if (isFinite(parameterLimit)) parameterLimit = parameterLimit | 0;
 
-        return (body, encoding) => {
-            const paramCount = this.parameterCount(body, parameterLimit);
+        return function (body, encoding) {
+            /**
+             * Count the number of parameters, stopping once limit reached
+             *
+             * @param {string} body
+             * @param {number} limit
+             * @api private
+             */
+            function parameterCount(body, limit) {
+                let count = 0;
+                let index = 0;
+
+                while ((index = body.indexOf('&', index)) !== -1) {
+                    count++;
+                    index++;
+
+                    if (count === limit) return undefined;
+                }
+
+                return count;
+            }
+
+            const paramCount = parameterCount(body, parameterLimit);
 
             if (paramCount === undefined) {
                 throw createError(413, 'too many parameters', {
@@ -207,27 +239,6 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
                 }
             }
         };
-    }
-
-    /**
-     * Count the number of parameters, stopping once limit reached
-     *
-     * @param {string} body
-     * @param {number} limit
-     * @api private
-     */
-    parameterCount(body, limit) {
-        let count = 0;
-        let index = 0;
-
-        while ((index = body.indexOf('&', index)) !== -1) {
-            count++;
-            index++;
-
-            if (count === limit) return undefined;
-        }
-
-        return count;
     }
 
     /**
@@ -268,6 +279,13 @@ export default function (options?: BodyParserUrlEncodedOptions) {
         typeof options.verify !== 'function'
     ) {
         throw new TypeError('option verify must be function');
+    }
+
+    const parameterLimit =
+        options.parameterLimit !== undefined ? options.parameterLimit : 1000;
+
+    if (isNaN(parameterLimit) || parameterLimit < 1) {
+        throw new TypeError('option parameterLimit must be a positive number');
     }
 
     return new CMMVBodyParserUrlEncoded(options);
