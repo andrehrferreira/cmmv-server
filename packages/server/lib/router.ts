@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Http2ServerRequest, Http2ServerResponse } from 'http2';
+import { Http2ServerRequest, Http2ServerResponse, constants } from 'http2';
 
 import * as FindMyWay from 'find-my-way';
 import { flatten } from 'array-flatten';
@@ -10,6 +10,8 @@ import { ServerApplication } from './application';
 
 const mixin = require('merge-descriptors');
 
+const { HTTP_STATUS_INTERNAL_SERVER_ERROR } = constants;
+
 export class Router {
     public router: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
     public registeredRoutes: {
@@ -17,15 +19,20 @@ export class Router {
         path: string;
         options: any;
     }[] = [];
-    public params: Map<string, Function> = new Map<string, Function>();
+    public params: Map<string, Function[]> = new Map<string, Function[]>();
 
     public stack: Map<FindMyWay.HTTPMethod, Array<Function>> = new Map<
         FindMyWay.HTTPMethod,
         Array<Function>
     >();
 
+    public optionsAllow: Map<string, Set<string>> = new Map<
+        string,
+        Set<string>
+    >();
     public wildcard: Array<Function> = new Array<Function>();
     public parent: Router;
+    private allBind = false;
 
     constructor(private path: string = '') {
         if (!this.router) {
@@ -42,10 +49,25 @@ export class Router {
 
     public param(valueOrObject: string | string[], cb) {
         //compatibility Expressjs
-        if (typeof valueOrObject === 'string')
-            this.params.set(valueOrObject, cb);
-        else if (Array.isArray(valueOrObject)) {
-            valueOrObject.forEach(item => this.params.set(item, cb));
+        if (
+            typeof valueOrObject === 'string' &&
+            !this.params.has(valueOrObject)
+        )
+            this.params.set(valueOrObject, []);
+
+        if (typeof valueOrObject === 'string') {
+            const stack = this.params.get(valueOrObject);
+            stack.push(cb);
+            this.params.set(valueOrObject, stack);
+        } else if (Array.isArray(valueOrObject)) {
+            valueOrObject.forEach(item => {
+                if (typeof item === 'string' && !this.params.has(item))
+                    this.params.set(item, []);
+
+                const stack = this.params.get(item);
+                stack.push(cb);
+                this.params.set(item, stack);
+            });
         }
     }
 
@@ -61,6 +83,7 @@ export class Router {
             (req: Request, res: Response, next?: Function) => void
         >
     ) {
+        this.allBind = true;
         this.acl(path, ...callbacks);
         this.bind(path, ...callbacks);
         this.connect(path, ...callbacks);
@@ -94,6 +117,7 @@ export class Router {
         this.unlink(path, ...callbacks);
         this.unlock(path, ...callbacks);
         this.unsubscribe(path, ...callbacks);
+        this.allBind = false;
 
         this.wildcard = [...this.wildcard, ...callbacks];
 
@@ -113,6 +137,9 @@ export class Router {
             const finalPath = this.path ? this.path + path : path;
 
             if (typeof finalPath === 'string') {
+                if (!this.optionsAllow.has(finalPath))
+                    this.optionsAllow.set(finalPath, new Set<string>());
+
                 if (!this.router.hasRoute(method, finalPath)) {
                     this.router.on(method, finalPath, (req, res) => {}, {
                         callbacks,
@@ -128,6 +155,12 @@ export class Router {
                     this.router.on(method, finalPath, (req, res) => {}, {
                         callbacks: [...handler.store.callbacks, ...callbacks],
                     });
+                }
+
+                if (method !== 'OPTIONS' && !this.allBind) {
+                    const optionsAllow = this.optionsAllow.get(finalPath);
+                    optionsAllow.add(method);
+                    this.optionsAllow.set(finalPath, optionsAllow);
                 }
             }
         } else {
@@ -457,112 +490,185 @@ export class Router {
         fn: Array<(req: Request, res: Response, next?: Function) => void>;
         head?: boolean;
     } | null> {
-        const method = req.method as FindMyWay.HTTPMethod;
+        try {
+            const method = req.method as FindMyWay.HTTPMethod;
+            const route = this.router.find(method, req.url ? req.url : '');
+            let err = null;
 
-        if (req.method === 'OPTIONS') {
-            res.writeHead(204, {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods':
+            //Options (compatibility Expressjs)
+            if (method === 'OPTIONS') {
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.setHeader(
+                    'Access-Control-Allow-Methods',
                     'GET,HEAD,PUT,PATCH,POST,DELETE',
-                Vary: 'Access-Control-Request-Headers',
-                'Content-Length': '0',
-                Connection: 'close',
-                Date: new Date().toUTCString(),
-            });
-            res.end();
-            return null;
-        }
+                );
+                res.setHeader('Connection', 'close');
+                res.setHeader('Vary', 'Access-Control-Request-Headers');
 
-        if (req.url) {
-            const route = this.router.find(method, req.url);
-
-            if (
-                route &&
-                route.store &&
-                route.store.callbacks &&
-                route.store.callbacks.length > 0
-            ) {
-                const request = new Request(socket, req, res, body, {
-                    ...route.params,
-                });
-
+                const request = new Request(socket, req, res, body);
                 const response = new Response(socket, req, res);
 
-                if (this.stack.has(method)) {
-                    //compatibility Expressjs
-                    const stack = this.stack.get(method);
+                const optionsAllow = this.optionsAllow.get(req.url);
+                let allow;
 
-                    if (Array.isArray(stack)) {
-                        route.store.callbacks = Array.isArray(
-                            route.store.callbacks,
-                        )
-                            ? [...stack, ...route.store.callbacks]
-                            : [...stack];
+                if (optionsAllow) {
+                    allow = Array.from(optionsAllow).join(', ');
+                    res.setHeader('Allow', allow);
+                }
+
+                if (
+                    route &&
+                    route.store &&
+                    route.store.callbacks &&
+                    route.store.callbacks.length > 0
+                ) {
+                    try {
+                        route.store.callbacks[0](request, response, () => {
+                            if (typeof next === 'function') next();
+                        });
+                    } catch (err) {
+                        console.log(err);
+                        return;
                     }
                 }
 
-                if (request.params) {
-                    //compatibility Expressjs
-                    for (const key in request.params) {
-                        if (this.params.has(key)) {
-                            route.store.callbacks.unshift((req, res, next) => {
-                                const callback = this.params.get(key);
-                                callback(
-                                    req,
-                                    res,
-                                    async () => {
-                                        next(req, res, next);
-                                    },
-                                    request.params[key],
-                                );
-                            });
+                if (this.wildcard.length > 0) {
+                    const wildcard = this.parent
+                        ? [
+                              ...new Set([
+                                  ...this.wildcard,
+                                  ...this.parent.wildcard,
+                              ]),
+                          ]
+                        : [...new Set(this.wildcard)];
+                    this.processWindcard(wildcard, request, response, () => {
+                        if (typeof next === 'function') next();
+                    });
+                }
+
+                if (!res.headersSent && allow) {
+                    res.writeHead(200);
+                    res.end(allow);
+                } else if (!allow) {
+                    res.writeHead(404);
+                    res.end();
+                }
+
+                return;
+            }
+
+            //With route exits
+            if (req.url) {
+                if (
+                    route &&
+                    route.store &&
+                    route.store.callbacks &&
+                    route.store.callbacks.length > 0
+                ) {
+                    const request = new Request(socket, req, res, body, {
+                        ...route.params,
+                    });
+
+                    const response = new Response(socket, req, res);
+
+                    if (this.stack.has(method)) {
+                        //compatibility Expressjs
+                        const stack = this.stack.get(method);
+
+                        if (Array.isArray(stack)) {
+                            route.store.callbacks = Array.isArray(
+                                route.store.callbacks,
+                            )
+                                ? [...stack, ...route.store.callbacks]
+                                : [...stack];
                         }
                     }
-                }
 
-                if (handle && route.store.callbacks.length === 1) {
-                    mixin(req, route, false);
-                    route.store.callbacks[0](req, res);
-                }
+                    if (request.params) {
+                        //compatibility Expressjs
+                        for (const key in request.params) {
+                            if (this.params.has(key)) {
+                                const callbacks = this.params.get(key);
 
-                return {
-                    request,
-                    response,
-                    fn: route.store.callbacks,
-                    head: req.method === 'HEAD',
-                };
+                                callbacks.forEach(callback => {
+                                    route.store.callbacks.unshift(
+                                        (req, res, next) => {
+                                            try {
+                                                callback(
+                                                    req,
+                                                    res,
+                                                    async () => {
+                                                        next(req, res, next);
+                                                    },
+                                                    request.params[key],
+                                                );
+                                            } catch (err) {
+                                                err = err;
+                                                res.writeHead(
+                                                    HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                                                );
+                                                res.end(err.message);
+                                                res.finish();
+                                            }
+                                        },
+                                    );
+                                });
+                            }
+                        }
+                    }
+
+                    if (handle && route.store.callbacks.length === 1) {
+                        mixin(req, route, false);
+                        route.store.callbacks[0](req, res);
+                    }
+
+                    return {
+                        request,
+                        response,
+                        fn: route.store.callbacks,
+                        head: req.method === 'HEAD',
+                    };
+                }
+            }
+
+            //Process next
+            if (next && !err && typeof next === 'function') {
+                const wildcard = this.parent
+                    ? [...new Set([...this.wildcard, ...this.parent.wildcard])]
+                    : [...new Set(this.wildcard)];
+
+                if (this.stack.has(method)) this.dispatch(req, res, next);
+                else if (wildcard.length > 0) {
+                    this.processWindcard(wildcard, req, res, next);
+                } else next();
+            }
+
+            return null;
+        } catch (err) {
+            res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            res.end(err.message);
+        }
+    }
+
+    private processWindcard(wildcard, req, res, next?) {
+        let current = null;
+        let finished = 0;
+
+        for (let i = 0; i < wildcard.length; i++) {
+            current = wildcard[i];
+
+            try {
+                current(req, res, () => {
+                    finished++;
+
+                    if (finished === wildcard.length && next) next();
+                });
+            } catch {
+                finished++;
+
+                if (finished === wildcard.length && next) next();
             }
         }
-
-        if (next && typeof next === 'function') {
-            const wildcard = this.parent
-                ? [...new Set([...this.wildcard, ...this.parent.wildcard])]
-                : [...new Set(this.wildcard)];
-
-            if (this.stack.has(method)) this.dispatch(req, res, next);
-            else if (wildcard.length > 0) {
-                let current = null;
-                let finished = 0;
-
-                for (let i = 0; i < wildcard.length; i++) {
-                    current = wildcard[i];
-
-                    try {
-                        current(req, res, () => {
-                            finished++;
-
-                            if (finished === wildcard.length) next();
-                        });
-                    } catch {
-                        finished++;
-
-                        if (finished === wildcard.length) next();
-                    }
-                }
-            } else next();
-        }
-
-        return null;
     }
 
     //compatibility Expressjs

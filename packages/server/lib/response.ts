@@ -46,6 +46,10 @@ export class Response implements IRespose {
         return this.res;
     }
 
+    get writeHead() {
+        return this.res.writeHead;
+    }
+
     public append(appendName: string, value: any) {}
 
     public attachment(contentType?: string) {}
@@ -56,7 +60,7 @@ export class Response implements IRespose {
 
     public download(path: string, filename?: string) {}
 
-    public end(data?: string, encoding?: string) {
+    public end(data?: string, encoding?: string, cb?: () => void) {
         this.buffer = data ? Buffer.from(data, encoding) : Buffer.from('');
 
         if (!this.headers['Content-Encoding'])
@@ -191,5 +195,10 @@ export class Response implements IRespose {
     public vary(field: string): Response {
         vary(this.res as http.ServerResponse, field);
         return this;
+    }
+
+    public finish() {
+        this.res.writeHead(this.statusCode);
+        this.res.end(this.buffer.toString());
     }
 }

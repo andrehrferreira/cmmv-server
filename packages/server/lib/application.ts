@@ -2,6 +2,7 @@ import * as http from 'node:http';
 import * as https from 'node:https';
 import * as http2 from 'node:http2';
 import * as zlib from 'node:zlib';
+import { AddressInfo } from 'node:net';
 
 import * as querystring from 'qs';
 import * as formidable from 'formidable';
@@ -34,6 +35,8 @@ type Socket =
     | https.Server
     | http2.Http2Server
     | http2.Http2SecureServer;
+
+process.setMaxListeners(0);
 
 export class ServerApplication implements IServerApplication {
     private isHTTP2: boolean = false;
@@ -95,6 +98,14 @@ export class ServerApplication implements IServerApplication {
 
     set response(value) {
         this._response = value;
+    }
+
+    get address() {
+        return this.socket.address.bind(this);
+    }
+
+    get port() {
+        return (this.socket.address() as AddressInfo).port;
     }
 
     constructor(opts?: ServerOptions) {
@@ -293,7 +304,7 @@ export class ServerApplication implements IServerApplication {
                         },
                     );
 
-                    const processMiddleware = async (
+                    const processMiddleware = (
                         index: number,
                         after: boolean = false,
                     ) => {
@@ -346,31 +357,48 @@ export class ServerApplication implements IServerApplication {
                             } else if (route) {
                                 if (!route.response.sended || hasAfterProcess) {
                                     if (!after) {
-                                        await this.runFunctions(
+                                        this.runFunctions(
                                             route.fn,
                                             route.request,
                                             route.response,
-                                        );
-
-                                        if (
-                                            !route.response.sended ||
-                                            hasAfterProcess
                                         )
-                                            processMiddleware(0, true);
-                                        else {
-                                            res.writeHead(
-                                                route.response.statusCode,
-                                            );
-                                            res.end(
-                                                route.head === true
-                                                    ? ''
-                                                    : route.response.buffer,
-                                            );
-                                        }
+                                            .then(result => {
+                                                if (result) {
+                                                    if (
+                                                        !route.response
+                                                            .sended ||
+                                                        hasAfterProcess
+                                                    )
+                                                        processMiddleware(
+                                                            0,
+                                                            true,
+                                                        );
+                                                    else {
+                                                        res.writeHead(
+                                                            route.response
+                                                                .statusCode,
+                                                        );
+                                                        res.end(
+                                                            route.head === true
+                                                                ? ''
+                                                                : route.response
+                                                                      .buffer,
+                                                        );
+                                                    }
+                                                }
+                                            })
+                                            .catch(err => {
+                                                res.writeHead(
+                                                    HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                                                );
+                                                res.end(err.message);
+                                                res.finish();
+                                            });
                                     } else if (route) {
                                         res.writeHead(
                                             route.response.statusCode,
                                         );
+
                                         res.end(
                                             route.head === true
                                                 ? ''
@@ -394,6 +422,7 @@ export class ServerApplication implements IServerApplication {
                                         res,
                                         body,
                                     );
+
                                     const response = new Response(
                                         this,
                                         req,
@@ -434,16 +463,18 @@ export class ServerApplication implements IServerApplication {
                             processMiddleware(0);
                         else {
                             if (route) {
-                                await this.runFunctions(
+                                const result = await this.runFunctions(
                                     route.fn,
                                     route.request,
                                     route.response,
                                 );
 
-                                res.writeHead(route.response.statusCode);
-                                res.end(
-                                    route.head ? '' : route.response.buffer,
-                                );
+                                if (result) {
+                                    res.writeHead(route.response.statusCode);
+                                    res.end(
+                                        route.head ? '' : route.response.buffer,
+                                    );
+                                }
                             } else {
                                 res.writeHead(HTTP_STATUS_NOT_FOUND);
                                 res.end('Not Found');
@@ -456,16 +487,17 @@ export class ServerApplication implements IServerApplication {
                         res.end('Not Found');
                     }
                 } catch (err) {
-                    console.log(err);
                     if (process.env.NODE_ENV === 'dev') console.error(err);
 
                     res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
                     res.end(err.message);
+                    res.finish();
                 }
             })
             .catch(err => {
                 res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
                 res.end(err.message);
+                res.finish();
             });
     }
 
@@ -473,13 +505,21 @@ export class ServerApplication implements IServerApplication {
         fns: Array<(req: Request, res: Response, next?: Function) => void>,
         req: Request,
         res: Response,
-    ) {
-        const runFn = async (index: number) => {
-            if (fns && index < fns.length)
-                fns[index](req, res, () => runFn(index + 1));
-        };
+    ): Promise<boolean> {
+        try {
+            const runFn = async (index: number) => {
+                if (fns && index < fns.length)
+                    fns[index](req, res, () => runFn(index + 1));
+            };
 
-        await runFn(0);
+            await runFn(0);
+            return true;
+        } catch (err) {
+            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            res.end(err.message);
+            res.finish();
+            return false;
+        }
     }
 
     //Methods

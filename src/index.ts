@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import cmmv, { json, serverStatic } from '@cmmv/server';
 import compression from '@cmmv/compression';
+import cors from '@cmmv/cors';
 
 /*const app = CmmvServer({
     key: readFileSync("./cert/private-key.pem"),
@@ -22,6 +23,11 @@ const port = 3000;
 app.use(json({ limit: '50mb' }));
 app.use(compression({ threshold: 0 }));
 app.use(serverStatic('public'));
+app.use(cors());
+
+app.post('/', function () {});
+app.get('/users', function (req, res) {});
+app.put('/users', function (req, res) {});
 
 app.get('/docs/:id', (req, res) => {
     console.log(req.params);

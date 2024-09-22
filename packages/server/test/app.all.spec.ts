@@ -2,8 +2,6 @@
  * @see https://github.com/expressjs/express/blob/master/test/app.all.js
  */
 
-import { strict as assert } from 'assert';
-
 import * as request from 'supertest';
 
 import { CmmvServer } from '..';
@@ -24,9 +22,10 @@ describe('app.all()', function () {
         request(app.socket).get('/tobi').expect(200, 'GET', cb);
     });
 
+    //find-my-way dont support /*splat
     /*it('should run the callback for a method just once', function(done){
         const app = CmmvServer()
-            , n = 0;
+        let n = 0;
     
         app.all('/*splat', function(req, res, next){
             if (n++) return done(new Error('DELETE called several times'));

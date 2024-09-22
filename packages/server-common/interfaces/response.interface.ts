@@ -8,6 +8,9 @@ export interface IRespose {
     readonly httpResponse: http.ServerResponse | http2.Http2ServerResponse;
     readonly req: http.IncomingMessage | http2.Http2ServerRequest;
     readonly res: http.ServerResponse | http2.Http2ServerResponse;
+    statusCode: number;
     append(appendName: string, value: any);
     getHeader(headerName: string);
+    setHeader(name: string, value: string);
+    end(data?: string, encoding?: string, cb?: () => void);
 }
