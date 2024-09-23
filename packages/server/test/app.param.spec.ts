@@ -83,7 +83,7 @@ describe('app', function () {
                 next();
             });
 
-            app.use(function(req, res) {
+            app.use((req, res) => {
                 res.end([count, called, req.user].join(' '));
             });
         
@@ -100,6 +100,7 @@ describe('app', function () {
             app.param('user', function(req, res, next, user) {
                 called++;
                 req.users = (req.users || []).concat(user);
+                console.log(req);
                 next();
             });
         
@@ -112,7 +113,7 @@ describe('app', function () {
                 next();
             });
             app.use(function(req, res) {
-                res.end([count, called, req.users.join(',')].join(' '));
+                res.end([count, called, req.users?.join(',')].join(' '));
             });
         
             request(app.socket)

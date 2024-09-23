@@ -9,6 +9,10 @@ export interface IRequest {
     readonly req: http.IncomingMessage | http2.Http2ServerRequest;
     readonly res: http.ServerResponse | http2.Http2ServerResponse;
     readonly body: any;
+    readonly params?: { [k: string]: string | undefined };
+    readonly next?: Function;
+    headers: http.IncomingHttpHeaders | http2.IncomingHttpHeaders;
+    url: string;
     method: string;
     path: string;
     baseUrl: string;
@@ -23,5 +27,5 @@ export interface IRequest {
     stale: boolean;
     subdomains: string[];
     xhr: boolean;
-    getHeader(name?: string): string | null;
+    getHeader(name?: string): string | string[] | null;
 }

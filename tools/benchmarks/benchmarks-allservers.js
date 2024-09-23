@@ -60,7 +60,9 @@ async function runBenchmarkOfLib(lib) {
 		url: `http://localhost:${port}`,
 	});
 
-	process.kill();
+	process.kill('SIGKILL');
+	process.unref();
+	
 	return result;
 }
 

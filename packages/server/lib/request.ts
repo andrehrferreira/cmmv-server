@@ -3,11 +3,17 @@ import * as https from 'node:https';
 import * as http2 from 'node:http2';
 import * as url from 'node:url';
 
+import * as accepts from 'accepts';
 import * as cookie from 'cookie';
+import * as parseRange from 'range-parser';
+import * as typeis from 'type-is';
+import * as fresh from 'fresh';
 
 import { IRequest } from '@cmmv/server-common';
 
 import { ServerApplication } from './application';
+
+import { parseurl } from '../utils';
 
 export class Request implements IRequest {
     constructor(
@@ -16,6 +22,7 @@ export class Request implements IRequest {
         public readonly res: http.ServerResponse | http2.Http2ServerResponse,
         public readonly body: any,
         public readonly params?: { [k: string]: string | undefined },
+        public readonly next?: Function,
     ) {}
 
     get httpRequest() {
@@ -40,10 +47,6 @@ export class Request implements IRequest {
 
     get cookies() {
         return cookie.parse(this.req.headers.cookie || '');
-    }
-
-    get fresh() {
-        return this.req['fresh'];
     }
 
     get hostname() {
@@ -73,15 +76,17 @@ export class Request implements IRequest {
     }
 
     get query() {
-        return url.parse(this.req.url, true).query;
+        const queryparse = this.app.get('query parser fn');
+
+        if (!queryparse) return Object.create(null);
+
+        const querystring = parseurl(this.req).query;
+
+        return queryparse(querystring);
     }
 
     get secure() {
         return this.protocol === 'https';
-    }
-
-    get stale() {
-        return !this.fresh;
     }
 
     get subdomains() {
@@ -98,7 +103,130 @@ export class Request implements IRequest {
         return false;
     }
 
-    getHeader(name): string | null {
-        return this.req.headers[name] as string;
+    get header() {
+        return (name: string) => this.getHeader(name);
+    }
+
+    get headers() {
+        return this.req.headers;
+    }
+
+    get get() {
+        return (name: string) => this.getHeader(name);
+    }
+
+    getHeader(name): string | string[] | null {
+        if (!name) {
+            throw new TypeError('name argument is required to req.get');
+        }
+
+        if (typeof name !== 'string') {
+            throw new TypeError('name must be a string to req.get');
+        }
+
+        const lc = name.toLowerCase();
+
+        switch (lc) {
+            case 'referer':
+            case 'referrer':
+                return this.req.headers.referrer || this.req.headers.referer;
+            default:
+                return this.req.headers[lc];
+        }
+    }
+
+    //compatibility Expressjs
+    get accepts() {
+        return (...args: string[]) => {
+            const accept = accepts(this.req as http.IncomingMessage);
+            return accept.types.apply(accept, args);
+        };
+    }
+
+    get acceptsEncodings() {
+        return (...args: string[]) => {
+            const accept = accepts(this.req as http.IncomingMessage);
+            return accept.encodings.apply(accept, args);
+        };
+    }
+
+    get acceptsCharsets() {
+        return (...args: string[]) => {
+            const accept = accepts(this.req as http.IncomingMessage);
+            return accept.charsets.apply(accept, args);
+        };
+    }
+
+    get acceptsLanguages() {
+        return (...args: string[]) => {
+            const accept = accepts(this.req as http.IncomingMessage);
+            return accept.languages.apply(accept, args);
+        };
+    }
+
+    get range() {
+        return (size, options) => {
+            const range = this.get('Range');
+            if (!range) return;
+            return parseRange(size, range, options);
+        };
+    }
+
+    get is() {
+        return types => {
+            let arr = types;
+
+            if (!Array.isArray(types)) {
+                arr = new Array(arguments.length);
+
+                for (let i = 0; i < arr.length; i++) arr[i] = arguments[i];
+            }
+
+            return typeis(this, arr);
+        };
+    }
+
+    get host() {
+        return () => {
+            let trust = this.app.get('trust proxy fn');
+            let val = this.get('X-Forwarded-Host');
+
+            if (!val || !trust(this.req.socket.remoteAddress, 0)) {
+                val = this.get('Host');
+            } else if (val.indexOf(',') !== -1) {
+                // Note: X-Forwarded-Host is normally only ever a
+                //       single value, but this is to be safe.
+                val = (val as string)
+                    .substring(0, val.indexOf(','))
+                    .trimRight();
+            }
+
+            return val || undefined;
+        };
+    }
+
+    get fresh() {
+        return () => {
+            const method = this.method;
+            const res = this.res;
+            const status = res.statusCode;
+
+            // GET or HEAD for weak freshness validation only
+            if ('GET' !== method && 'HEAD' !== method) return false;
+
+            // 2xx or 304 as per rfc2616 14.26
+            if ((status >= 200 && status < 300) || 304 === status) {
+                return fresh(this.req.headers, {
+                    etag: res.getHeader('ETag'),
+                    'last-modified': res.getHeader('Last-Modified'),
+                });
+            }
+
+            return false;
+        };
+    }
+
+    get stale() {
+        return !this.fresh;
     }
 }

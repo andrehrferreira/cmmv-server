@@ -45,6 +45,7 @@ describe('Router', function () {
             assert.strictEqual(req.params.bar, 'route');
             res.end();
         });
+
         router.use('/:foo', another);
 
         router.handle(

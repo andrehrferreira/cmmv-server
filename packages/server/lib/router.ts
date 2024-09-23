@@ -10,6 +10,9 @@ import { ServerApplication } from './application';
 
 const mixin = require('merge-descriptors');
 
+const reqExpress = require('./req.express');
+const resExpress = require('./res.express');
+
 const { HTTP_STATUS_INTERNAL_SERVER_ERROR } = constants;
 
 export class Router {
@@ -479,7 +482,7 @@ export class Router {
 
     public async process(
         socket: ServerApplication,
-        req: IncomingMessage | Http2ServerRequest,
+        req: (IncomingMessage | Http2ServerRequest) & { params: {} },
         res: ServerResponse | Http2ServerResponse,
         body: any,
         handle: boolean = false,
@@ -505,8 +508,8 @@ export class Router {
                 res.setHeader('Connection', 'close');
                 res.setHeader('Vary', 'Access-Control-Request-Headers');
 
-                const request = new Request(socket, req, res, body);
-                const response = new Response(socket, req, res);
+                const request = new Request(socket, req, res, body, null, next);
+                const response = new Response(socket, request, res);
 
                 const optionsAllow = this.optionsAllow.get(req.url);
                 let allow;
@@ -565,11 +568,18 @@ export class Router {
                     route.store.callbacks &&
                     route.store.callbacks.length > 0
                 ) {
-                    const request = new Request(socket, req, res, body, {
-                        ...route.params,
-                    });
+                    const request = new Request(
+                        socket,
+                        req,
+                        res,
+                        body,
+                        {
+                            ...route.params,
+                        },
+                        route.store.callbacks[route.store.callbacks.length - 1],
+                    );
 
-                    const response = new Response(socket, req, res);
+                    const response = new Response(socket, request, res);
 
                     if (this.stack.has(method)) {
                         //compatibility Expressjs
@@ -618,7 +628,9 @@ export class Router {
                     }
 
                     if (handle && route.store.callbacks.length === 1) {
-                        mixin(req, route, false);
+                        mixin(req, reqExpress, false);
+                        mixin(res, resExpress, false);
+                        req.params = route.params;
                         route.store.callbacks[0](req, res);
                     }
 

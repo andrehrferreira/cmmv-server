@@ -95,26 +95,30 @@ describe('compression()', function () {
 
 function createServer(opts, fn) {
     const _compression = compression(opts);
-    const express = opts && opts.express === true;
+    const express = opts && opts?.express === true;
 
     return http.createServer(async (req, res) => {
         if (!express) {
-            const request = new Request(null, req, res, null);
-            const response = new Response(null, req, res);
-            await fn(request, response);
-            let callFn = false;
+            try {
+                const request = new Request(null, req, res, null, null, fn);
+                const response = new Response(null, request, res);
+                await fn(request, response);
+                let callFn = false;
 
-            await (_compression as CMMVCompression).process(
-                request,
-                response,
-                () => {
-                    callFn = true;
-                    res.writeHead(response.statusCode);
-                    res.end(response.buffer);
-                },
-            );
+                await (_compression as CMMVCompression).process(
+                    request,
+                    response,
+                    () => {
+                        callFn = true;
+                        res.writeHead(response.statusCode);
+                        res.end(response.buffer);
+                    },
+                );
 
-            if (!callFn) fn(req, res);
+                if (!callFn) fn(req, res);
+            } catch (e) {
+                console.error(e);
+            }
         } else if (typeof _compression === 'function') {
             let callFn = false;
 

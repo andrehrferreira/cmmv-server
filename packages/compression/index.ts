@@ -70,17 +70,18 @@ export class CMMVCompression extends ServerMiddleware {
                 req instanceof http.IncomingMessage ||
                 req instanceof http2.Http2ServerRequest
                     ? req
-                    : req.httpRequest;
+                    : req?.httpRequest;
             const resTest =
                 res instanceof http.ServerResponse ||
                 res instanceof http2.Http2ServerResponse
                     ? res
-                    : res.httpResponse;
+                    : res?.httpResponse;
 
             const acceptHeader =
                 req instanceof Request
                     ? req.getHeader('accept-encoding')
                     : req.headers['accept-encoding'];
+
             const accept = accepts(
                 (req instanceof Request
                     ? req.httpRequest

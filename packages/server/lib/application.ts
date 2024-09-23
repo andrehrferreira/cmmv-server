@@ -22,6 +22,8 @@ import {
     DefaultServerHTTP2Options,
 } from '../interfaces';
 
+import { compileETag } from '../utils';
+
 const {
     HTTP_STATUS_NOT_FOUND,
     HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -332,18 +334,25 @@ export class ServerApplication implements IServerApplication {
                                     ) {
                                         if (middleware.length === 4) {
                                             //compatibility Expressjs
-                                            middleware(null, route, route, () =>
-                                                processMiddleware(
-                                                    index + 1,
-                                                    after,
-                                                ),
+                                            middleware(
+                                                null,
+                                                route.request,
+                                                route.response,
+                                                () =>
+                                                    processMiddleware(
+                                                        index + 1,
+                                                        after,
+                                                    ),
                                             );
                                         } else {
-                                            middleware(route, route, () =>
-                                                processMiddleware(
-                                                    index + 1,
-                                                    after,
-                                                ),
+                                            middleware(
+                                                route.request,
+                                                route.response,
+                                                () =>
+                                                    processMiddleware(
+                                                        index + 1,
+                                                        after,
+                                                    ),
                                             );
                                         }
                                     } else {
@@ -388,11 +397,11 @@ export class ServerApplication implements IServerApplication {
                                                 }
                                             })
                                             .catch(err => {
+                                                console.error(err);
                                                 res.writeHead(
                                                     HTTP_STATUS_INTERNAL_SERVER_ERROR,
                                                 );
                                                 res.end(err.message);
-                                                res.finish();
                                             });
                                     } else if (route) {
                                         res.writeHead(
@@ -421,11 +430,13 @@ export class ServerApplication implements IServerApplication {
                                         req,
                                         res,
                                         body,
+                                        null,
+                                        middleware,
                                     );
 
                                     const response = new Response(
                                         this,
-                                        req,
+                                        request,
                                         res,
                                     );
 
@@ -487,17 +498,17 @@ export class ServerApplication implements IServerApplication {
                         res.end('Not Found');
                     }
                 } catch (err) {
+                    console.error(err);
                     if (process.env.NODE_ENV === 'dev') console.error(err);
 
                     res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
                     res.end(err.message);
-                    res.finish();
                 }
             })
             .catch(err => {
+                console.error(err);
                 res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
                 res.end(err.message);
-                res.finish();
             });
     }
 
@@ -640,17 +651,34 @@ export class ServerApplication implements IServerApplication {
     }
 
     //Scope
-    public set(name: string, value: any): boolean {
+    public set(name: string, value: any): this {
         if (!this.scope.has('settings')) this.scope.set('settings', {});
 
         if (!this.namesProtected.has(name)) {
             const settings = this.scope.get('settings');
             settings[name] = value;
             this.scope.set('settings', settings);
-            return true;
+
+            switch (name) {
+                case 'etag':
+                    this.set('etag fn', compileETag(value));
+                    break;
+                case 'query parser':
+                    //this.set('query parser fn', compileQueryParser(value));
+                    break;
+                case 'trust proxy':
+                    /*this.set('trust proxy fn', compileTrust(value));
+                
+                    // trust proxy inherit back-compat
+                    Object.defineProperty(this.settings, trustProxyDefaultSymbol, {
+                        configurable: true,
+                        value: false
+                    }); */
+                    break;
+            }
         }
 
-        return false;
+        return this;
     }
 
     public enable(name: string): void {
