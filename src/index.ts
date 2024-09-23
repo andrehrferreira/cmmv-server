@@ -1,6 +1,4 @@
-import { readFileSync } from 'node:fs';
-
-import cmmv, { json, serverStatic } from '@cmmv/server';
+import cmmv, { json, urlencoded, serverStatic } from '@cmmv/server';
 import compression from '@cmmv/compression';
 import cors from '@cmmv/cors';
 
@@ -21,6 +19,7 @@ const host = '0.0.0.0';
 const port = 3000;
 
 app.use(json({ limit: '50mb' }));
+app.use(urlencoded({ limit: '50mb', extended: true }));
 app.use(compression({ threshold: 0 }));
 app.use(serverStatic('public'));
 app.use(cors());

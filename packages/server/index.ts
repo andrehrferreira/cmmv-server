@@ -13,6 +13,9 @@ export * from './lib';
 ('use strict');
 
 import { json as bodyParserJSON } from '@cmmv/body-parser';
+import { urlencoded as bodyParserURLEncoded } from '@cmmv/body-parser';
+import { text as bodyParserText } from '@cmmv/body-parser';
+import { raw as bodyParserRaw } from '@cmmv/body-parser';
 import { default as ss } from '@cmmv/server-static';
 import { EventEmitter } from 'events';
 import { CmmvServer } from './lib/application';
@@ -31,6 +34,10 @@ export default (options?: ServerOptions) => {
 
 export const application = CmmvServer;
 export const json = bodyParserJSON;
+export const urlencoded = bodyParserURLEncoded;
+export const text = bodyParserText;
+export const raw = bodyParserRaw;
+
 export const serverStatic = ss;
 export const Router = router;
 export const Route = router;
