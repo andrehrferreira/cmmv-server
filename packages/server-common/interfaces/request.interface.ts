@@ -27,5 +27,7 @@ export interface IRequest {
     stale: boolean;
     subdomains: string[];
     xhr: boolean;
+    secret?: string;
+    signedCookies?: any;
     getHeader(name?: string): string | string[] | null;
 }

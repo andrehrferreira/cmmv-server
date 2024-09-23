@@ -121,6 +121,10 @@ export class Response implements IRespose {
         return this;
     }
 
+    get cookies() {
+        return this.req.cookies;
+    }
+
     /**
      * Set cookie `name` to `value`, with the given `options`.
      *
@@ -144,7 +148,11 @@ export class Response implements IRespose {
      * @return {ServerResponse} for chaining
      * @public
      */
-    public cookie(name: string, value: string, options?: CookieOptions) {
+    public cookie(
+        name: string,
+        value: string | Object,
+        options?: CookieOptions,
+    ) {
         var opts = this.mergeObject({}, options);
         var secret = this.secret;
         var signed = opts.signed;

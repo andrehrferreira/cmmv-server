@@ -1,6 +1,7 @@
 import cmmv, { json, urlencoded, serverStatic } from '@cmmv/server';
 import compression from '@cmmv/compression';
 import cors from '@cmmv/cors';
+import cookieParser from '@cmmv/cookie-parser';
 
 /*const app = CmmvServer({
     key: readFileSync("./cert/private-key.pem"),
@@ -20,11 +21,12 @@ const port = 3000;
 
 app.use(json({ limit: '50mb' }));
 app.use(urlencoded({ limit: '50mb', extended: true }));
-app.use(compression({ threshold: 0 }));
+app.use(compression());
 app.use(serverStatic('public'));
 app.use(cors());
+app.use(cookieParser());
 
-app.post('/', function () {});
+app.post('/', function (req, res) {});
 app.get('/users', function (req, res) {});
 app.put('/users', function (req, res) {});
 
