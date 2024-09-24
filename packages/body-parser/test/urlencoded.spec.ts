@@ -1152,7 +1152,7 @@ function createManyParams(count) {
     str += '0=0';
 
     for (let i = 1; i < count; i++) {
-        let n = i.toString(36);
+        const n = i.toString(36);
         str += '&' + n + '=' + n;
     }
 

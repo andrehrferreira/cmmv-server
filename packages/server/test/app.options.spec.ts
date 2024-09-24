@@ -63,8 +63,8 @@ describe('OPTIONS', function () {
     });
 
     it('should forward requests down the middleware chain', function (done) {
-        var app = CmmvServer();
-        var router = new Router();
+        const app = CmmvServer();
+        const router = new Router();
 
         router.get('/users', function (req, res) {});
         app.use(router);

@@ -19,9 +19,9 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 
-export let etag = createETagGenerator({ weak: false });
+export const etag = createETagGenerator({ weak: false });
 
-export let wetag = createETagGenerator({ weak: true });
+export const wetag = createETagGenerator({ weak: true });
 
 /**
  * Compile "etag" value to function.
@@ -30,7 +30,7 @@ export let wetag = createETagGenerator({ weak: true });
  * @return {Function}
  * @api private
  */
-export let compileETag = val => {
+export const compileETag = val => {
     let fn;
 
     if (typeof val === 'function') return val;
@@ -62,7 +62,7 @@ export let compileETag = val => {
  */
 export function createETagGenerator(options) {
     return function generateETag(body, options?) {
-        let encoding = options === 'string' ? options : 'utf-8';
+        const encoding = options === 'string' ? options : 'utf-8';
 
         const buf =
             typeof body === 'string' ? Buffer.from(body, encoding) : body;

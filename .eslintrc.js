@@ -37,8 +37,13 @@ module.exports = {
 			files: ['**/*.spec.ts', 'integration/**/*.ts'],
 			parser: '@typescript-eslint/parser',
 			parserOptions: {
+				ecmaVersion: 2020,
 				project: 'tsconfig.spec.json',
 				sourceType: 'module',
+				ecmaFeatures: {
+					jsx: true,
+					experimentalObjectRestSpread: true
+				}
 			},
 			rules: {
 				'@typescript-eslint/interface-name-prefix': 'off',

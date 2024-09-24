@@ -128,4 +128,4 @@ export class Mime {
     }
 }
 
-export let mime = new Mime()._freeze();
+export const mime = new Mime()._freeze();

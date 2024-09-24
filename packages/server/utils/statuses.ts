@@ -9,7 +9,7 @@
 
 const Codes = require('./codes.json');
 
-export let statuses = {
+export const statuses = {
     // status code to message map
     get message() {
         return Codes;
@@ -55,7 +55,7 @@ export let statuses = {
      * @private
      */
     createMessageToStatusCodeMap(codes) {
-        let map = {};
+        const map = {};
 
         Object.keys(codes).forEach(function forEachCode(code) {
             const message = codes[code];
@@ -81,7 +81,7 @@ export let statuses = {
      * @private
      */
     getStatusCode(message) {
-        var msg = message.toLowerCase();
+        const msg = message.toLowerCase();
 
         if (!Object.prototype.hasOwnProperty.call(this.code, msg))
             throw new Error('invalid status message: "' + message + '"');
@@ -125,7 +125,7 @@ function status(code: string | number): number {
         throw new TypeError('code must be a number or string');
 
     // '403'
-    var n = parseInt(code, 10);
+    const n = parseInt(code, 10);
 
     if (!isNaN(n)) return statuses.getStatusMessage(n);
 

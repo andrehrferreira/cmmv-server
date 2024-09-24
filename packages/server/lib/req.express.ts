@@ -2,5 +2,5 @@
 
 import * as http from 'node:http';
 
-let req = Object.create(http.IncomingMessage.prototype);
+const req = Object.create(http.IncomingMessage.prototype);
 module.exports = req;

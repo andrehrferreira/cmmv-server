@@ -83,7 +83,7 @@ describe('cookieParser()', function () {
     });
 
     describe('when a secret is given', function () {
-        var val = sign('foobarbaz', 'keyboard cat');
+        const val = sign('foobarbaz', 'keyboard cat');
         // TODO: "bar" fails...
 
         it('should populate req.signedCookies', function (done) {
@@ -101,7 +101,7 @@ describe('cookieParser()', function () {
         });
 
         it('should omit invalid signatures', function (done) {
-            var server = createServer('keyboard cat');
+            const server = createServer('keyboard cat');
 
             request(server)
                 .get('/signed')
@@ -344,7 +344,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
 });
 
 function createServer(secret?) {
-    var _parser: any = cookieParser({ secret, express: true });
+    const _parser: any = cookieParser({ secret, express: true });
 
     return http.createServer(function (req: any, res) {
         _parser(req, res, function (err) {
@@ -354,7 +354,7 @@ function createServer(secret?) {
                 return;
             }
 
-            var cookies =
+            const cookies =
                 req.url === '/signed' ? req.signedCookies : req.cookies;
 
             res.end(JSON.stringify(cookies));

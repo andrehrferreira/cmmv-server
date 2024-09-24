@@ -120,8 +120,6 @@ function createServer(opts, fn) {
                 console.error(e);
             }
         } else if (typeof _compression === 'function') {
-            let callFn = false;
-
             _compression(req, res, err => {
                 if (err) {
                     res.statusCode = err.status || 500;

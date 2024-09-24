@@ -11,7 +11,7 @@
 
 import * as http from 'node:http';
 
-let res = Object.create(http.ServerResponse.prototype);
+const res = Object.create(http.ServerResponse.prototype);
 
 module.exports = res;
 

@@ -17,7 +17,7 @@
  * @return {Array}
  * @public
  */
-export let rangeParser = (size: number, str: string, options?: any) => {
+export const rangeParser = (size: number, str: string, options?: any) => {
     if (typeof str !== 'string')
         throw new TypeError('argument str must be a string');
 
@@ -26,7 +26,7 @@ export let rangeParser = (size: number, str: string, options?: any) => {
     if (index === -1) return -2;
 
     const arr = str.slice(index + 1).split(',');
-    let ranges: any = [];
+    const ranges: any = [];
 
     ranges.type = str.slice(0, index);
 

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /**
  * @see https://github.com/expressjs/cors/blob/master/test/test.js
  */
@@ -10,7 +12,7 @@ import * as after from 'after';
 
 import Cors, { CorsOptions } from '..';
 
-const fakeRequest = function (method?, headers?) {
+const fakeRequest = function (method: string, headers?: any) {
     return new FakeRequest(method, headers);
 };
 

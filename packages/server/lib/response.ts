@@ -157,9 +157,9 @@ export class Response implements IRespose {
         value: string | Object,
         options?: CookieOptions,
     ) {
-        var opts = this.mergeObject({}, options);
-        var secret = this.secret;
-        var signed = opts.signed;
+        const opts = this.mergeObject({}, options);
+        const secret = this.secret;
+        const signed = opts.signed;
 
         if (signed && !secret)
             throw new Error(
@@ -174,7 +174,7 @@ export class Response implements IRespose {
         if (signed) val = 's:' + this.cookieSign(val, secret);
 
         if (opts.maxAge != null) {
-            var maxAge = opts.maxAge - 0;
+            const maxAge = opts.maxAge - 0;
 
             if (!isNaN(maxAge)) {
                 opts.expires = new Date(Date.now() + maxAge);
@@ -224,9 +224,9 @@ export class Response implements IRespose {
      * @public
      */
     public download(path: string, filename?: string, options?, callback?) {
-        var done = callback;
-        var name = filename;
-        var opts = options || null;
+        let done = callback;
+        let name = filename;
+        let opts = options || null;
 
         if (typeof filename === 'function') {
             done = filename;
@@ -245,15 +245,15 @@ export class Response implements IRespose {
             opts = filename;
         }
 
-        let headers = {
+        const headers = {
             'Content-Disposition': contentDisposition(name || path),
         };
 
         if (opts && opts.headers) {
-            let keys = Object.keys(opts.headers);
+            const keys = Object.keys(opts.headers);
 
             for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
+                const key = keys[i];
 
                 if (key.toLowerCase() !== 'content-disposition')
                     headers[key] = opts.headers[key];
@@ -263,7 +263,7 @@ export class Response implements IRespose {
         opts = Object.create(opts);
         opts.headers = headers;
 
-        var fullPath = !opts.root ? resolve(path) : path;
+        const fullPath = !opts.root ? resolve(path) : path;
 
         return this.sendFile(fullPath, opts, done);
     }
@@ -340,10 +340,11 @@ export class Response implements IRespose {
         const req = this.req;
         const next = req.next;
 
-        var keys = Object.keys(object).filter(function (v) {
+        const keys = Object.keys(object).filter(function (v) {
             return v !== 'default';
         });
 
+        // eslint-disable-next-line
         var key =
             keys.length > 0
                 ? accepts(this.req.httpRequest as http.IncomingMessage).types(
@@ -546,11 +547,13 @@ export class Response implements IRespose {
     public redirect(url?: string) {
         let address = url;
         let body: string;
-        var status = 302;
+        let status = 302;
 
         // allow status / url
         if (arguments.length === 2) {
+            // eslint-disable-next-line
             status = arguments[0];
+            // eslint-disable-next-line
             address = arguments[1];
         }
 
@@ -564,7 +567,7 @@ export class Response implements IRespose {
             },
 
             html: function () {
-                var u = escapeHtml(address);
+                const u = escapeHtml(address);
                 body =
                     '<p>' +
                     statuses.message[status] +
@@ -599,11 +602,11 @@ export class Response implements IRespose {
      * @public
      */
     public render(view, options, callback) {
-        var app = this.app;
-        var done = callback;
-        var opts = options || {};
-        var req = this.req;
-        var self = this;
+        const app = this.app;
+        let done = callback;
+        let opts = options || {};
+        const req = this.req;
+        const self = this;
 
         // support callback function as second arg
         if (typeof options === 'function') {
@@ -855,7 +858,7 @@ export class Response implements IRespose {
      * @api private
      */
     public normalizeTypes(types: string[]) {
-        let ret = [];
+        const ret = [];
 
         for (let i = 0; i < types.length; ++i)
             ret.push(this.normalizeType(types[i]));
@@ -889,9 +892,9 @@ export class Response implements IRespose {
      */
     public acceptParams(str: string) {
         const parts = str.split(/ *; */);
-        let ret = { value: parts[0], quality: 1, params: {} };
+        const ret = { value: parts[0], quality: 1, params: {} };
 
-        for (var i = 1; i < parts.length; ++i) {
+        for (let i = 1; i < parts.length; ++i) {
             const pms = parts[i].split(/ *= */);
             if ('q' === pms[0]) ret.quality = parseFloat(pms[1]);
             else ret.params[pms[0]] = pms[1];
@@ -916,7 +919,7 @@ export class Response implements IRespose {
      */
     public mergeObject(a, b) {
         if (a && b) {
-            for (let key in b) a[key] = b[key];
+            for (const key in b) a[key] = b[key];
         }
 
         return a;

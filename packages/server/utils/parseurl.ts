@@ -10,7 +10,7 @@ import * as http2 from 'node:http2';
 
 const url = require('url');
 const parse = url.parse; // eslint-disable-line
-var Url = url.Url;
+const Url = url.Url;
 
 type Req = (http.IncomingMessage | http2.Http2ServerRequest) & {
     originalUrl?: string;
@@ -26,8 +26,8 @@ type Req = (http.IncomingMessage | http2.Http2ServerRequest) & {
  * @return {Object}
  * @public
  */
-export let parseurl = (req: Req): any | undefined => {
-    let urlReturn = req.url;
+export const parseurl = (req: Req): any | undefined => {
+    const urlReturn = req.url;
 
     if (urlReturn === undefined) return undefined;
 
@@ -48,7 +48,7 @@ export let parseurl = (req: Req): any | undefined => {
  * @return {Object}
  * @public
  */
-export let parseUrlOriginal = (req: Req) => {
+export const parseUrlOriginal = (req: Req) => {
     const url = req.originalUrl;
 
     if (typeof url !== 'string') return parseurl(req);
@@ -72,12 +72,12 @@ export let parseUrlOriginal = (req: Req) => {
  * @public
  */
 
-export let originalurl = (req: Req) => {
-    let urlReturn = req.originalUrl;
+export const originalurl = (req: Req) => {
+    const urlReturn = req.originalUrl;
 
     if (typeof urlReturn !== 'string') return parseurl(req);
 
-    var parsed = req._parsedOriginalUrl;
+    let parsed = req._parsedOriginalUrl;
 
     if (fresh(urlReturn, parsed)) return parsed;
 
@@ -99,14 +99,14 @@ function fastparse(str) {
     if (typeof str !== 'string' || str.charCodeAt(0) !== 0x2f /* / */)
         return parse(str);
 
-    var pathname = str;
-    var query = null;
-    var search = null;
+    let pathname = str;
+    let query = null;
+    let search = null;
 
     // This takes the regexp from https://github.com/joyent/node/pull/7878
     // Which is /^(\/[^?#\s]*)(\?[^#\s]*)?$/
     // And unrolls it into a for loop
-    for (var i = 1; i < str.length; i++) {
+    for (let i = 1; i < str.length; i++) {
         switch (str.charCodeAt(i)) {
             case 0x3f /* ?  */:
                 if (search === null) {
@@ -127,7 +127,7 @@ function fastparse(str) {
         }
     }
 
-    let urlReturn = Url !== undefined ? new Url() : {};
+    const urlReturn = Url !== undefined ? new Url() : {};
 
     urlReturn.path = str;
     urlReturn.href = str;

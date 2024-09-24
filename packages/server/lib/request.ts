@@ -137,6 +137,7 @@ export class Request implements IRequest {
     get accepts() {
         return (...args: string[]) => {
             const accept = accepts(this.req as http.IncomingMessage);
+            // eslint-disable-next-line
             return accept.types.apply(accept, args);
         };
     }
@@ -144,6 +145,7 @@ export class Request implements IRequest {
     get acceptsEncodings() {
         return (...args: string[]) => {
             const accept = accepts(this.req as http.IncomingMessage);
+            // eslint-disable-next-line
             return accept.encodings.apply(accept, args);
         };
     }
@@ -151,6 +153,7 @@ export class Request implements IRequest {
     get acceptsCharsets() {
         return (...args: string[]) => {
             const accept = accepts(this.req as http.IncomingMessage);
+            // eslint-disable-next-line
             return accept.charsets.apply(accept, args);
         };
     }
@@ -158,6 +161,7 @@ export class Request implements IRequest {
     get acceptsLanguages() {
         return (...args: string[]) => {
             const accept = accepts(this.req as http.IncomingMessage);
+            // eslint-disable-next-line
             return accept.languages.apply(accept, args);
         };
     }
@@ -175,8 +179,9 @@ export class Request implements IRequest {
             let arr = types;
 
             if (!Array.isArray(types)) {
+                // eslint-disable-next-line
                 arr = new Array(arguments.length);
-
+                // eslint-disable-next-line
                 for (let i = 0; i < arr.length; i++) arr[i] = arguments[i];
             }
 
@@ -186,7 +191,7 @@ export class Request implements IRequest {
 
     get host() {
         return () => {
-            let trust = this.app.get('trust proxy fn');
+            const trust = this.app.get('trust proxy fn');
             let val = this.get('X-Forwarded-Host');
 
             if (!val || !trust(this.req.socket.remoteAddress, 0)) {

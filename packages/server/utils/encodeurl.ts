@@ -45,7 +45,7 @@ const UNMATCHED_SURROGATE_PAIR_REPLACE = '$1\uFFFD$2';
  * @return {string}
  * @public
  */
-export let encodeUrl = url => {
+export const encodeUrl = url => {
     return String(url)
         .replace(
             UNMATCHED_SURROGATE_PAIR_REGEXP,

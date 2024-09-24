@@ -9,7 +9,7 @@ const url = require('url');
 import * as http from 'node:http';
 import * as http2 from 'node:http2';
 
-var URL_EMPTY_VALUE = url.Url ? null : undefined;
+const URL_EMPTY_VALUE = url.Url ? null : undefined;
 
 type Req = (http.IncomingMessage | http2.Http2ServerRequest) & {
     originalUrl?: string;

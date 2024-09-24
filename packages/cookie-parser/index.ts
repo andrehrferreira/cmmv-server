@@ -85,7 +85,7 @@ export default function (options?: CookieParserOptions) {
  * @return {Object}
  * @public
  */
-export let JSONCookies = obj => {
+export const JSONCookies = obj => {
     const cookies = Object.keys(obj);
     let key;
     let val;
@@ -107,7 +107,7 @@ export let JSONCookies = obj => {
  * @return {Object} Parsed object or undefined if not json cookie
  * @public
  */
-export let JSONCookie = (str?: any) => {
+export const JSONCookie = (str?: any) => {
     if (typeof str !== 'string' || str.substr(0, 2) !== 'j:') return undefined;
 
     try {
@@ -125,7 +125,7 @@ export let JSONCookie = (str?: any) => {
  * @return {String} decoded value
  * @public
  */
-export let signedCookie = (
+export const signedCookie = (
     str: any,
     secret: string | string[],
 ): string | boolean => {
@@ -153,9 +153,9 @@ export let signedCookie = (
  * @return {Object}
  * @public
  */
-export let signedCookies = (obj: Object, secret: string | string[]) => {
+export const signedCookies = (obj: Object, secret: string | string[]) => {
     const cookies = Object.keys(obj);
-    let ret = {};
+    const ret = {};
     let dec;
     let key;
     let val;
@@ -182,7 +182,7 @@ export let signedCookies = (obj: Object, secret: string | string[]) => {
  * @return {String}
  * @api private
  */
-export let sign = (val, secret) => {
+export const sign = (val, secret) => {
     if ('string' != typeof val)
         throw new TypeError('Cookie value must be provided as a string.');
     if (null == secret) throw new TypeError('Secret key must be provided.');
@@ -206,11 +206,11 @@ export let sign = (val, secret) => {
  * @return {String|Boolean}
  * @api private
  */
-export let unsign = (input, secret) => {
+export const unsign = (input, secret) => {
     if ('string' != typeof input)
         throw new TypeError('Signed cookie string must be provided.');
     if (null == secret) throw new TypeError('Secret key must be provided.');
-    let tentativeValue = input.slice(0, input.lastIndexOf('.')),
+    const tentativeValue = input.slice(0, input.lastIndexOf('.')),
         expectedInput = exports.sign(tentativeValue, secret),
         expectedBuffer = Buffer.from(expectedInput),
         inputBuffer = Buffer.from(input);

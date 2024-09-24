@@ -496,6 +496,7 @@ export class Router {
         try {
             const method = req.method as FindMyWay.HTTPMethod;
             const route = this.router.find(method, req.url ? req.url : '');
+            // eslint-disable-next-line
             let err = null;
 
             //Options (compatibility Expressjs)

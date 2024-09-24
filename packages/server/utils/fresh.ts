@@ -18,7 +18,7 @@ const CACHE_CONTROL_NO_CACHE_REGEXP = /(?:^|,)\s*?no-cache\s*?(?:,|$)/;
  * @return {Boolean}
  * @public
  */
-export let fresh = (reqHeaders, resHeaders) => {
+export const fresh = (reqHeaders, resHeaders) => {
     // fields
     const modifiedSince = reqHeaders['if-modified-since'];
     const noneMatch = reqHeaders['if-none-match'];
@@ -93,7 +93,7 @@ function parseHttpDate(date) {
 
 function parseTokenList(str) {
     let end = 0;
-    let list = [];
+    const list = [];
     let start = 0;
 
     // gather tokens

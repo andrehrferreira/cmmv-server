@@ -124,9 +124,12 @@ const DISPOSITION_TYPE_REGEXP =
  * @return {string}
  * @public
  */
-export let contentDisposition = (
+export const contentDisposition: any = (
     filename?: string,
-    options?: { type?: string; fallback?: boolean },
+    options?: {
+        type?: string | number;
+        fallback?: boolean | string | number;
+    },
 ): string => {
     const opts: any = options || {};
 
@@ -140,6 +143,8 @@ export let contentDisposition = (
     return format(new ContentDisposition(type, params));
 };
 
+contentDisposition.parse = parse;
+
 /**
  * Create parameters object from filename and fallback.
  *
@@ -152,7 +157,7 @@ export let contentDisposition = (
 function createparams(filename, fallback) {
     if (filename === undefined) return;
 
-    let params = {};
+    const params = {};
 
     if (typeof filename !== 'string')
         throw new TypeError('filename must be a string');
@@ -216,10 +221,10 @@ function format(obj) {
         let param;
         const params = Object.keys(parameters).sort();
 
-        for (var i = 0; i < params.length; i++) {
+        for (let i = 0; i < params.length; i++) {
             param = params[i];
 
-            var val =
+            const val =
                 param.slice(-1) === '*'
                     ? ustring(parameters[param])
                     : qstring(parameters[param]);
@@ -249,7 +254,7 @@ function decodefield(str) {
     let value;
 
     // to binary string
-    let binary = encoded.replace(HEX_ESCAPE_REPLACE_REGEXP, pdecode);
+    const binary = encoded.replace(HEX_ESCAPE_REPLACE_REGEXP, pdecode);
 
     switch (charset) {
         case 'iso-8859-1':
@@ -300,8 +305,8 @@ function parse(string) {
     const type = match[1].toLowerCase();
 
     let key;
-    let names = [];
-    let params = {};
+    const names = [];
+    const params = {};
     let value;
 
     // calculate index to start at
@@ -391,10 +396,10 @@ function qstring(val: string): string {
  * @private
  */
 function ustring(val: string): string {
-    var str = String(val);
+    const str = String(val);
 
     // percent encode as UTF-8
-    var encoded = encodeURIComponent(str).replace(
+    const encoded = encodeURIComponent(str).replace(
         ENCODE_URL_ATTR_CHAR_REGEXP,
         pencode,
     );
