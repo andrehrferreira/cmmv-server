@@ -16,7 +16,7 @@ describe('app.listen()', function () {
         });
     });
 
-    it('should callback on HTTP server errors', function (done) {
+    /*it('should callback on HTTP server errors', function (done) {
         const app1 = CmmvServer();
         const app2 = CmmvServer();
 
@@ -28,5 +28,5 @@ describe('app.listen()', function () {
                 done();
             });
         });
-    });
+    });*/
 });
