@@ -23,7 +23,7 @@ describe('app.listen()', function () {
         const server1 = app1.listen(0, err => {
             assert(!err);
             app2.listen((server1.address() as AddressInfo).port, (err: any) => {
-                //assert(err.code === 'EADDRINUSE')
+                assert(err.code === 'EADDRINUSE');
                 server1.close();
                 done();
             });
