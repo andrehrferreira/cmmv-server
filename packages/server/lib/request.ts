@@ -5,15 +5,13 @@ import * as url from 'node:url';
 
 import * as accepts from 'accepts';
 import * as cookie from 'cookie';
-import * as parseRange from 'range-parser';
 import * as typeis from 'type-is';
-import * as fresh from 'fresh';
 
 import { IRequest } from '@cmmv/server-common';
 
 import { ServerApplication } from './application';
 
-import { parseurl } from '../utils';
+import { parseurl, rangeParser, fresh } from '../utils';
 
 export class Request implements IRequest {
     constructor(
@@ -168,7 +166,7 @@ export class Request implements IRequest {
         return (size, options) => {
             const range = this.get('Range');
             if (!range) return;
-            return parseRange(size, range, options);
+            return rangeParser(size, range as string, options);
         };
     }
 

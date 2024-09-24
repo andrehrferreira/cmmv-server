@@ -30,5 +30,8 @@
         "on-headers": "^1.0.2",
         "safe-buffer": "^5.2.1",
         "vary": "^1.1.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.6.1"
     }
 }

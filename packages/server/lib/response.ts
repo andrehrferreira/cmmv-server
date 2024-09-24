@@ -10,11 +10,8 @@ import * as vary from 'vary';
 import * as accepts from 'accepts';
 import * as send from 'send';
 import { Buffer } from 'safe-buffer';
-import * as fresh from 'fresh';
-import * as contentDisposition from 'content-disposition';
 import * as createError from 'http-errors';
 import * as cookie from 'cookie';
-import * as encodeurl from 'encodeurl';
 
 import * as http from 'node:http';
 import * as http2 from 'node:http2';
@@ -36,7 +33,14 @@ import { IRespose, IRequest } from '@cmmv/server-common';
 
 import { ServerApplication } from './application';
 
-import { mime, escapeHtml, statuses, parseurl } from '../utils';
+import {
+    mime,
+    escapeHtml,
+    statuses,
+    fresh,
+    encodeUrl,
+    contentDisposition,
+} from '../utils';
 
 export class Response implements IRespose {
     public buffer: Buffer = Buffer.alloc(0);
@@ -523,7 +527,7 @@ export class Response implements IRespose {
      * @public
      */
     public location(path: string) {
-        return this.set('Location', encodeurl(url));
+        return this.set('Location', encodeUrl(url));
     }
 
     /**

@@ -12,7 +12,6 @@ import * as http2 from 'node:http2';
 
 import * as assign from 'object-assign';
 import * as vary from 'vary';
-import * as bytes from 'bytes';
 
 import {
     ServerMiddleware,
