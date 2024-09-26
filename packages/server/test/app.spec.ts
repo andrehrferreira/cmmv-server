@@ -6,27 +6,25 @@ import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
 
-import { CmmvServer } from '..';
-
-import { ServerApplication } from '../';
+import cmmv from '..';
 
 const onHeaders = require('on-headers');
 
 describe('app', function () {
-    let server: ServerApplication;
+    let server;
 
     before(function () {
-        server = CmmvServer();
+        server = cmmv();
     });
 
     it('should inherit from event emitter', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
         app.on('foo', done);
         app.emit('foo');
     });
 
     it('should be callable', function () {
-        const app = CmmvServer();
+        const app = cmmv();
         assert.equal(typeof app, 'object');
     });
 

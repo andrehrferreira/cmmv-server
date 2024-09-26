@@ -4,12 +4,12 @@
 
 import { strict as assert } from 'assert';
 
-import { CmmvServer } from '..';
+import cmmv from '..';
 import { AddressInfo } from 'net';
 
 describe('app.listen()', function () {
     it('should wrap with an HTTP server', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         const server = app.listen(0, () => {
             server.close(done);

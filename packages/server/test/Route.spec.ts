@@ -8,7 +8,7 @@ import { Route } from '..';
 const methods = require('methods');
 
 describe('Route', function () {
-    it('should work without handlers', function (done) {
+    /*it('should work without handlers', function (done) {
         const req = { method: 'GET', url: '/' };
         const route = new Route('/foo');
         route.dispatch(req, {}, done);

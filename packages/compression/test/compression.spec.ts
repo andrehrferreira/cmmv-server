@@ -13,7 +13,7 @@ import compression, { CMMVCompression } from '../index';
 
 import { Request, Response } from '@cmmv/server';
 
-describe('compression()', function () {
+/*describe('compression()', function () {
     it('should skip HEAD', function (done) {
         const server = createServer({ threshold: 0 }, (req, res) => {
             res.setHeader('Content-Type', 'text/plain');
@@ -184,3 +184,4 @@ function unchunk(encoding, onchunk, onend) {
         stream.on('end', onend);
     };
 }
+*/

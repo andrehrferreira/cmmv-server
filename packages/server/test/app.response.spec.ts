@@ -4,14 +4,14 @@
 
 import * as request from 'supertest';
 
-import { CmmvServer } from '..';
+import cmmv from '..';
 
 const after = require('after');
 
 describe('app', function () {
     describe('.response', function () {
         it('should extend the response prototype', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.response.shout = function (str) {
                 this.send(str.toUpperCase());

@@ -26,7 +26,6 @@ export class Mime {
 
     define(typeMap: TypeMap, force = false) {
         for (let [type, extensions] of Object.entries(typeMap)) {
-            // Lowercase thingz
             type = type.toLowerCase();
             extensions = extensions.map(ext => ext.toLowerCase());
 
@@ -49,6 +48,7 @@ export class Mime {
                 if (starred) continue;
 
                 const currentType = this.#extensionToType.get(extension);
+
                 if (currentType && currentType != type && !force) {
                     throw new Error(
                         `"${type} -> ${extension}" conflicts with "${currentType} -> ${extension}". Pass \`force=true\` to override this definition.`,
@@ -104,7 +104,6 @@ export class Mime {
     //
     // Private API, for internal use only.  These APIs may change at any time
     //
-
     _freeze() {
         this.define = () => {
             throw new Error(

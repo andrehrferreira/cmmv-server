@@ -6,11 +6,11 @@ import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
 
-import { CmmvServer } from '..';
+import cmmv from '..';
 
 describe('HEAD', function () {
     it('should default to GET', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.get('/tobi', function (req, res) {
             // send() detects HEAD
@@ -21,7 +21,7 @@ describe('HEAD', function () {
     });
 
     it('should output the same headers as GET requests', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.get('/tobi', function (req, res) {
             // send() detects HEAD
@@ -54,7 +54,7 @@ describe('HEAD', function () {
 
 describe('app.head()', function () {
     it('should override', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.head('/tobi', function (req, res) {
             res.header('x-method', 'head');

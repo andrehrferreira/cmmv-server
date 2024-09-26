@@ -1,51 +1,29 @@
-import cmmv, { json, urlencoded, serverStatic } from '@cmmv/server';
-import compression from '@cmmv/compression';
-import cors from '@cmmv/cors';
-import cookieParser from '@cmmv/cookie-parser';
+import cmmv from '@cmmv/server';
 
 /*const app = CmmvServer({
+    http2: true,
     key: readFileSync("./cert/private-key.pem"),
     cert: readFileSync("./cert/certificate.pem"),
     passphrase: "1234"
 });*/
 
-const app = cmmv({
-    /*http2: true,
-    key: readFileSync('./cert/private-key.pem'),
-    cert: readFileSync('./cert/certificate.pem'),
-    passphrase: '1234',*/
-});
-
+const app = cmmv();
 const host = '0.0.0.0';
 const port = 3000;
 
-app.use(json({ limit: '50mb' }));
-app.use(urlencoded({ limit: '50mb', extended: true }));
-app.use(compression());
-app.use(serverStatic('public'));
-app.use(cors());
-app.use(cookieParser());
-
-app.post('/', function (req, res) {});
-app.get('/users', function (req, res) {});
-app.put('/users', function (req, res) {});
-
-app.get('/docs/:id', (req, res) => {
-    console.log(req.params);
-    res.send('Ok');
+app.use(() => {
+    console.log('aki');
 });
 
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-app.post('/test', (req, res) => {
-    console.log(req.body);
-    res.send('Ok');
-});
-
-app.get('/test', (req, res) => res.sendFile('./public/test.html'));
-
-app.listen(3000, host, () => {
-    console.log(`Listen on http://${host}:${port}`);
-});
+app.listen({ host, port })
+    .then(address => {
+        //console.log(app.server)
+        console.log(`Listen on http://${address.address}:${address.port}`);
+    })
+    .catch(err => {
+        throw Error(err.message);
+    });

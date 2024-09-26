@@ -6,11 +6,11 @@ import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
 
-import { CmmvServer, Router } from '..';
+import cmmv, { Router } from '..';
 
 describe('OPTIONS', function () {
     it('should default to the routes defined', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.post('/', function () {});
         app.get('/users', function (req, res) {});
@@ -23,7 +23,7 @@ describe('OPTIONS', function () {
     });
 
     it('should only include each method once', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.delete('/', function () {});
         app.get('/users', function (req, res) {});
@@ -37,7 +37,7 @@ describe('OPTIONS', function () {
     });
 
     it('should not be affected by app.all', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.get('/', function () {});
         app.get('/users', function (req, res) {});
@@ -55,7 +55,7 @@ describe('OPTIONS', function () {
     });
 
     it('should not respond if the path is not defined', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.get('/users', function (req, res) {});
 
@@ -63,7 +63,7 @@ describe('OPTIONS', function () {
     });
 
     it('should forward requests down the middleware chain', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
         const router = new Router();
 
         router.get('/users', function (req, res) {});
@@ -101,7 +101,7 @@ describe('OPTIONS', function () {
 
 describe('app.options()', function () {
     it('should override the default behavior', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
 
         app.options('/users', function (req, res) {
             res.set('Allow', 'GET');

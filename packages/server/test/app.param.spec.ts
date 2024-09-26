@@ -6,12 +6,12 @@ import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
 
-import { CmmvServer, Router } from '..';
+import cmmv from '..';
 
 describe('app', function () {
     describe('.param(names, fn)', function () {
         it('should map the array', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param(['id', 'uid'], function (req, res, next, id) {
                 id = Number(id);
@@ -43,7 +43,7 @@ describe('app', function () {
 
     describe('.param(name, fn)', function () {
         it('should map logic for a single param', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param('id', function (req, res, next, id) {
                 id = Number(id);
@@ -122,7 +122,7 @@ describe('app', function () {
         })*/
 
         it('should support altering req.params across routes', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param('user', function (req, res, next, user) {
                 req.params.user = 'loki';
@@ -166,7 +166,7 @@ describe('app', function () {
         })*/
 
         it('should work with encoded values', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param('name', function (req, res, next, name) {
                 req.params.name = name;
@@ -182,7 +182,7 @@ describe('app', function () {
         });
 
         it('should catch thrown error', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param('id', function (req, res, next, id) {
                 throw new Error('err!');
@@ -197,7 +197,7 @@ describe('app', function () {
         });
 
         it('should catch thrown secondary error', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param('id', function (req, res, next, val) {
                 process.nextTick(next);
@@ -237,7 +237,7 @@ describe('app', function () {
         })*/
 
         it('should defer all the param routes', function (done) {
-            const app = CmmvServer();
+            const app = cmmv();
 
             app.param('id', function (req, res, next, val) {
                 if (val === 'new') return next('route');

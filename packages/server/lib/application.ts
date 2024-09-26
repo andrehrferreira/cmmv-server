@@ -1,738 +1,252 @@
 import * as http from 'node:http';
 import * as https from 'node:https';
-import * as http2 from 'node:http2';
-import * as zlib from 'node:zlib';
-import { AddressInfo } from 'node:net';
+import * as path from 'node:path';
+import { EventEmitter } from 'node:events';
 
-import * as querystring from 'qs';
-import * as formidable from 'formidable';
-import { EventEmitter } from 'events';
-
-import { ServerMiddleware, IServerApplication } from '@cmmv/server-common';
-
-import { ServerStaticMiddleware } from '@cmmv/server-static';
-
-import { Router } from './router';
-import { Request } from './request';
-import { Response } from './response';
+import { ServerOptions } from '@cmmv/server-common';
 
 import {
-    ServerOptions,
-    DefaultServerOptions,
-    DefaultServerHTTP2Options,
-} from '../interfaces';
+    CM_ERR_HTTP2_INVALID_VERSION,
+    CM_ERR_OPTIONS_NOT_OBJ,
+    CM_ERR_QSP_NOT_FN,
+} from './errors';
 
-import { compileETag } from '../utils';
+import { kChildren, kHooks, kMiddlewares } from './symbols';
 
-const {
-    HTTP_STATUS_NOT_FOUND,
-    HTTP_STATUS_INTERNAL_SERVER_ERROR,
-    HTTP_STATUS_BAD_GATEWAY,
-} = http2.constants;
+import { Hooks, hookRunnerApplication, supportedHooks } from './hooks';
 
-const mixin = require('merge-descriptors');
+import { HTTPMethod } from '../constants';
+import { Router } from './router';
+import { buildRequest } from './request';
+import { buildResponse } from './response';
 
-type Socket =
-    | http.Server
-    | https.Server
-    | http2.Http2Server
-    | http2.Http2SecureServer;
+export class Application extends EventEmitter {
+    private processOptions(options?: ServerOptions) {
+        if (typeof options !== 'object') throw new CM_ERR_OPTIONS_NOT_OBJ();
 
-process.setMaxListeners(0);
+        if (
+            options.querystringParser &&
+            typeof options.querystringParser !== 'function'
+        )
+            throw new CM_ERR_QSP_NOT_FN(typeof options.querystringParser);
 
-export class ServerApplication implements IServerApplication {
-    private isHTTP2: boolean = false;
-    public socket: Socket;
-    private opts:
-        | http.ServerOptions
-        | https.ServerOptions
-        | http2.ServerOptions
-        | http2.SecureServerOptions;
+        options.http2 = Boolean(options.http2 === true);
+        options.connectionTimeout = options.connectionTimeout || 0;
+        options.keepAliveTimeout = options.keepAliveTimeout || 72000;
+        options.maxRequestsPerSocket = options.maxRequestsPerSocket || 0;
+        options.requestTimeout = options.requestTimeout || 0;
+        options.bodyLimit = options.bodyLimit || 1048576;
+        options.maxHeaderSize = options.maxHeaderSize || 16384;
+        options.insecureHTTPParser = Boolean(
+            options.insecureHTTPParser === true,
+        );
+        options.joinDuplicateHeaders = Boolean(
+            options.joinDuplicateHeaders === true,
+        );
 
-    private middlewares: Set<ServerMiddleware | Function> = new Set<
-        ServerMiddleware | Function
-    >();
-
-    private middlewaresArr: Array<ServerMiddleware | Function> = [];
-    private staticServer: ServerStaticMiddleware | null = null;
-    private router: Router = new Router();
-    public parent: ServerApplication = null;
-
-    private scope: Map<string, any> = new Map<string, any>();
-    private namesProtected: Set<string> = new Set<string>();
-
-    //compatibility Expressjs
-    get locals() {
-        const obj: { [key: string]: any } = {};
-
-        this.scope.forEach((value, key) => {
-            obj[key] = value;
-        });
-
-        return obj;
+        return options;
     }
 
-    //compatibility Expressjs
-    get settings() {
-        return this.scope.has('settings') ? this.scope.get('settings') : {};
-    }
+    private injectApplication(server, options?: ServerOptions) {
+        const slice = Array.prototype.slice;
+        const flatten = Array.prototype.flat;
 
-    //compatibility Expressjs
-    get param() {
-        return this.router.param.bind(this.router);
-    }
-
-    //compatibility Expressjs
-    private _request = {};
-    private _response = {};
-
-    get request() {
-        return this._request as any;
-    }
-
-    set request(value) {
-        this._request = value;
-    }
-
-    get response() {
-        return this._response as any;
-    }
-
-    set response(value) {
-        this._response = value;
-    }
-
-    get address() {
-        return this.socket.address.bind(this);
-    }
-
-    get port() {
-        return (this.socket.address() as AddressInfo).port;
-    }
-
-    constructor(opts?: ServerOptions) {
-        this.isHTTP2 = opts?.http2 === true || false;
-
-        this.opts = this.isHTTP2
-            ? new DefaultServerHTTP2Options(opts).ToOptions()
-            : new DefaultServerOptions(opts).ToOptions();
-
-        if (!this.isHTTP2) {
-            this.socket =
-                opts && opts?.key && opts?.cert
-                    ? https.createServer(
-                          this.opts as https.ServerOptions,
-                          (req, res) => this.onListener(req, res),
-                      )
-                    : http.createServer(
-                          this.opts as http.ServerOptions,
-                          (req, res) => this.onListener(req, res),
-                      );
-        } else {
-            (this.opts as http2.SecureServerOptions).allowHTTP1 = true;
-
-            this.socket =
-                opts && opts?.key && opts?.cert
-                    ? http2.createSecureServer(
-                          this.opts as http2.SecureServerOptions,
-                          (req, res) => this.onListener(req, res),
-                      )
-                    : http2.createServer(
-                          this.opts as http2.ServerOptions,
-                          (req, res) => this.onListener(req, res),
-                      );
-        }
-
-        const gracefulShutdown = () => {
-            this.socket.close(() => process.exit(0));
+        const app: any = {
+            router: new Router(),
+            cache: Object.create(null),
+            engines: Object.create(null),
+            settings: Object.create(null),
+            locals: Object.create(null),
+            mountpath: '/',
         };
 
-        process.on('SIGTERM', gracefulShutdown);
-        process.on('SIGINT', gracefulShutdown);
-    }
+        HTTPMethod.forEach(method => {
+            app[method] = ((path?: string, ...callbacks) => {
+                if (method === 'get' && callbacks.length === 0)
+                    return app.set(path);
 
-    private async onListener(
-        req: http.IncomingMessage | http2.Http2ServerRequest,
-        res: http.ServerResponse | http2.Http2ServerResponse,
-    ) {
-        const hasFileExtension = /\.\w+$/.test(req.url);
-        //res.setHeader('Req-UUID', Telemetry.generateId());
-
-        if (hasFileExtension && this.staticServer) {
-            this.staticServer.process(req, res, err =>
-                this.handleBody(req, res, this.processRequest.bind(this)),
-            );
-        } else {
-            this.handleBody(req, res, this.processRequest.bind(this));
-        }
-    }
-
-    async handleBody(
-        req: http.IncomingMessage | http2.Http2ServerRequest,
-        res: http.ServerResponse | http2.Http2ServerResponse,
-        next: (req: any, res: any, body: any) => void,
-    ) {
-        try {
-            const method = req.method?.toUpperCase();
-            const bodyMethods = ['POST', 'PUT', 'PATCH'];
-            const contentType = req.headers['content-type'];
-
-            if (bodyMethods.includes(method)) {
-                let body = '';
-
-                req.on('data', async chunk => {
-                    body += chunk.toString();
-                });
-
-                req.on('end', async () => {
-                    try {
-                        const decompressedBody = await this.decompressBody(
-                            body,
-                            req,
-                            res,
-                        );
-
-                        switch (contentType) {
-                            case 'application/json':
-                                next(req, res, JSON.parse(decompressedBody));
-                                break;
-                            case 'application/x-www-form-urlencoded':
-                                next(
-                                    req,
-                                    res,
-                                    querystring.parse(decompressedBody),
-                                );
-                                break;
-                            case 'multipart/form-data':
-                                const form = new formidable.IncomingForm();
-                                form.parse(req, (err, fields, files) => {
-                                    if (err) {
-                                        res.writeHead(400, {
-                                            'Content-Type': 'application/json',
-                                        });
-                                        res.end(
-                                            JSON.stringify({
-                                                error: 'Invalid form data',
-                                            }),
-                                        );
-                                        return;
-                                    }
-                                    next(req, res, { fields, files });
-                                });
-                                break;
-                            default:
-                                next(req, res, null);
-                                break;
-                        }
-                    } catch (err) {
-                        if (process.env.NODE_ENV === 'dev') console.error(err);
-
-                        res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-                        res.end(err.message);
-                    }
-                });
-            } else {
-                next(req, res, null);
-            }
-        } catch (err) {
-            if (process.env.NODE_ENV === 'dev') console.error(err);
-
-            res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-            res.end(err.message);
-        }
-    }
-
-    async decompressBody(body: string, req, res): Promise<string> {
-        const encoding = (
-            req.headers['content-encoding'] || 'identity'
-        ).toLowerCase();
-
-        let steam = null;
-
-        switch (encoding) {
-            case 'br':
-                steam = zlib.createBrotliCompress();
-            case 'gzip':
-                steam = zlib.createGzip();
-            case 'deflate':
-                steam = zlib.createDeflate();
-        }
-
-        if (steam) {
-            const data = await this.decompressData(Buffer.from(body), steam);
-            return data;
-        }
-
-        return body;
-    }
-
-    async decompressData(
-        inputBuffer: Buffer,
-        compressionStream: zlib.Gzip | zlib.Deflate | zlib.BrotliCompress,
-    ): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            const chunks: Buffer[] = [];
-
-            compressionStream.on('data', chunk => {
-                chunks.push(chunk);
-            });
-
-            compressionStream.on('end', () => {
-                resolve(Buffer.concat(chunks).toString());
-            });
-
-            compressionStream.on('error', err => {
-                reject(err);
-            });
-
-            compressionStream.end(inputBuffer);
+                const route = app.router;
+                route[method].call(route, path, callbacks);
+                return this;
+            }).bind(app);
         });
-    }
 
-    bindCustomContext(original, newScope) {
-        mixin(original, newScope, false);
-    }
+        app.use = function use(fn: any) {
+            let offset = 0;
+            let path = '/';
 
-    async processRequest(req, res, body: any) {
-        this.router
-            .process(this, req, res, body)
-            .then(async route => {
-                try {
-                    const hasAfterProcess = this.middlewaresArr.some(
-                        middleware => {
-                            if (middleware instanceof ServerMiddleware)
-                                return middleware.afterProcess === true;
-                            else return false;
-                        },
-                    );
+            if (typeof fn !== 'function') {
+                let arg = fn;
 
-                    const processMiddleware = (
-                        index: number,
-                        after: boolean = false,
-                    ) => {
-                        if (!res.headersSent) {
-                            if (index < this.middlewaresArr.length && route) {
-                                const middleware = this.middlewaresArr[index];
+                while (Array.isArray(arg) && arg.length !== 0) arg = arg[0];
 
-                                if (!route.response.sended || after) {
-                                    if (
-                                        middleware instanceof
-                                            ServerMiddleware &&
-                                        middleware?.afterProcess === after
-                                    ) {
-                                        middleware.process(
-                                            route.request,
-                                            route.response,
-                                            () =>
-                                                processMiddleware(
-                                                    index + 1,
-                                                    after,
-                                                ),
-                                        );
-                                    } else if (
-                                        typeof middleware === 'function'
-                                    ) {
-                                        if (middleware.length === 4) {
-                                            //compatibility Expressjs
-                                            middleware(
-                                                null,
-                                                route.request,
-                                                route.response,
-                                                () =>
-                                                    processMiddleware(
-                                                        index + 1,
-                                                        after,
-                                                    ),
-                                            );
-                                        } else {
-                                            middleware(
-                                                route.request,
-                                                route.response,
-                                                () =>
-                                                    processMiddleware(
-                                                        index + 1,
-                                                        after,
-                                                    ),
-                                            );
-                                        }
-                                    } else {
-                                        processMiddleware(index + 1, after);
-                                    }
-                                } else {
-                                    console.error(
-                                        `Dont process ${(middleware as ServerMiddleware).middlewareName}`,
-                                    );
-                                }
-                            } else if (route) {
-                                if (!route.response.sended || hasAfterProcess) {
-                                    if (!after) {
-                                        this.runFunctions(
-                                            route.fn,
-                                            route.request,
-                                            route.response,
-                                        )
-                                            .then(result => {
-                                                if (result) {
-                                                    if (
-                                                        !route.response
-                                                            .sended ||
-                                                        hasAfterProcess
-                                                    )
-                                                        processMiddleware(
-                                                            0,
-                                                            true,
-                                                        );
-                                                    else {
-                                                        res.writeHead(
-                                                            route.response
-                                                                .statusCode,
-                                                        );
-                                                        res.end(
-                                                            route.head === true
-                                                                ? ''
-                                                                : route.response
-                                                                      .buffer,
-                                                        );
-                                                    }
-                                                }
-                                            })
-                                            .catch(err => {
-                                                console.error(err);
-                                                res.writeHead(
-                                                    HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                                                );
-                                                res.end(err.message);
-                                            });
-                                    } else if (route) {
-                                        res.writeHead(
-                                            route.response.statusCode,
-                                        );
-
-                                        res.end(
-                                            route.head === true
-                                                ? ''
-                                                : route.response.buffer,
-                                        );
-                                    } else {
-                                        res.writeHead(HTTP_STATUS_NOT_FOUND);
-                                        res.end('Not Found');
-                                    }
-                                }
-                            } else if (
-                                this.middlewaresArr.length > 0 &&
-                                index < this.middlewaresArr.length
-                            ) {
-                                const middleware = this.middlewaresArr[index];
-
-                                if (typeof middleware === 'function') {
-                                    const request = new Request(
-                                        this,
-                                        req,
-                                        res,
-                                        body,
-                                        null,
-                                        middleware,
-                                    );
-
-                                    const response = new Response(
-                                        this,
-                                        request,
-                                        res,
-                                    );
-
-                                    if (!response.sended) {
-                                        mixin(request, this._request, false);
-                                        mixin(response, this._response, false);
-                                        middleware.call(
-                                            this,
-                                            request,
-                                            response,
-                                            processMiddleware(index + 1, after),
-                                        );
-
-                                        res.writeHead(response.statusCode);
-                                        res.end(response.buffer);
-                                    }
-                                } else processMiddleware(index + 1, after);
-                            }
-                        } else {
-                            processMiddleware(index + 1, after);
-                        }
-                    };
-
-                    if (route) {
-                        this.bindCustomContext(
-                            route.request.req,
-                            this._request,
-                        ); //compatibility Expressjs
-                        this.bindCustomContext(
-                            route.response.res,
-                            this._response,
-                        ); //compatibility Expressjs
-
-                        if (this.middlewaresArr.length > 0)
-                            processMiddleware(0);
-                        else {
-                            if (route) {
-                                const result = await this.runFunctions(
-                                    route.fn,
-                                    route.request,
-                                    route.response,
-                                );
-
-                                if (result) {
-                                    res.writeHead(route.response.statusCode);
-                                    res.end(
-                                        route.head ? '' : route.response.buffer,
-                                    );
-                                }
-                            } else {
-                                res.writeHead(HTTP_STATUS_NOT_FOUND);
-                                res.end('Not Found');
-                            }
-                        }
-                    } else if (this.middlewaresArr.length > 0) {
-                        processMiddleware(0);
-                    } else {
-                        res.writeHead(HTTP_STATUS_NOT_FOUND);
-                        res.end('Not Found');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    if (process.env.NODE_ENV === 'dev') console.error(err);
-
-                    res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-                    res.end(err.message);
+                if (typeof arg !== 'function') {
+                    offset = 1;
+                    path = fn;
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                res.writeHead(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-                res.end(err.message);
-            });
-    }
+            }
 
-    private async runFunctions(
-        fns: Array<(req: Request, res: Response, next?: Function) => void>,
-        req: Request,
-        res: Response,
-    ): Promise<boolean> {
-        try {
-            const runFn = async (index: number) => {
-                if (fns && index < fns.length)
-                    fns[index](req, res, () => runFn(index + 1));
-            };
+            const fns = flatten.call(slice.call(arguments, offset), Infinity);
 
-            await runFn(0);
-            return true;
-        } catch (err) {
-            res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-            res.end(err.message);
-            res.finish();
-            return false;
-        }
-    }
+            if (fns.length === 0)
+                throw new TypeError('app.use() requires a middleware function');
 
-    //Methods
-    public use(
-        app:
-            | ServerMiddleware
-            | Router
-            | ServerStaticMiddleware
-            | Function
-            | string
-            | ServerApplication,
-        parent?: ServerApplication,
-    ): void {
-        if (app instanceof Router) {
-            this.router = app;
-        } else if (app instanceof ServerStaticMiddleware) {
-            this.staticServer = app;
-        } else if (
-            parent instanceof ServerApplication &&
-            typeof app === 'string'
-        ) {
-            this.parent = parent;
-        } else if (app instanceof ServerApplication) {
-            this.parent = app;
-            app.emit('mount', this);
-        } else if (app instanceof ServerMiddleware) {
-            this.middlewares.add(app);
-            this.middlewaresArr = Array.from(this.middlewares);
-        } else if (typeof app === 'function') {
-            /*console.warn(
-                'The use of generic middlewares was maintained for compatibility but its use is not recommended, change to ServerMiddleware',
-            );*/
-            this.middlewares.add(app);
-            this.middlewaresArr = Array.from(this.middlewares);
-        } else {
-            throw Error('Invalid use middleware');
-        }
-    }
+            const router = this.router;
 
-    public all(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) {
-            this.router.all(path, ...callbacks);
-        }
-    }
+            fns.forEach((fn: any) => {
+                if (!fn || !fn.handle || !fn.set) return router.use(path, fn);
 
-    public get(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ): any | null {
-        if (callbacks.length > 0) {
-            this.router.get(path, ...callbacks);
-        } else if (typeof path === 'string' && path !== '') {
-            return this.scope.has(path as string) ? this.scope.get(path) : null;
-        }
+                fn.mountpath = path;
+                fn.parent = this;
+                router.use(path, fn.handle);
+                fn.emit('mount', this);
+            }, this);
 
-        return null;
-    }
+            return this;
+        };
 
-    public post(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) this.router.post(path, ...callbacks);
-    }
+        app.route = function route(method: string, path: string) {
+            return this.router.find(method, path);
+        };
 
-    public put(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) this.router.put(path, ...callbacks);
-    }
+        /**
+         * Assign `setting` to `val`, or return `setting`'s value.
+         *
+         *    app.set('foo', 'bar');
+         *    app.set('foo');
+         *    // => "bar"
+         *
+         * Mounted servers inherit their parent server's settings.
+         *
+         * @param {String} setting
+         * @param {*} [val]
+         * @return {Server} for chaining
+         * @public
+         */
+        app.set = function set(setting: string, val: any) {
+            if (arguments.length === 1) return this.settings[setting];
 
-    public delete(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) this.router.delete(path, ...callbacks);
-    }
+            this.settings[setting] = val;
 
-    public head(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) this.router.head(path, ...callbacks);
-    }
-
-    public patch(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) this.router.patch(path, ...callbacks);
-    }
-
-    public options(
-        path: string,
-        ...callbacks: Array<
-            (req: Request, res: Response, next?: Function) => void
-        >
-    ) {
-        if (callbacks.length > 0) this.router.options(path, ...callbacks);
-    }
-
-    //Scope
-    public set(name: string, value: any): this {
-        if (!this.scope.has('settings')) this.scope.set('settings', {});
-
-        if (!this.namesProtected.has(name)) {
-            const settings = this.scope.get('settings');
-            settings[name] = value;
-            this.scope.set('settings', settings);
-
-            switch (name) {
+            switch (setting) {
                 case 'etag':
-                    this.set('etag fn', compileETag(value));
+                    const { compileETag } = require('../utils');
+                    this.set('etag fn', compileETag(val));
                     break;
                 case 'query parser':
-                    //this.set('query parser fn', compileQueryParser(value));
+                    const { compileQueryParser } = require('../utils');
+                    this.set('query parser fn', compileQueryParser(val));
                     break;
                 case 'trust proxy':
-                    /*this.set('trust proxy fn', compileTrust(value));
-                
-                    // trust proxy inherit back-compat
-                    Object.defineProperty(this.settings, trustProxyDefaultSymbol, {
-                        configurable: true,
-                        value: false
-                    }); */
+                    const { compileTrust } = require('../utils');
+                    this.set('trust proxy fn', compileTrust(val));
                     break;
             }
+
+            return this;
+        };
+
+        for (const method in app) {
+            if (!server[method]) server[method] = app[method];
         }
 
-        return this;
+        app.set('etag', 'weak');
+        app.set('env', process.env.NODE_ENV || 'dev');
+        app.set('query parser', 'simple');
+        app.set('subdomain offset', 2);
+        app.set('trust proxy', false);
+        app.set('jsonp callback name', 'callback');
+        app.set('views', path.resolve('views'));
+
+        server.app = app;
+        server[kHooks] = new Hooks();
+        server[kMiddlewares] = [];
+        server[kChildren] = [];
     }
 
-    public enable(name: string): void {
-        if (this.namesProtected.has(name)) this.namesProtected.delete(name);
+    public createServerInstance(options?: ServerOptions, httpHandler?) {
+        let server = null;
+
+        options = this.processOptions(options || {});
+
+        if (options.serverFactory) {
+            server = options.serverFactory(this._handler, options);
+        } else if (options.http2) {
+            if (options.https)
+                server = this.http2().createSecureServer(
+                    options.https,
+                    (req, res) => this._handler.call(server, req, res),
+                );
+            else
+                server = this.http2().createServer(options, (req, res) =>
+                    this._handler.call(server, req, res),
+                );
+        } else {
+            if (options.https)
+                server = https.createServer(options.https, (req, res) =>
+                    this._handler.call(server, req, res),
+                );
+            else
+                server = http.createServer(options, (req, res) =>
+                    this._handler.call(server, req, res),
+                );
+
+            server.keepAliveTimeout = options.keepAliveTimeout;
+            server.requestTimeout = options.requestTimeout;
+
+            if (options.maxRequestsPerSocket > 0)
+                server.maxRequestsPerSocket = options.maxRequestsPerSocket;
+        }
+
+        if (!options.serverFactory)
+            server.setTimeout(options.connectionTimeout);
+
+        this.injectApplication.call(this, server, options);
+
+        const listen = (listenOptions: { host: string; port: number }) => {
+            return server.listen.call(server, listenOptions);
+        };
+
+        return { server, listen };
     }
 
-    public enabled(name: string): boolean {
-        return this.namesProtected.has(name);
+    private _handler(this: any, req, res) {
+        const route = this.route(req.method, req.url);
+
+        if (route) {
+            const request = buildRequest(
+                this.app,
+                req,
+                res,
+                route.parms,
+                route.searchParams,
+            );
+            const response = buildResponse(this.app, request, res);
+            const middlewares = this[kMiddlewares] || [];
+            let stack = [...middlewares, ...route.store.stack].flat();
+
+            while (stack.length > 0) {
+                stack[0].call(this, request, response);
+                stack.shift();
+            }
+        } else {
+            res.writeHead(404);
+            res.end('Not Found');
+        }
     }
 
-    public disable(name: string): void {
-        if (!this.namesProtected.has(name)) this.namesProtected.add(name);
+    private http2() {
+        try {
+            return require('node:http2');
+        } catch (err) {
+            throw new CM_ERR_HTTP2_INVALID_VERSION();
+        }
     }
-
-    public disabled(name: string): boolean {
-        return !this.namesProtected.has(name);
-    }
-
-    //Others
-    public render(
-        viewName: string,
-        dataOrCallback: object | Function,
-        callback?: Function,
-    ) {}
-
-    public listen(
-        port: number,
-        hostOrCallback?: string | ((err?: Error) => void),
-        callback?: (err?: Error) => void,
-    ): Socket {
-        const host =
-            typeof hostOrCallback === 'string' ? hostOrCallback : '127.0.0.1';
-        const cb =
-            typeof hostOrCallback === 'function' ? hostOrCallback : callback;
-        this.socket.listen({ port, host, backlog: true }, cb);
-        return this.socket;
-    }
-
-    public close(callback?: (err?: Error) => void) {
-        this.socket.close(callback);
-    }
-
-    public Router(): new () => Router {
-        //compatibility Expressjs
-        return Router;
-    }
-
-    //Events
-    public on(name: string, callback: Function) {} //compatibility Expressjs
-    public emit(name: string, value?: any) {} //compatibility Expressjs
 }
 
-export const CmmvServer = (options?: ServerOptions) => {
-    const app = new ServerApplication(options);
-    mixin(app, EventEmitter.prototype, false);
-    return app;
+export default (
+    options?: ServerOptions,
+    httpHandler?: Function,
+): { server; listen } => {
+    return new Application().createServerInstance(options, httpHandler);
 };

@@ -1,15 +1,14 @@
-const wrkPkg = require('wrk');
+const AutoCannon = require('autocannon');
 const { spawn } = require('child_process');
 const { join } = require('path');
-const { table } = require('console');
 
 module.default = async function checkBenchmarks() {
   await getBenchmarks();
 }
 
-const wrk = (options) =>
+const autocannon = (options) =>
   new Promise((resolve, reject) =>
-    wrkPkg(options, (err, result) =>
+  	AutoCannon(options, (err, result) =>
       err ? reject(err) : resolve(result),
     ),
   );
@@ -21,7 +20,7 @@ const BENCHMARK_PATH = join(process.cwd(), 'benchmarks');
 
 const LIBS = [
 	'cmmv-simple:5001', 'http:5002', 'express-simple:5003',
-	'fastify:5004', 'hapi:5005', 'koa:5006', 'resfity:5007'
+	'fastify:5004', 'hapi:5005', 'koa:5006'
 ];
 
 async function runBenchmarkOfLib(lib) {
@@ -53,9 +52,9 @@ async function runBenchmarkOfLib(lib) {
 
   	await sleep(10000);
 
-	const result = await wrk({
-		threads: 8,
-		duration: '10s',
+	const result = await autocannon({
+		workers: 8,
+		duration: 10,
 		connections: 1024,
 		url: `http://localhost:${port}`,
 	});
@@ -83,21 +82,30 @@ async function getBenchmarks() {
   	return results;
 }
 
+function formatBytes(bytes) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatLatency(latency) {
+    return latency.toFixed(0) + ' ms';
+}
+
 async function run() {
   	const results = await getBenchmarks();
 
 	const tableData = Object.entries(results).map(([lib, result]) => ({
-		Framework: lib.replace("-simple", ""),
-		'Reqs/sec': result.requestsPerSec,
-		'Transfer/sec': result.transferPerSec,
-		Latency: result.latencyAvg,
-		'Total Reqs': result.requestsTotal,
-		'Transfer Total': result.transferTotal,
-		'Latency Stdev': result.latencyStdev,
-		'Latency Max': result.latencyMax,
+		Framework: lib.replace("-simple", "").split(":")[0],
+		'Reqs/s': Number(result.requests.average.toFixed(0)),
+		'Total Reqs': result.requests.total,
+		'Transfer/s': formatBytes(result.throughput.average),
+		'Transfer Total': formatBytes(result.throughput.total),
+		Latency: formatLatency(result.latency.average),
 	}));
 
-  	tableData.sort((a, b) => b['Reqs/sec'] - a['Reqs/sec']);
+  	tableData.sort((a, b) => b['Reqs/s'] - a['Reqs/s']);
 
   	console.table(tableData);
 }

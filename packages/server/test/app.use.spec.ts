@@ -6,15 +6,15 @@ import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
 
-import { CmmvServer } from '..';
+import cmmv from '..';
 
 const methods = require('methods');
 const after = require('after');
 
 describe('app', function () {
     it('should emit "mount" when mounted', function (done) {
-        const blog = CmmvServer(),
-            app = CmmvServer();
+        const blog = cmmv(),
+            app = cmmv();
 
         blog.on('mount', function (arg) {
             assert.strictEqual(arg, app);

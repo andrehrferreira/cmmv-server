@@ -4,13 +4,13 @@
 
 import * as request from 'supertest';
 
-import { CmmvServer } from '..';
+import cmmv from '..';
 
 const after = require('after');
 
 describe('app.all()', function () {
     it('should add a router per method', function (done) {
-        const app = CmmvServer();
+        const app = cmmv();
         const cb = after(2, done);
 
         app.all('/tobi', function (req, res) {

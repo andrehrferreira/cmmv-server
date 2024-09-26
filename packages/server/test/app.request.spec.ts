@@ -6,7 +6,7 @@ import { strict as assert } from 'assert';
 
 import * as request from 'supertest';
 
-import { CmmvServer } from '..';
+import cmmv from '..';
 
 describe('app', function () {
     describe('.request', function () {

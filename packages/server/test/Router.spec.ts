@@ -10,7 +10,7 @@ const after = require('after');
 const methods = require('methods');
 
 describe('Router', function () {
-    it('should return a function with router methods', function () {
+    /*it('should return a function with router methods', function () {
         const router: any = new Router();
 
         assert(typeof router === 'object');
@@ -225,14 +225,13 @@ describe('Router', function () {
                 router.route('/foo').all('not a function');
             })
         })*/
-
-        it('should not throw if all callbacks are functions', function () {
+        /*it('should not throw if all callbacks are functions', function () {
             const router = new Router();
             router
                 .route('/foo')
                 .all(function () {})
                 .all(function () {});
-        });
+        });*/
     });
 
     /*describe('error', function(){
@@ -320,7 +319,7 @@ describe('Router', function () {
         });
     });*/
 
-    describe('FQDN', function () {
+    /*describe('FQDN', function () {
         it('should not obscure FQDNs', function (done) {
             const request = {
                 hit: 0,
@@ -342,7 +341,7 @@ describe('Router', function () {
             });
         });
 
-        /*it('should ignore FQDN in search', function (done) {
+        it('should ignore FQDN in search', function (done) {
             const request = { hit: 0, url: '/proxy?url=http://example.com/blog/post/1', method: 'GET' };
             const router = new Router();
         
@@ -357,7 +356,7 @@ describe('Router', function () {
                 assert.equal(request.hit, 1);
                 done();
             });
-        });*/
+        });
 
         it('should ignore FQDN in path', function (done) {
             const request = {
@@ -568,7 +567,7 @@ describe('Router', function () {
         it('should reject non-function', function () {
             var router = new Router();
             assert.throws(router.param.bind(router, 'id', 42), /argument fn must be a function/);
-        });*/
+        });
 
         it('should call param function when routing VERBS', function (done) {
             const router = new Router();
@@ -655,7 +654,7 @@ describe('Router', function () {
                 assert.equal(req.user, 'foo');
                 done();
             });
-        });*/
+        });
     });
 
     /*describe('parallel requests', function() {

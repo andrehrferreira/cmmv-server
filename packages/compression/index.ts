@@ -61,32 +61,13 @@ export class CMMVCompression extends ServerMiddleware {
     }
 
     async process(
-        req: Request | http.IncomingMessage | http2.Http2ServerRequest,
-        res: Response | http.ServerResponse | http2.Http2ServerResponse,
+        req: http.IncomingMessage | http2.Http2ServerRequest,
+        res: http.ServerResponse | http2.Http2ServerResponse,
         next?: INext,
     ) {
         try {
-            const reqTest =
-                req instanceof http.IncomingMessage ||
-                req instanceof http2.Http2ServerRequest
-                    ? req
-                    : req?.httpRequest;
-            const resTest =
-                res instanceof http.ServerResponse ||
-                res instanceof http2.Http2ServerResponse
-                    ? res
-                    : res?.httpResponse;
-
-            const acceptHeader =
-                req instanceof Request
-                    ? req.getHeader('accept-encoding')
-                    : req.headers['accept-encoding'];
-
-            const accept = accepts(
-                (req instanceof Request
-                    ? req.httpRequest
-                    : req) as http.IncomingMessage,
-            );
+            const acceptHeader = req.headers['accept-encoding'];
+            const accept = accepts(req as http.IncomingMessage);
 
             let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
@@ -96,7 +77,7 @@ export class CMMVCompression extends ServerMiddleware {
                 if (this.options.express)
                     this.expressCompatibility(req, res, next, this.options);
                 else {
-                    vary(resTest as http.ServerResponse, 'Accept-Encoding');
+                    vary(res as http.ServerResponse, 'Accept-Encoding');
 
                     if (req.method === 'HEAD') {
                         next();
@@ -107,7 +88,7 @@ export class CMMVCompression extends ServerMiddleware {
                         res.getHeader('Content-Encoding') || 'identity';
                     const contentLenght = res.getHeader('Content-Length');
 
-                    if (
+                    /*if (
                         (Number(contentLenght) < this.options.threshold &&
                             !Number.isNaN(contentLenght)) ||
                         (res instanceof Response &&
@@ -115,7 +96,7 @@ export class CMMVCompression extends ServerMiddleware {
                     ) {
                         next();
                         return;
-                    }
+                    }*/
 
                     if (encoding !== 'identity') {
                         next();
@@ -127,7 +108,7 @@ export class CMMVCompression extends ServerMiddleware {
                         return;
                     }
 
-                    if (res instanceof Response) {
+                    /*if (res instanceof Response) {
                         const hashKey = this.generateHash(method, res.buffer);
 
                         if (
@@ -155,7 +136,7 @@ export class CMMVCompression extends ServerMiddleware {
                                 this.cache.delete(hashKey);
                             }
                         }
-                    }
+                    }*/
 
                     const stream = this.createCompressionStream(method);
 
@@ -164,7 +145,7 @@ export class CMMVCompression extends ServerMiddleware {
                         return;
                     }
 
-                    if (res instanceof Response) {
+                    /*if (res instanceof Response) {
                         res.set('Content-Encoding', method);
                         res.remove('Content-Length');
 
@@ -177,7 +158,7 @@ export class CMMVCompression extends ServerMiddleware {
                     } else {
                         resTest.setHeader('Content-Encoding', method);
                         resTest.removeHeader('Content-Length');
-                    }
+                    }*/
                 }
             }
 

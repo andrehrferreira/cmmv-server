@@ -1,4 +1,4 @@
-const wrkPkg = require('wrk');
+const AutoCannon = require('autocannon');
 const { spawn } = require('child_process');
 const { join } = require('path');
 
@@ -6,9 +6,9 @@ module.default = async function checkBenchmarks() {
   await getBenchmarks();
 }
 
-const wrk = (options) =>
+const autocannon = (options) =>
   new Promise((resolve, reject) =>
-    wrkPkg(options, (err, result) =>
+  	AutoCannon(options, (err, result) =>
       err ? reject(err) : resolve(result),
     ),
   );
@@ -48,20 +48,20 @@ async function runBenchmarkOfLib(lib) {
 		console.log(`stderr: ${data}`);
 	});
 
-	process.unref();
+  	process.unref();
 
-	await sleep(10000);
+  	await sleep(10000);
 
-	const result = await wrk({
-		threads: 8,
-		duration: '10s',
+	const result = await autocannon({
+		workers: 8,
+		duration: 10,
 		connections: 1024,
 		url: `http://localhost:${port}`,
 	});
 
 	process.kill('SIGKILL');
 	process.unref();
-
+	
 	return result;
 }
 
@@ -79,26 +79,35 @@ async function getBenchmarks() {
 		}
 	}
 
-	return results;
+  	return results;
+}
+
+function formatBytes(bytes) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatLatency(latency) {
+    return latency.toFixed(0) + ' ms';
 }
 
 async function run() {
-	const results = await getBenchmarks();
+  	const results = await getBenchmarks();
 
 	const tableData = Object.entries(results).map(([lib, result]) => ({
-		Framework: lib.replace("-middlewares", ""),
-		'Reqs/sec': result.requestsPerSec,
-		'Transfer/sec': result.transferPerSec,
-		Latency: result.latencyAvg,
-		'Total Reqs': result.requestsTotal,
-		'Transfer Total': result.transferTotal,
-		'Latency Stdev': result.latencyStdev,
-		'Latency Max': result.latencyMax,
+		Framework: lib.replace("-middlewares", "").split(":")[0],
+		'Reqs/s': Number(result.requests.average.toFixed(0)),
+		'Total Reqs': result.requests.total,
+		'Transfer/s': formatBytes(result.throughput.average),
+		'Transfer Total': formatBytes(result.throughput.total),
+		Latency: formatLatency(result.latency.average),
 	}));
 
-	tableData.sort((a, b) => b['Reqs/sec'] - a['Reqs/sec']);
+  	tableData.sort((a, b) => b['Reqs/s'] - a['Reqs/s']);
 
-	console.table(tableData);
+  	console.table(tableData);
 }
 
 run();
