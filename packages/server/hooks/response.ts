@@ -6,27 +6,29 @@ export const onResponseHookIterator = (fn, req, res, next) => {
     return fn(req, res, next);
 };
 
-export const onSendHookRunner = (functions, request, reply, payload, cb) => {
+export const onSendHookRunner = (functions, request, res, payload, cb) => {
     let i = 0;
 
     function next(err?, newPayload?) {
+        if (res.sent) return;
+
         if (err) {
-            cb(err, request, reply, payload);
+            cb(err, request, res, payload);
             return;
         }
 
         if (newPayload !== undefined) payload = newPayload;
 
         if (i === functions.length) {
-            cb(null, request, reply, payload);
+            cb(null, request, res, payload);
             return;
         }
 
         let result;
         try {
-            result = functions[i++](request, reply, payload, next);
+            result = functions[i++](request, res, payload, next);
         } catch (error) {
-            cb(error, request, reply);
+            cb(error, request, res);
             return;
         }
 
@@ -40,8 +42,7 @@ export const onSendHookRunner = (functions, request, reply, payload, cb) => {
 
     function handleReject(err) {
         if (!err) err = new CM_ERR_SEND_UNDEFINED_ERR();
-
-        cb(err, request, reply, payload);
+        cb(err, request, res, payload);
     }
 
     next();

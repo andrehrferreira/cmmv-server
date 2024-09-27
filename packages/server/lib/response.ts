@@ -105,7 +105,7 @@ export const setupResponseListeners = res => {
         res.removeListener('finish', onResFinished);
         res.removeListener('error', onResFinished);
 
-        if (res && res.onResponse !== null) {
+        if (res && res.onResponse !== null && res.onResponse.length > 0) {
             onResponseHookRunner(
                 res.onResponse,
                 res.request,
@@ -177,7 +177,7 @@ function safeWriteHead(response, statusCode) {
 }
 
 function preSerializationHook(res, payload) {
-    if (res.preSerialization !== null) {
+    if (res.preSerialization !== null && res.preSerialization.length > 0) {
         preSerializationHookRunner(
             res.preSerialization,
             res.request,
@@ -226,6 +226,7 @@ function onErrorHook(res, error, cb?) {
     if (
         res.onError !== null &&
         res.onError !== undefined &&
+        res.onError.length > 0 &&
         !res[kResponseNextErrorHandler]
     ) {
         res[kResponseIsRunningOnErrorHook] = true;
@@ -238,7 +239,11 @@ function onErrorHook(res, error, cb?) {
 }
 
 function onSendHook(res, payload) {
-    if (res.onSend !== null && res.onSend !== undefined) {
+    if (
+        res.onSend !== null &&
+        res.onSend !== undefined &&
+        res.onSend.length > 0
+    ) {
         onSendHookRunner(res.onSend, res.request, res, payload, wrapOnSendEnd);
     } else {
         onSendEnd(res, payload);
@@ -330,9 +335,10 @@ function onSendEnd(response, payload) {
 
     if (response[kResponseTrailers] === null) {
         const contentLength = response[kResponseHeaders]['content-length'];
+
         if (
             !contentLength ||
-            (response.request.method !== 'HEAD' &&
+            (response.request.method.toLowerCase() !== 'head' &&
                 Number(contentLength) !== Buffer.byteLength(payload))
         ) {
             response[kResponseHeaders]['content-length'] =
@@ -342,7 +348,8 @@ function onSendEnd(response, payload) {
 
     safeWriteHead(response, statusCode);
 
-    if (response.req.method !== 'HEAD') response.res.write(payload);
+    if (response.req.method.toLowerCase() !== 'head')
+        response.res.write(payload);
 
     sendTrailer(payload, response);
 }
@@ -1090,6 +1097,7 @@ export default {
                 payload = Buffer.isBuffer(payload)
                     ? payload
                     : Buffer.from(payload);
+
                 onSendHook(this, payload);
             }
 

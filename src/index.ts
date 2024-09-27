@@ -12,7 +12,7 @@ const app = cmmv();
 const host = '0.0.0.0';
 const port = 3000;
 
-app.use(etag());
+app.use(etag({ algorithm: 'fnv1a' }));
 
 app.get('/', async (req, res) => {
     res.send('Hello World');

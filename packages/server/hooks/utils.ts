@@ -14,6 +14,8 @@ export const hookRunnerGenerator = iterator => {
         let i = 0;
 
         function next(err?) {
+            if (res.sent) return;
+
             if (err || i === functions.length) {
                 cb(err, req, res);
                 return;

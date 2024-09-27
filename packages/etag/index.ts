@@ -34,7 +34,7 @@ export class EtagMiddleware extends ServerMiddleware {
     async process(req, res, next) {
         if (req.app && typeof req.app.addHook == 'function')
             req.app.addHook('onSend', this.onCall.bind(this));
-        else this.onCall.call(this, req, res, null, next);
+        else this.onCall.call(this, req, res, res.body, next);
     }
 
     async onCall(req, res, payload, done) {
@@ -65,7 +65,7 @@ export class EtagMiddleware extends ServerMiddleware {
             newPayload = '';
         }
 
-        //done(null, newPayload);
+        done(null, newPayload);
     }
 
     buildHashFn(algorithm = 'sha1', weak = false) {
