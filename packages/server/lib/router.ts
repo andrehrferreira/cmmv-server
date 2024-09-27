@@ -24,9 +24,16 @@ export class Router {
     public route: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
 
     public find(method: string, path: string) {
-        const httpMethod = method as FindMyWay.HTTPMethod;
-        const route = this.router.find(httpMethod, path);
-        return route;
+        return new Promise((resolve, reject) => {
+            const httpMethod = method as FindMyWay.HTTPMethod;
+
+            if (this.router.hasRoute(httpMethod, path)) {
+                const route = this.router.find(httpMethod, path);
+                resolve(route);
+            } else {
+                reject();
+            }
+        });
     }
 
     private mergeRoutes(

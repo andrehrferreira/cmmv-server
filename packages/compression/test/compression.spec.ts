@@ -11,8 +11,6 @@ import * as request from 'supertest';
 
 import compression, { CMMVCompression } from '../index';
 
-import { Request, Response } from '@cmmv/server';
-
 /*describe('compression()', function () {
     it('should skip HEAD', function (done) {
         const server = createServer({ threshold: 0 }, (req, res) => {

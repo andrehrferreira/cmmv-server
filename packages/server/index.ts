@@ -19,7 +19,6 @@ import app from './lib/application';
 import { Router as router } from './lib/router';
 import * as Utils from './utils';
 
-import { Request, Response } from '.';
 import { ServerOptions } from '@cmmv/server-common';
 import { onListenHookRunner } from './lib/hooks';
 
@@ -56,6 +55,6 @@ export const application = app;
 export const Router = router;
 export const Route = router;
 
-//export const req = Request;
-//export const res = Response;
-//export const utils = Utils;
+export const request = require('./lib/request');
+export const response = require('./lib/response');
+export const utils = Utils;

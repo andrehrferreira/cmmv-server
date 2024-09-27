@@ -11,12 +11,12 @@ const app = cmmv();
 const host = '0.0.0.0';
 const port = 3000;
 
-app.use(() => {
-    console.log('aki');
+app.get('/', async (req, res) => {
+    res.send('Hello World');
 });
 
-app.get('/', (req, res) => {
-    res.send('Hello World');
+app.get('/json', async (req, res) => {
+    res.json({ hello: 'world' });
 });
 
 app.listen({ host, port })

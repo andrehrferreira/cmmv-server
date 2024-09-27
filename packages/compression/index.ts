@@ -28,8 +28,6 @@ import {
     IRespose,
 } from '@cmmv/server-common';
 
-import { Request, Response } from '@cmmv/server';
-
 export type CompressionOptions = zlib.ZlibOptions & {
     threshold?: number;
     express?: boolean;

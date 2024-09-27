@@ -17,10 +17,20 @@ import { Hooks, hookRunnerApplication, supportedHooks } from './hooks';
 
 import { HTTPMethod } from '../constants';
 import { Router } from './router';
-import { buildRequest } from './request';
-import { buildResponse } from './response';
+import request from './request';
+import response from './response';
 
 export class Application extends EventEmitter {
+    request: any;
+
+    response: any;
+
+    constructor() {
+        super();
+        this.request = Object.create(request);
+        this.response = Object.create(response);
+    }
+
     private processOptions(options?: ServerOptions) {
         if (typeof options !== 'object') throw new CM_ERR_OPTIONS_NOT_OBJ();
 
@@ -162,6 +172,8 @@ export class Application extends EventEmitter {
         server[kHooks] = new Hooks();
         server[kMiddlewares] = [];
         server[kChildren] = [];
+        server.request = this.request;
+        server.response = this.response;
     }
 
     public createServerInstance(options?: ServerOptions, httpHandler?) {
@@ -210,29 +222,38 @@ export class Application extends EventEmitter {
         return { server, listen };
     }
 
-    private _handler(this: any, req, res) {
-        const route = this.route(req.method, req.url);
+    private async _handler(this: any, req, res) {
+        this.route(req.method, req.url)
+            .then(async route => {
+                const request = Object.create(this.request);
+                const response = Object.create(this.response);
+                response.clear();
 
-        if (route) {
-            const request = buildRequest(
-                this.app,
-                req,
-                res,
-                route.parms,
-                route.searchParams,
-            );
-            const response = buildResponse(this.app, request, res);
-            const middlewares = this[kMiddlewares] || [];
-            let stack = [...middlewares, ...route.store.stack].flat();
+                request.app = response.app = this;
+                request.req = response.req = req;
+                request.res = response.res = res;
 
-            while (stack.length > 0) {
-                stack[0].call(this, request, response);
-                stack.shift();
-            }
-        } else {
-            res.writeHead(404);
-            res.end('Not Found');
-        }
+                request.response = response;
+                response.request = request;
+                request.originalUrl = req.url;
+
+                const middlewares = this[kMiddlewares] || [];
+                let stack = [...middlewares, ...route.store.stack].flat();
+
+                if (stack.length === 1) {
+                    stack[0].call(this, request, response);
+                } else {
+                    while (stack.length > 0) {
+                        stack[0].call(this, request, response);
+                        stack.shift();
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                res.writeHead(404);
+                res.end('Not Found');
+            });
     }
 
     private http2() {

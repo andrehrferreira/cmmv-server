@@ -3,46 +3,32 @@
  * Copyright(c) 2009-2013 TJ Holowaychuk
  * Copyright(c) 2013 Roman Shtylman
  * Copyright(c) 2014-2015 Douglas Christopher Wilson
- * Copyright(c) 2024 Andre Ferreira
  * MIT Licensed
  *
  * @see https://github.com/expressjs/express/blob/master/lib/request.js
+ *
+ * koa
+ * Copyright (c) 2019 Koa contributors
+ * MIT Licensed
+ *
+ * @see https://github.com/koajs/koa/blob/master/lib/request.js
+ *
+ * fastify
+ * Copyright (c) 2016-2024 The Fastify Team
+ * MIT Licensed
+ *
+ * @see https://github.com/fastify/fastify/blob/main/lib/request.js
  */
-
-import * as http from 'node:http';
-import * as http2 from 'node:http2';
 import { isIP } from 'node:net';
 
 import * as proxyaddr from 'proxy-addr';
 
-export type Request = (http.IncomingMessage | http2.Http2ServerRequest) & {
-    app?: any;
-    props?: any;
-    prototype?: any;
-    body?: {} | undefined;
-    params?: {} | undefined;
-    query?: {} | undefined;
-    get(name: string);
-    header(name: string);
-    accepts();
-    acceptsEncodings();
-    acceptsCharsets();
-    acceptsLanguages();
-    range(size, options);
-    is(types: string | string[]);
-};
-
-export const buildRequest = (
-    app,
-    R: Request,
-    res: Response,
-    params: {},
-    query: {},
-) => {
-    R.app = app;
-    R.body = undefined;
-    R.params = params;
-    R.query = query;
+export default {
+    app: undefined,
+    req: undefined,
+    res: undefined,
+    originalUrl: undefined,
+    memoizedURL: undefined,
 
     /**
      * Parse the query string of `req.url`.
@@ -53,20 +39,45 @@ export const buildRequest = (
      * @return {String}
      * @api public
      */
-    Object.defineProperty(R, 'query', {
-        configurable: true,
-        enumerable: true,
-        get(): number {
-            const { parseurl } = require('../utils');
-            var queryparse = app.get('query parser fn');
+    get query(): number {
+        const { parseurl, compileQueryParser } = require('../utils');
+        var querystring = parseurl(this).query;
+        return compileQueryParser(querystring);
+    },
 
-            if (!queryparse) return Object.create(null);
+    /**
+     * Get query string.
+     *
+     * @return {String}
+     * @api public
+     */
+    get querystring() {
+        if (!this.req) return '';
+        const { parseurl } = require('../utils');
+        return parseurl(this.req).query || '';
+    },
 
-            var querystring = parseurl(this).query;
+    /**
+     * Get the search string. Same as the query string
+     * except it includes the leading ?.
+     *
+     * @return {String}
+     * @api public
+     */
+    get search() {
+        if (!this.querystring) return '';
+        return `?${this.querystring}`;
+    },
 
-            return queryparse(querystring);
-        },
-    });
+    /**
+     * Return the request socket.
+     *
+     * @return {Connection}
+     * @api public
+     */
+    get socket() {
+        return this.req.socket;
+    },
 
     /**
      * Return the protocol string "http" or "https"
@@ -81,23 +92,54 @@ export const buildRequest = (
      * @return {String}
      * @public
      */
-    Object.defineProperty(R, 'protocol', {
-        configurable: true,
-        enumerable: true,
-        get(): string {
-            const proto = this.connection.encrypted ? 'https' : 'http';
-            const trust = app.get('trust proxy fn');
+    get protocol() {
+        if (this.socket.encrypted) return 'https';
+        if (!this.app.proxy) return 'http';
+        const proto = this.get('X-Forwarded-Proto');
+        return proto ? proto.split(/\s*,\s*/, 1)[0] : 'http';
+    },
 
-            if (!trust(this.connection.remoteAddress, 0)) return proto;
+    /**
+     * Return request header, alias as request.header
+     *
+     * @return {Object}
+     * @api public
+     */
+    get headers() {
+        return this.req.headers;
+    },
 
-            const header = this.get('X-Forwarded-Proto') || proto;
-            const index = header.indexOf(',');
+    /**
+     * Get request URL.
+     *
+     * @return {String}
+     * @api public
+     */
+    get url() {
+        return this.req.url;
+    },
 
-            return index !== -1
-                ? header.substring(0, index).trim()
-                : header.trim();
-        },
-    });
+    /**
+     * Get origin of URL.
+     *
+     * @return {String}
+     * @api public
+     */
+    get origin() {
+        return `${this.protocol}://${this.host}`;
+    },
+
+    /**
+     * Get full request URL.
+     *
+     * @return {String}
+     * @api public
+     */
+    get href() {
+        // support: `GET http://example.com/foo`
+        if (/^https?:\/\//i.test(this.originalUrl)) return this.originalUrl;
+        return this.origin + this.originalUrl;
+    },
 
     /**
      * Short-hand for:
@@ -107,13 +149,142 @@ export const buildRequest = (
      * @return {Boolean}
      * @public
      */
-    Object.defineProperty(R, 'secure', {
-        configurable: true,
-        enumerable: true,
-        get(): boolean {
-            return this.protocol === 'https';
-        },
-    });
+    get secure(): boolean {
+        return this.protocol === 'https';
+    },
+
+    /**
+     * Get request method.
+     *
+     * @return {String}
+     * @api public
+     */
+    get method() {
+        return this.req.method;
+    },
+
+    /**
+     * Get request pathname.
+     *
+     * @return {String}
+     * @api public
+     */
+    get path() {
+        const { parseurl } = require('../utils');
+        return parseurl(this.req).pathname;
+    },
+
+    /**
+     * Parse the "Host" header field to a host.
+     *
+     * When the "trust proxy" setting trusts the socket
+     * address, the "X-Forwarded-Host" header field will
+     * be trusted.
+     *
+     * @return {String}
+     * @public
+     */
+    get host(): string {
+        const trust = this.app.get('trust proxy fn');
+        let host = this.get('X-Forwarded-Host');
+
+        if (!host || !trust(this.socket.remoteAddress, 0)) {
+            if (this.req.httpVersionMajor >= 2) host = this.get(':authority');
+            else host = this.get('Host');
+        } else if (host.indexOf(',') !== -1) {
+            // Note: X-Forwarded-Host is normally only ever a
+            //       single value, but this is to be safe.
+            host = host.substring(0, host.indexOf(',')).trimRight();
+        }
+
+        if (!host) return '';
+        return host.split(/\s*,\s*/, 1)[0];
+    },
+
+    /**
+     * Parse the "Host" header field hostname
+     * and support X-Forwarded-Host when a
+     * proxy is enabled.
+     *
+     * @return {String} hostname
+     * @api public
+     */
+    get hostname() {
+        const host = this.host;
+        if (!host) return '';
+        if (host[0] === '[') return this.URL.hostname || ''; // IPv6
+        return host.split(':', 1)[0];
+    },
+
+    /**
+     * Get WHATWG parsed URL.
+     * Lazily memoized.
+     *
+     * @return {URL|Object}
+     * @api public
+     */
+    get URL() {
+        /* istanbul ignore else */
+        if (!this.memoizedURL) {
+            const originalUrl = this.originalUrl || ''; // avoid undefined in template string
+            try {
+                this.memoizedURL = new URL(`${this.origin}${originalUrl}`);
+            } catch (err) {
+                this.memoizedURL = Object.create(null);
+            }
+        }
+
+        return this.memoizedURL;
+    },
+
+    /**
+     * Check if the request is fresh, aka
+     * Last-Modified and/or the ETag
+     * still match.
+     *
+     * @return {Boolean}
+     * @api public
+     */
+    get fresh(): boolean {
+        const { fresh } = require('../utils');
+        const method = this.method;
+        const res = this.res;
+        const status = res.statusCode;
+
+        if ('GET' !== method && 'HEAD' !== method) return false;
+
+        if ((status >= 200 && status < 300) || 304 === status) {
+            return fresh(this.headers, {
+                etag: res.get('ETag'),
+                'last-modified': res.get('Last-Modified'),
+            });
+        }
+
+        return false;
+    },
+
+    /**
+     * Check if the request is stale, aka
+     * "Last-Modified" and / or the "ETag" for the
+     * resource has changed.
+     *
+     * @return {Boolean}
+     * @api public
+     */
+    get stale() {
+        return !this.fresh;
+    },
+
+    /**
+     * Check if the request is idempotent.
+     *
+     * @return {Boolean}
+     * @api public
+     */
+    get idempotent() {
+        const methods = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];
+        return !!~methods.indexOf(this.method);
+    },
 
     /**
      * Return the remote address from the trusted proxy.
@@ -124,14 +295,10 @@ export const buildRequest = (
      * @return {String}
      * @public
      */
-    Object.defineProperty(R, 'ip', {
-        configurable: true,
-        enumerable: true,
-        get(): boolean {
-            const trust = app.get('trust proxy fn');
-            return proxyaddr(this, trust);
-        },
-    });
+    get ip(): boolean {
+        const trust = this.app.get('trust proxy fn');
+        return proxyaddr(this, trust);
+    },
 
     /**
      * When "trust proxy" is set, trusted proxy addresses + client.
@@ -144,16 +311,24 @@ export const buildRequest = (
      * @return {Array}
      * @public
      */
-    Object.defineProperty(R, 'ips', {
-        configurable: true,
-        enumerable: true,
-        get(): boolean {
-            const trust = app.get('trust proxy fn');
-            const addrs = proxyaddr.all(this, trust);
-            addrs.reverse().pop();
-            return addrs;
-        },
-    });
+    get ips(): boolean {
+        const trust = this.app.get('trust proxy fn');
+        const addrs = proxyaddr.all(this, trust);
+        addrs.reverse().pop();
+        return addrs;
+    },
+
+    /**
+     * Return parsed Content-Length when present.
+     *
+     * @return {Number|void}
+     * @api public
+     */
+    get length(): number {
+        const len = this.get('Content-Length');
+        if (len === '') return;
+        return ~~len;
+    },
 
     /**
      * Return subdomains as an array.
@@ -169,133 +344,17 @@ export const buildRequest = (
      * @return {Array}
      * @public
      */
-    Object.defineProperty(R, 'subdomains', {
-        configurable: true,
-        enumerable: true,
-        get(): string[] {
-            const hostname = this.hostname;
-            if (!hostname) return [];
+    get subdomains(): string[] {
+        const hostname = this.hostname;
+        if (!hostname) return [];
 
-            var offset = app.get('subdomain offset');
-            var subdomains = !isIP(hostname)
-                ? hostname.split('.').reverse()
-                : [hostname];
+        var offset = this.app.get('subdomain offset');
+        var subdomains = !isIP(hostname)
+            ? hostname.split('.').reverse()
+            : [hostname];
 
-            return subdomains.slice(offset);
-        },
-    });
-
-    /**
-     * Short-hand for `url.parse(req.url).pathname`.
-     *
-     * @return {String}
-     * @public
-     */
-    Object.defineProperty(R, 'path', {
-        configurable: true,
-        enumerable: true,
-        get(): string {
-            const { parseurl } = require('../utils');
-            return parseurl(this).pathname;
-        },
-    });
-
-    /**
-     * Parse the "Host" header field to a host.
-     *
-     * When the "trust proxy" setting trusts the socket
-     * address, the "X-Forwarded-Host" header field will
-     * be trusted.
-     *
-     * @return {String}
-     * @public
-     */
-    Object.defineProperty(R, 'host', {
-        configurable: true,
-        enumerable: true,
-        get(): string {
-            const trust = app.get('trust proxy fn');
-            let val = this.get('X-Forwarded-Host');
-
-            if (!val || !trust(this.connection.remoteAddress, 0))
-                val = this.get('Host');
-            else if (val.indexOf(',') !== -1)
-                val = val.substring(0, val.indexOf(',')).trimRight();
-
-            return val || undefined;
-        },
-    });
-
-    /**
-     * Parse the "Host" header field to a hostname.
-     *
-     * When the "trust proxy" setting trusts the socket
-     * address, the "X-Forwarded-Host" header field will
-     * be trusted.
-     *
-     * @return {String}
-     * @api public
-     */
-    Object.defineProperty(R, 'hostname', {
-        configurable: true,
-        enumerable: true,
-        get(): string {
-            const host = this.host;
-
-            if (!host) return;
-
-            const offset = host[0] === '[' ? host.indexOf(']') + 1 : 0;
-            const index = host.indexOf(':', offset);
-
-            return index !== -1 ? host.substring(0, index) : host;
-        },
-    });
-
-    /**
-     * Check if the request is fresh, aka
-     * Last-Modified or the ETag
-     * still match.
-     *
-     * @return {Boolean}
-     * @public
-     */
-    Object.defineProperty(R, 'fresh', {
-        configurable: true,
-        enumerable: true,
-        get(): boolean {
-            const { fresh } = require('../utils');
-            const method = this.method;
-            const res = this.res;
-            const status = res.statusCode;
-
-            if ('GET' !== method && 'HEAD' !== method) return false;
-
-            if ((status >= 200 && status < 300) || 304 === status) {
-                return fresh(this.headers, {
-                    etag: res.get('ETag'),
-                    'last-modified': res.get('Last-Modified'),
-                });
-            }
-
-            return false;
-        },
-    });
-
-    /**
-     * Check if the request is stale, aka
-     * "Last-Modified" and / or the "ETag" for the
-     * resource has changed.
-     *
-     * @return {Boolean}
-     * @public
-     */
-    Object.defineProperty(R, 'stale', {
-        configurable: true,
-        enumerable: true,
-        get(): boolean {
-            return !this.fresh;
-        },
-    });
+        return subdomains.slice(offset);
+    },
 
     /**
      * Check if the request was an _XMLHttpRequest_.
@@ -303,14 +362,48 @@ export const buildRequest = (
      * @return {Boolean}
      * @public
      */
-    Object.defineProperty(R, 'xhr', {
-        configurable: true,
-        enumerable: true,
-        get(): boolean {
-            const val = this.get('X-Requested-With') || '';
-            return val.toLowerCase() === 'xmlhttprequest';
-        },
-    });
+    get xhr(): boolean {
+        const val = this.get('X-Requested-With') || '';
+        return val.toLowerCase() === 'xmlhttprequest';
+    },
+
+    /**
+     * Return request header.
+     *
+     * The `Referrer` header field is special-cased,
+     * both `Referrer` and `Referer` are interchangeable.
+     *
+     * Examples:
+     *
+     *     this.get('Content-Type');
+     *     // => "text/plain"
+     *
+     *     this.get('content-type');
+     *     // => "text/plain"
+     *
+     *     this.get('Something');
+     *     // => ''
+     *
+     * @param {String} field
+     * @return {String}
+     * @api public
+     */
+    header(name): string {
+        if (!name) throw new TypeError('name argument is required to req.get');
+
+        if (typeof name !== 'string')
+            throw new TypeError('name must be a string to req.get');
+
+        switch ((name = name.toLowerCase())) {
+            case 'referer':
+            case 'referrer':
+                return (
+                    this.req.headers.referrer || this.req.headers.referer || ''
+                );
+            default:
+                return this.req.headers[name] || '';
+        }
+    },
 
     /**
      * Return request header.
@@ -335,22 +428,36 @@ export const buildRequest = (
      * @return {String}
      * @public
      */
-    R.get = R.header = function header(name) {
-        if (!name) throw new TypeError('name argument is required to req.get');
+    get(name): string {
+        return this.header(name);
+    },
 
-        if (typeof name !== 'string')
-            throw new TypeError('name must be a string to req.get');
+    /**
+     * Get accept object.
+     * Lazily memoized.
+     *
+     * @return {Object}
+     * @api private
+     */
+    _accept: undefined,
 
-        var lc = name.toLowerCase();
+    get accept() {
+        return this._accept || (this._accept = require('accepts')(this.req));
+    },
 
-        switch (lc) {
-            case 'referer':
-            case 'referrer':
-                return this.headers.referrer || this.headers.referer;
-            default:
-                return this.headers[lc];
-        }
-    };
+    /**
+     * Return the request mime type void of
+     * parameters such as "charset".
+     *
+     * @return {String}
+     * @api public
+     */
+
+    get type() {
+        const type = this.get('Content-Type');
+        if (!type) return '';
+        return type.split(';')[0];
+    },
 
     /**
      * To do: update docs.
@@ -397,10 +504,9 @@ export const buildRequest = (
      * @return {String|Array|Boolean}
      * @public
      */
-    R.accepts = function () {
-        var accept = require('accepts')(this);
-        return accept.types.apply(accept, arguments);
-    };
+    accepts(...args) {
+        return this.accept.types(...args);
+    },
 
     /**
      * Check if the given `encoding`s are accepted.
@@ -409,10 +515,9 @@ export const buildRequest = (
      * @return {String|Array}
      * @public
      */
-    R.acceptsEncodings = function () {
-        var accept = require('accepts')(this);
-        return accept.encodings.apply(accept, arguments);
-    };
+    acceptsEncodings(...args) {
+        return this.accept.encodings(...args);
+    },
 
     /**
      * Check if the given `charset`s are acceptable,
@@ -422,10 +527,9 @@ export const buildRequest = (
      * @return {String|Array}
      * @public
      */
-    R.acceptsCharsets = function () {
-        var accept = require('accepts')(this);
-        return accept.charsets.apply(accept, arguments);
-    };
+    acceptsCharsets(...args) {
+        return this.accept.charsets(...args);
+    },
 
     /**
      * Check if the given `lang`s are acceptable,
@@ -435,10 +539,9 @@ export const buildRequest = (
      * @return {String|Array}
      * @public
      */
-    R.acceptsLanguages = function () {
-        var accept = require('accepts')(this);
-        return accept.languages.apply(accept, arguments);
-    };
+    acceptsLanguages(...args) {
+        return this.accept.languages(...args);
+    },
 
     /**
      * Parse Range header field, capping to the given `size`.
@@ -464,12 +567,12 @@ export const buildRequest = (
      * @return {number|array}
      * @public
      */
-    R.range = function range(size, options) {
+    range(size, options) {
         const { parseRange } = require('../utils');
         const range = this.get('Range');
         if (!range) return;
         return parseRange(size, range, options);
-    };
+    },
 
     /**
      * Check if the incoming request contains the "Content-Type"
@@ -496,7 +599,7 @@ export const buildRequest = (
      * @return {String|false|null}
      * @public
      */
-    R.is = function is(...types: any) {
+    is(...types: any) {
         const typeis = require('typeis');
         let arr = types;
 
@@ -507,7 +610,5 @@ export const buildRequest = (
         }
 
         return typeis(this, arr);
-    };
-
-    return R;
+    },
 };
