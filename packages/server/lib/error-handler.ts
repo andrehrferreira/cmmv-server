@@ -16,52 +16,56 @@ import { wrapThenable } from './response';
 
 const serializeError = require('./error-serializer');
 
-const rootErrorHandler = {
+export const rootErrorHandler = {
     func: defaultErrorHandler,
     toJSON() {
         return this.func.name.toString() + '()';
     },
 };
 
-export const handleError = (res, error, cb) => {
-    res[kResponseIsRunningOnErrorHook] = false;
+export const handleError = (response, error, cb?) => {
+    response[kResponseIsRunningOnErrorHook] = false;
 
-    if (res[kResponseNextErrorHandler] === false) {
-        fallbackErrorHandler(error, res, function (res, payload) {
+    if (response[kResponseNextErrorHandler] === false) {
+        fallbackErrorHandler(error, response, function (res, payload) {
             try {
-                res.writeHead(res.raw.statusCode, res[kResponseHeaders]);
+                response.res.writeHead(
+                    res.raw.statusCode,
+                    res[kResponseHeaders],
+                );
             } catch (error) {
-                res.writeHead(res.statusCode);
+                response.res.writeHead(res.statusCode);
             }
-            res.end(payload);
+            response.res.end(payload);
         });
         return;
     }
 
-    const errorHandler = res[kResponseNextErrorHandler] || res.errorHandler;
-    res[kResponseNextErrorHandler] = Object.getPrototypeOf(errorHandler);
+    const errorHandler =
+        response[kResponseNextErrorHandler] || response.errorHandler;
+    response[kResponseNextErrorHandler] = Object.getPrototypeOf(errorHandler);
 
-    delete res[kResponseHeaders]['content-type'];
-    delete res[kResponseHeaders]['content-length'];
+    delete response[kResponseHeaders]['content-type'];
+    delete response[kResponseHeaders]['content-length'];
 
-    const func = errorHandler.func;
+    const func = errorHandler?.func || null;
 
     if (!func) {
-        res[kResponseNextErrorHandler] = false;
-        fallbackErrorHandler(error, res, cb);
+        response[kResponseNextErrorHandler] = false;
+        fallbackErrorHandler(error, response, cb);
         return;
     }
 
     try {
-        const result = func(error, res.request, res);
+        const result = func(error, response.request, response);
 
         if (result !== undefined) {
             if (result !== null && typeof result.then === 'function')
-                wrapThenable(result, res);
-            else res.send(result);
+                wrapThenable(result, response);
+            else response.send(result);
         }
     } catch (err) {
-        res.send(err);
+        response.send(err);
     }
 };
 

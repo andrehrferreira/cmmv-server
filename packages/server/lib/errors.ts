@@ -68,6 +68,18 @@ export const CM_ERR_QSP_NOT_FN = createError(
     TypeError,
 );
 
+export const CM_ERR_INSTANCE_ALREADY_LISTENING = createError(
+    'CM_ERR_INSTANCE_ALREADY_LISTENING',
+    'CMMV instance is already listening. %s',
+);
+
+export const CM_ERR_ERROR_HANDLER_NOT_FN = createError(
+    'CM_ERR_ERROR_HANDLER_NOT_FN',
+    'Error Handler must be a function',
+    500,
+    TypeError,
+);
+
 /**
  * hooks
  */
@@ -88,6 +100,13 @@ export const CM_ERR_HOOK_NOT_SUPPORTED = createError(
 export const CM_ERR_HOOK_INVALID_HANDLER = createError(
     'CM_ERR_HOOK_INVALID_HANDLER',
     '%s hook should be a function, instead got %s',
+    500,
+    TypeError,
+);
+
+export const CM_ERR_HOOK_INVALID_ASYNC_HANDLER = createError(
+    'CM_ERR_HOOK_INVALID_ASYNC_HANDLER',
+    "Async function has too many arguments. Async hooks should not use the 'done' argument.",
     500,
     TypeError,
 );
@@ -146,10 +165,10 @@ export const CM_ERR_RES_INVALID_PAYLOAD_TYPE = createError(
 
 export const CM_ERR_SEND_UNDEFINED_ERR = createError(
     'CM_ERR_SEND_UNDEFINED_ERR',
-    "Attempted to send payload of invalid type '%s'. Expected a string or Buffer.",
+    'Undefined error has occurred',
 );
 
 export const CM_ERR_FAILED_ERROR_SERIALIZATION = createError(
     'CM_ERR_FAILED_ERROR_SERIALIZATION',
-    "Attempted to send payload of invalid type '%s'. Expected a string or Buffer.",
+    'Failed to serialize an error. Error: %s. Original error: %s.',
 );

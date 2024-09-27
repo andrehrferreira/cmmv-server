@@ -1,0 +1,18 @@
+{
+    "extends": "../tsconfig.build.json",
+    "compilerOptions": {
+        "outDir": ".",
+        "rootDir": ".",
+        "paths": {
+            "@cmmv/server-common": ["../server-common"],
+            "@cmmv/server-common/*": ["../server-common/*"],
+            "@cmmv/server": ["../server"],
+            "@cmmv/server/*": ["../server/*"]
+        }
+    },
+    "exclude": ["node_modules", "dist"],
+    "references": [
+        { "path": "../server-common/tsconfig.build.json" },
+        { "path": "../server/tsconfig.build.json" }
+    ]
+}

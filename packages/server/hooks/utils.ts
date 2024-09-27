@@ -38,7 +38,6 @@ export const hookRunnerGenerator = iterator => {
 
         function handleReject(err) {
             if (!err) err = new CM_ERR_SEND_UNDEFINED_ERR();
-
             cb(err, req, res);
         }
 

@@ -168,12 +168,11 @@ function safeWriteHead(response, statusCode) {
     try {
         response.res.writeHead(statusCode, response[kResponseHeaders]);
     } catch (err) {
-        if (err.code === 'ERR_HTTP_HEADERS_SENT')
+        if (err.code === 'ERR_HTTP_HEADERS_SENT') {
             console.warn(
                 `Reply was already sent, did you forget to "return reply" in the "${response.request.url}" (${response.request.method}) route?`,
             );
-
-        throw err;
+        }
     }
 }
 
@@ -339,16 +338,6 @@ function onSendEnd(response, payload) {
             response[kResponseHeaders]['content-length'] =
                 '' + Buffer.byteLength(payload);
         }
-    }
-
-    //Etag
-    const len = Number(response[kResponseHeaders]['content-length']);
-    const etagFn = response.app.get('etag fn');
-    const generateETag = !response.get('ETag') && typeof etagFn === 'function';
-
-    let etag;
-    if (generateETag && len !== undefined) {
-        if ((etag = etagFn(payload, 'utf8'))) response.set('ETag', etag);
     }
 
     safeWriteHead(response, statusCode);
@@ -1413,8 +1402,12 @@ export default {
         return this.sendFile(fullPath, opts, done);
     },
 
-    end(data: string | Buffer | Uint8Array, encoding?: string, cb?: Function) {
-        this.res.end(data, encoding, cb);
+    end(
+        payload: string | Buffer | Uint8Array,
+        encoding?: string,
+        cb?: Function,
+    ) {
+        onSendHook(this, payload);
         return this;
     },
 
@@ -1827,5 +1820,10 @@ export default {
 
     uncork() {
         this.res.uncork();
+    },
+
+    writeEarlyHints(hints, callback) {
+        this.res.writeEarlyHints(hints, callback);
+        return this;
     },
 };

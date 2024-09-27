@@ -9,16 +9,38 @@ import {
     CM_ERR_HTTP2_INVALID_VERSION,
     CM_ERR_OPTIONS_NOT_OBJ,
     CM_ERR_QSP_NOT_FN,
+    CM_ERR_INSTANCE_ALREADY_LISTENING,
+    CM_ERR_HOOK_INVALID_HANDLER,
+    CM_ERR_HOOK_INVALID_ASYNC_HANDLER,
+    CM_ERR_ERROR_HANDLER_NOT_FN,
 } from './errors';
 
-import { kChildren, kHooks, kMiddlewares } from './symbols';
+import {
+    kChildren,
+    kErrorHandler,
+    kHooks,
+    kMiddlewares,
+    kRequestPayloadStream,
+    kResponseIsError,
+    kState,
+} from './symbols';
 
-import { Hooks, hookRunnerApplication, supportedHooks } from './hooks';
+import {
+    Hooks,
+    hookRunnerApplication,
+    onRequestAbortHookRunner,
+    onRequestHookRunner,
+    preParsingHookRunner,
+    supportedHooks,
+} from './hooks';
+
+import { buildErrorHandler, rootErrorHandler } from './error-handler';
 
 import { HTTPMethod } from '../constants';
 import { Router } from './router';
 import request from './request';
 import response from './response';
+import { handleRequest } from './handle-request';
 
 export class Application extends EventEmitter {
     request: any;
@@ -60,6 +82,7 @@ export class Application extends EventEmitter {
     private injectApplication(server, options?: ServerOptions) {
         const slice = Array.prototype.slice;
         const flatten = Array.prototype.flat;
+        const self = this;
 
         const app: any = {
             router: new Router(),
@@ -85,6 +108,14 @@ export class Application extends EventEmitter {
             let offset = 0;
             let path = '/';
 
+            if (fn.constructor.name === 'Promise') {
+                return fn
+                    .then(init => init.call(this, { app: this }, null, null))
+                    .catch(err => {
+                        throw new Error(err);
+                    });
+            }
+
             if (typeof fn !== 'function') {
                 let arg = fn;
 
@@ -94,6 +125,8 @@ export class Application extends EventEmitter {
                     offset = 1;
                     path = fn;
                 }
+            } else {
+                path = '';
             }
 
             const fns = flatten.call(slice.call(arguments, offset), Infinity);
@@ -104,12 +137,11 @@ export class Application extends EventEmitter {
             const router = this.router;
 
             fns.forEach((fn: any) => {
-                if (!fn || !fn.handle || !fn.set) return router.use(path, fn);
+                if ((!fn || !fn.handle || !fn.set) && path !== '')
+                    return router.use(path, fn);
 
                 fn.mountpath = path;
-                fn.parent = this;
-                router.use(path, fn.handle);
-                fn.emit('mount', this);
+                this[kMiddlewares].push(fn.handle ? fn.handle : fn);
             }, this);
 
             return this;
@@ -156,6 +188,49 @@ export class Application extends EventEmitter {
             return this;
         };
 
+        app.setErrorHandler = function setErrorHandler(func) {
+            self.throwIfAlreadyStarted('Cannot call "setErrorHandler"!');
+
+            if (typeof func !== 'function')
+                throw new CM_ERR_ERROR_HANDLER_NOT_FN();
+
+            this[kErrorHandler] = buildErrorHandler(
+                this[kErrorHandler],
+                func.bind(this),
+            );
+            return this;
+        };
+
+        app.addHook = function addHook(name, fn) {
+            self.throwIfAlreadyStarted('Cannot call "addHook"!');
+
+            if (fn == null) throw new CM_ERR_HOOK_INVALID_HANDLER(name, fn);
+
+            if (
+                name === 'onSend' ||
+                name === 'preSerialization' ||
+                name === 'onError' ||
+                name === 'preParsing'
+            ) {
+                if (fn.constructor.name === 'AsyncFunction' && fn.length !== 4)
+                    throw new CM_ERR_HOOK_INVALID_ASYNC_HANDLER();
+            } else if (name === 'onReady' || name === 'onListen') {
+                if (fn.constructor.name === 'AsyncFunction' && fn.length !== 0)
+                    throw new CM_ERR_HOOK_INVALID_ASYNC_HANDLER();
+            } else if (name === 'onRequestAbort') {
+                if (fn.constructor.name === 'AsyncFunction' && fn.length !== 1)
+                    throw new CM_ERR_HOOK_INVALID_ASYNC_HANDLER();
+            } else {
+                if (fn.constructor.name === 'AsyncFunction' && fn.length === 3)
+                    throw new CM_ERR_HOOK_INVALID_ASYNC_HANDLER();
+            }
+
+            if (name === 'onClose') this.onClose(fn.bind(this));
+            else this[kHooks].add(name, fn);
+
+            return this;
+        };
+
         for (const method in app) {
             if (!server[method]) server[method] = app[method];
         }
@@ -172,6 +247,15 @@ export class Application extends EventEmitter {
         server[kHooks] = new Hooks();
         server[kMiddlewares] = [];
         server[kChildren] = [];
+        server[kState] = {};
+        server[kErrorHandler] = buildErrorHandler(
+            rootErrorHandler,
+            function (error, request, res) {
+                console.error(error);
+                res.status(409).send({ ok: false });
+            },
+        );
+        server.runPreParsing = this.runPreParsing;
         server.request = this.request;
         server.response = this.response;
     }
@@ -216,6 +300,7 @@ export class Application extends EventEmitter {
         this.injectApplication.call(this, server, options);
 
         const listen = (listenOptions: { host: string; port: number }) => {
+            server[kState].started = true;
             return server.listen.call(server, listenOptions);
         };
 
@@ -233,21 +318,60 @@ export class Application extends EventEmitter {
                 request.req = response.req = req;
                 request.res = response.res = res;
 
+                request.server = this;
                 request.response = response;
                 response.request = request;
                 request.originalUrl = req.url;
 
+                request.preParsing = this[kHooks].preParsing;
+                request.preHandler = this[kHooks].preHandler;
+                request.preValidation = this[kHooks].preValidation;
+
+                response.onSend = this[kHooks].onSend;
+                response.onError = this[kHooks].onError;
+                response.errorHandler = this[kErrorHandler];
+
                 const middlewares = this[kMiddlewares] || [];
                 let stack = [...middlewares, ...route.store.stack].flat();
+                request.handler = stack[stack.length - 1];
 
+                if (this[kHooks].onRequest !== null) {
+                    onRequestHookRunner(
+                        this[kHooks].onRequest,
+                        request,
+                        response,
+                        this.runPreParsing.bind(this),
+                    );
+                } else {
+                    this.runPreParsing(null, request, response);
+                }
+
+                if (this[kHooks].onRequestAbort !== null) {
+                    req.on('close', () => {
+                        /* istanbul ignore else */
+                        if (req.aborted) {
+                            onRequestAbortHookRunner(
+                                this[kHooks].onRequestAbort,
+                                request,
+                                this.handleOnRequestAbortHooksErrors.bind(
+                                    null,
+                                    response,
+                                ),
+                            );
+                        }
+                    });
+                }
+
+                /*
+                
                 if (stack.length === 1) {
-                    stack[0].call(this, request, response);
+                    stack[0].call(this, request, response, () => {});
                 } else {
                     while (stack.length > 0) {
-                        stack[0].call(this, request, response);
+                        stack[0].call(this, request, response, (err) => {});
                         stack.shift();
                     }
-                }
+                }*/
             })
             .catch(err => {
                 console.error(err);
@@ -262,6 +386,38 @@ export class Application extends EventEmitter {
         } catch (err) {
             throw new CM_ERR_HTTP2_INVALID_VERSION();
         }
+    }
+
+    public throwIfAlreadyStarted(msg) {
+        if (this[kState]?.started)
+            throw new CM_ERR_INSTANCE_ALREADY_LISTENING(msg);
+    }
+
+    runPreParsing(err, request, response) {
+        if (response.sent === true) return;
+
+        if (err != null) {
+            response[kResponseIsError] = true;
+            response.send(err);
+            return;
+        }
+
+        request[kRequestPayloadStream] = request.raw;
+
+        if (request.preParsing !== null) {
+            preParsingHookRunner(
+                request.preParsing,
+                request,
+                response,
+                handleRequest.bind(request.server),
+            );
+        } else {
+            handleRequest.call(request.server, null, request, response);
+        }
+    }
+
+    handleOnRequestAbortHooksErrors(reply, err) {
+        if (err) console.error({ err }, 'onRequestAborted hook failed');
     }
 }
 

@@ -70,5 +70,7 @@ export class Router {
         this.mergeRoutes('HEAD', path, ...callbacks);
     }
 
-    public use(path: string, fn: Function) {}
+    public use(path: string, fn: Function) {
+        console.log(path, fn);
+    }
 }

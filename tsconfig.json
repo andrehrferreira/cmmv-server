@@ -42,6 +42,8 @@
             "@cmmv/cookie-parser/*": ["packages/cookie-parser/*"],
             "@cmmv/cors": ["packages/cors"],
             "@cmmv/cors/*": ["packages/cors/*"],
+            "@cmmv/etag": ["packages/etag"],
+            "@cmmv/etag/*": ["packages/etag/*"],
             "@cmmv/multer": ["packages/multer"],
             "@cmmv/multer/*": ["packages/multer/*"],
             "@cmmv/server-static": ["packages/server-static"],

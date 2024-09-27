@@ -1,4 +1,5 @@
 import cmmv from '@cmmv/server';
+import etag from '@cmmv/etag';
 
 /*const app = CmmvServer({
     http2: true,
@@ -10,6 +11,8 @@ import cmmv from '@cmmv/server';
 const app = cmmv();
 const host = '0.0.0.0';
 const port = 3000;
+
+app.use(etag());
 
 app.get('/', async (req, res) => {
     res.send('Hello World');
