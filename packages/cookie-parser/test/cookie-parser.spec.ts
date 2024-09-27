@@ -8,7 +8,7 @@ import * as http from 'node:http';
 import * as request from 'supertest';
 
 import {
-    default as cookieParser,
+    cookieParser,
     sign,
     JSONCookies,
     JSONCookie,
@@ -60,7 +60,7 @@ describe('cookieParser()', function () {
 
     describe('when req.cookies exists', function () {
         it('should do nothing', function (done) {
-            const _parser: any = cookieParser({ express: true });
+            const _parser: any = cookieParser();
 
             const server = http.createServer(function (req: any, res) {
                 req.cookies = { fizz: 'buzz' };
@@ -344,7 +344,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
 });
 
 function createServer(secret?) {
-    const _parser: any = cookieParser({ secret, express: true });
+    const _parser: any = cookieParser({ secret });
 
     return http.createServer(function (req: any, res) {
         _parser(req, res, function (err) {

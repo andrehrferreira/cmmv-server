@@ -1,5 +1,6 @@
 import cmmv from '@cmmv/server';
 import etag from '@cmmv/etag';
+import cookieParser from '@cmmv/cookie-parser';
 
 /*const app = CmmvServer({
     http2: true,
@@ -13,6 +14,7 @@ const host = '0.0.0.0';
 const port = 3000;
 
 app.use(etag({ algorithm: 'fnv1a' }));
+app.use(cookieParser());
 
 app.get('/', async (req, res) => {
     res.send('Hello World');

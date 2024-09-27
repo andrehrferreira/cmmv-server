@@ -368,6 +368,29 @@ export default {
     },
 
     /**
+     * Cookies
+     */
+    _cookies: undefined,
+
+    get cookies() {
+        return this._cookies;
+    },
+
+    set cookies(value) {
+        this._cookies = value;
+    },
+
+    _signedCookies: undefined,
+
+    get signedCookies() {
+        return this._signedCookies;
+    },
+
+    set signedCookies(value) {
+        this._signedCookies = value;
+    },
+
+    /**
      * Return request header.
      *
      * The `Referrer` header field is special-cased,

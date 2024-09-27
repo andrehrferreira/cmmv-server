@@ -14,40 +14,45 @@
  * @see https://github.com/tj/node-cookie-signature/blob/master/LICENSE
  */
 
+/**
+ * @fastify/cookie
+ * Copyright (c) Fastify
+ * MIT Licensed
+ * @see https://github.com/fastify/fastify-cookie
+ */
+
 import * as crypto from 'node:crypto';
 import * as cookie from 'cookie';
-
-import {
-    ServerMiddleware,
-    IRequest,
-    IRespose,
-    INext,
-} from '@cmmv/server-common';
-
-const onHeaders = require('on-headers');
 
 type CookieParserOptions = cookie.CookieParseOptions & {
     name?: string;
     secret?: string | string[];
-    express?: boolean;
 };
 
-export class CookieParserMiddleware extends ServerMiddleware {
+export class CookieParserMiddleware {
     public middlewareName: string = 'cookie-parser';
+
     private options: CookieParserOptions;
 
     constructor(options: CookieParserOptions) {
-        super();
         this.options = options || {};
         this.options.secret =
             !options?.secret || Array.isArray(options?.secret)
                 ? options?.secret || []
                 : [options?.secret];
-        this.options.express = this.options.express !== false;
     }
 
-    async process(req: IRequest, res: IRespose, next: INext) {
-        if (req.cookies) return next();
+    async process(req, res, next) {
+        if (req.app && typeof req.app.addHook == 'function')
+            req.app.addHook('onRequest', this.onCall.bind(this));
+        else this.onCall.call(this, req, res, null, next);
+    }
+
+    async onCall(req, res, payload, done) {
+        if (req.cookies) {
+            if (done) done();
+            return;
+        }
 
         const cookies = req.headers.cookie;
 
@@ -55,7 +60,10 @@ export class CookieParserMiddleware extends ServerMiddleware {
         req.cookies = Object.create(null);
         req.signedCookies = Object.create(null);
 
-        if (!cookies) return next();
+        if (!cookies) {
+            if (done) done();
+            return;
+        }
 
         req.cookies = cookie.parse(cookies, this.options);
 
@@ -66,17 +74,19 @@ export class CookieParserMiddleware extends ServerMiddleware {
 
         req.cookies = JSONCookies(req.cookies);
 
-        next();
+        if (done) done();
     }
 }
 
-export default function (options?: CookieParserOptions) {
+export default async function (options?: CookieParserOptions) {
     const middleware = new CookieParserMiddleware(options);
-
-    if (options?.express === true)
-        return (req, res, next) => middleware.process(req, res, next);
-    else return middleware;
+    return (req, res, next) => middleware.process(req, res, next);
 }
+
+export const cookieParser = function (options?: CookieParserOptions) {
+    const middleware = new CookieParserMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+};
 
 /**
  * Parse JSON cookies.

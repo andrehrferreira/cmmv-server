@@ -144,6 +144,8 @@ export class Application extends EventEmitter {
                 this[kMiddlewares].push(fn.handle ? fn.handle : fn);
             }, this);
 
+            this.emit('mount');
+
             return this;
         };
 

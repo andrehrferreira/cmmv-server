@@ -18,6 +18,8 @@ import * as Zlib from 'node:zlib';
  * @public
  */
 export const destroy = (stream?, suppress?) => {
+    if (!stream) return;
+
     if (isFsReadStream(stream)) {
         destroyReadStream(stream);
     } else if (isZlibStream(stream)) {

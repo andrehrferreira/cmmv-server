@@ -10,21 +10,17 @@
 import { createHash } from 'node:crypto';
 import { fnv1a } from './fnv1a';
 
-import { ServerMiddleware } from '@cmmv/server-common';
-
 export interface ETagOptions {
     algorithm?: string;
     weak?: boolean;
 }
 
-export class EtagMiddleware extends ServerMiddleware {
-    public override middlewareName: string = 'etag';
+export class EtagMiddleware {
+    public middlewareName: string = 'etag';
 
     protected options: ETagOptions;
 
     constructor(options?: ETagOptions) {
-        super();
-
         this.options = {
             algorithm: options?.algorithm || 'sha1',
             weak: Boolean(options?.weak === true),
@@ -93,7 +89,12 @@ export class EtagMiddleware extends ServerMiddleware {
     }
 }
 
-export default async function (options?: ETagOptions, app?: any) {
+export default async function (options?: ETagOptions) {
     const middleware = new EtagMiddleware(options);
     return (req, res, next) => middleware.process(req, res, next);
 }
+
+export const etag = function (options?: ETagOptions) {
+    const middleware = new EtagMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+};
