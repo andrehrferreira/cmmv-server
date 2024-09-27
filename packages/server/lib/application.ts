@@ -325,7 +325,6 @@ export class Application extends EventEmitter {
 
                 request.preParsing = this[kHooks].preParsing;
                 request.preHandler = this[kHooks].preHandler;
-                request.preValidation = this[kHooks].preValidation;
 
                 response.onSend = this[kHooks].onSend;
                 response.onError = this[kHooks].onError;
@@ -335,18 +334,24 @@ export class Application extends EventEmitter {
                 let stack = [...middlewares, ...route.store.stack].flat();
                 request.handler = stack[stack.length - 1];
 
-                if (this[kHooks].onRequest !== null) {
+                if (
+                    this[kHooks].onRequest &&
+                    this[kHooks].onRequest.length > 0
+                ) {
                     onRequestHookRunner(
                         this[kHooks].onRequest,
                         request,
                         response,
-                        this.runPreParsing.bind(this),
+                        this.runPreParsing,
                     );
                 } else {
                     this.runPreParsing(null, request, response);
                 }
 
-                if (this[kHooks].onRequestAbort !== null) {
+                if (
+                    this[kHooks].onRequestAbort !== null &&
+                    this[kHooks].onRequestAbort.length > 0
+                ) {
                     req.on('close', () => {
                         /* istanbul ignore else */
                         if (req.aborted) {
@@ -361,17 +366,6 @@ export class Application extends EventEmitter {
                         }
                     });
                 }
-
-                /*
-                
-                if (stack.length === 1) {
-                    stack[0].call(this, request, response, () => {});
-                } else {
-                    while (stack.length > 0) {
-                        stack[0].call(this, request, response, (err) => {});
-                        stack.shift();
-                    }
-                }*/
             })
             .catch(err => {
                 console.error(err);
@@ -404,7 +398,7 @@ export class Application extends EventEmitter {
 
         request[kRequestPayloadStream] = request.raw;
 
-        if (request.preParsing !== null) {
+        if ((request.preParsing !== null, request.preParsing.length > 0)) {
             preParsingHookRunner(
                 request.preParsing,
                 request,

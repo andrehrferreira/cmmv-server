@@ -1054,15 +1054,10 @@ export default {
      * @public
      */
     send(payload: any) {
+        if (this.sent) return;
+
         if (this[kResponseIsRunningOnErrorHook] === true)
             throw new CM_ERR_SEND_INSIDE_ONERR();
-
-        if (this.sent) {
-            console.warn({
-                err: new CM_ERR_RES_ALREADY_SENT(this.req.url, this.req.method),
-            });
-            return this;
-        }
 
         if (payload instanceof Error || this[kResponseIsError] === true) {
             this[kResponseIsError] = false;
@@ -1162,6 +1157,8 @@ export default {
      * @public
      */
     json(obj) {
+        if (this.sent) return;
+
         const escape = this.app.get('json escape');
         const replacer = this.app.get('json replacer');
         const spaces = this.app.get('json spaces');
@@ -1185,6 +1182,8 @@ export default {
      * @public
      */
     jsonp(obj) {
+        if (this.sent) return;
+
         const escape = this.app.get('json escape');
         const replacer = this.app.get('json replacer');
         const spaces = this.app.get('json spaces');
@@ -1304,6 +1303,8 @@ export default {
      * @public
      */
     sendFile(path, options, callback) {
+        if (this.sent) return;
+
         let done = callback;
         const req = this.req;
         const res = this;
@@ -1358,6 +1359,8 @@ export default {
      * @public
      */
     download(path, filename, options, callback) {
+        if (this.sent) return;
+
         let done = callback;
         let name = filename;
         let opts = options || null;
@@ -1519,7 +1522,6 @@ export default {
      */
     attachment(filename) {
         if (filename) this.type(extname(filename));
-
         this.set('Content-Disposition', contentDisposition(filename));
         return this;
     },
@@ -1596,6 +1598,7 @@ export default {
      * @api public
      */
     redirect(url, alt?) {
+        if (this.sent) return;
         if (url === 'back') url = this.get('Referrer') || alt || '/';
 
         if (/^https?:\/\//i.test(url)) url = new URL(url).toString();

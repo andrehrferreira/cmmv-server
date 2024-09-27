@@ -58,36 +58,7 @@ export const handleRequest = (err, request, res) => {
 };
 
 function handler(req, res) {
-    try {
-        if (req.preValidation !== null) {
-            preValidationHookRunner(
-                req.preValidation,
-                req,
-                res,
-                preValidationCallback,
-            );
-        } else {
-            preValidationCallback(null, req, res);
-        }
-    } catch (err) {
-        preValidationCallback(err, req, res);
-    }
-}
-
-function preValidationCallback(err, req, res) {
-    if (res.sent === true) return;
-
-    if (err != null) {
-        res[kResponseIsError] = true;
-        res.send(err);
-        return;
-    }
-
-    validationCompleted(req, res);
-}
-
-function validationCompleted(req, res) {
-    if (req.preHandler !== null) {
+    if (req.preHandler !== null && req.preHandler.length > 0) {
         preHandlerHookRunner(req.preHandler, req, res, preHandlerCallback);
     } else {
         preHandlerCallback(null, req, res);
@@ -96,10 +67,7 @@ function validationCompleted(req, res) {
 
 function preHandlerCallback(err, req, res) {
     if (res.sent) return;
-    preHandlerCallbackInner(err, req, res);
-}
 
-function preHandlerCallbackInner(err, req, res) {
     try {
         if (err != null) {
             res[kResponseIsError] = true;
