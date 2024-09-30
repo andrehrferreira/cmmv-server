@@ -104,6 +104,15 @@ export class Application extends EventEmitter {
             }).bind(app);
         });
 
+        /**
+         * Proxy `Router#use()` to add middleware to the app router.
+         * See Router#use() documentation for details.
+         *
+         * If the _fn_ parameter is an express app, then it will be
+         * mounted at the _route_ specified.
+         *
+         * @public
+         */
         app.use = function use(fn: any) {
             let offset = 0;
             let path = '/';
@@ -149,6 +158,15 @@ export class Application extends EventEmitter {
             return this;
         };
 
+        /**
+         * Proxy to the app `Router#route()`
+         * Returns a new `Route` instance for the _path_.
+         *
+         * Routes are isolated middleware stacks for specific paths.
+         * See the Route api docs for details.
+         *
+         * @public
+         */
         app.route = function route(method: string, path: string) {
             return this.router.find(method, path);
         };
@@ -233,9 +251,8 @@ export class Application extends EventEmitter {
             return this;
         };
 
-        for (const method in app) {
+        for (const method in app)
             if (!server[method]) server[method] = app[method];
-        }
 
         app.set('etag', 'weak');
         app.set('env', process.env.NODE_ENV || 'dev');
@@ -270,24 +287,26 @@ export class Application extends EventEmitter {
         if (options.serverFactory) {
             server = options.serverFactory(this._handler, options);
         } else if (options.http2) {
-            if (options.https)
+            if (options.https) {
                 server = this.http2().createSecureServer(
                     options.https,
                     (req, res) => this._handler.call(server, req, res),
                 );
-            else
+            } else {
                 server = this.http2().createServer(options, (req, res) =>
                     this._handler.call(server, req, res),
                 );
+            }
         } else {
-            if (options.https)
+            if (options.https) {
                 server = https.createServer(options.https, (req, res) =>
                     this._handler.call(server, req, res),
                 );
-            else
+            } else {
                 server = http.createServer(options, (req, res) =>
                     this._handler.call(server, req, res),
                 );
+            }
 
             server.keepAliveTimeout = options.keepAliveTimeout;
             server.requestTimeout = options.requestTimeout;

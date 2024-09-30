@@ -10,7 +10,7 @@ import { EventEmitter } from 'events';
 import * as util from 'node:util';
 import * as after from 'after';
 
-import Cors, { CorsOptions } from '..';
+import { cors as Cors, CorsOptions } from '..';
 
 const fakeRequest = function (method: string, headers?: any) {
     return new FakeRequest(method, headers);
@@ -21,7 +21,7 @@ const fakeResponse = function () {
 };
 
 const cors = function (o?: CorsOptions | Function): (req, res, next) => void {
-    return Cors(typeof o === 'function' ? o : { ...o, express: true }) as (
+    return Cors(typeof o === 'function' ? o : { ...o }) as (
         req,
         res,
         next,
@@ -48,7 +48,7 @@ describe('cors', function () {
             done();
         };
 
-        const middleware = cors({ express: true });
+        const middleware = cors();
 
         if (typeof middleware === 'function') middleware(req, res, next);
     });
@@ -79,13 +79,9 @@ describe('cors', function () {
         });
 
         // act
-        cors({ optionsSuccessStatus: 200, express: true })(
-            req,
-            res,
-            function (err) {
-                cb(err || new Error('should not be called'));
-            },
-        );
+        cors({ optionsSuccessStatus: 200 })(req, res, function (err) {
+            cb(err || new Error('should not be called'));
+        });
     });
 
     it("doesn't shortcircuit preflight requests with preflightContinue option", function (done) {

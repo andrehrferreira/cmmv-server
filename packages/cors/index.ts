@@ -13,13 +13,6 @@ import * as http2 from 'node:http2';
 import * as assign from 'object-assign';
 import * as vary from 'vary';
 
-import {
-    ServerMiddleware,
-    IRequest,
-    IRespose,
-    INext,
-} from '@cmmv/server-common';
-
 export interface CorsOptions {
     origin?: any;
     methods?: string | string[];
@@ -27,20 +20,17 @@ export interface CorsOptions {
     optionsSuccessStatus?: number;
     credentials?: boolean;
     maxAge?: number;
-    express?: boolean;
     headers?: string | string[];
     allowedHeaders?: string | string[];
     exposedHeaders?: string | string[];
 }
 
-export class CMMVCors extends ServerMiddleware {
+export class CorsMiddleware {
     public middlewareName: string = 'cors';
 
     private options: CorsOptions;
 
     constructor(options?: CorsOptions) {
-        super();
-
         this.options = {
             origin: options?.origin || '*',
             methods: options?.methods || 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -51,59 +41,45 @@ export class CMMVCors extends ServerMiddleware {
             headers: options?.headers,
             exposedHeaders: options?.exposedHeaders,
             allowedHeaders: options?.allowedHeaders,
-            express: options?.express === true,
         };
     }
 
-    async process(
-        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
-        res: IRespose | http.ServerResponse | http2.Http2ServerResponse,
-        next?: INext,
-    ) {
-        let reqTest: any =
-            req instanceof http.IncomingMessage ||
-            req instanceof http2.Http2ServerRequest
-                ? req
-                : req?.httpRequest;
-        let resTest: any =
-            res instanceof http.ServerResponse ||
-            res instanceof http2.Http2ServerResponse
-                ? res
-                : res?.httpResponse;
+    async process(req, res, next?) {
+        if (req.app && typeof req.app.addHook == 'function')
+            req.app.addHook('onSend', this.onCall.bind(this));
+        else this.onCall.call(this, req, res, res.body, next);
+    }
 
-        if (!reqTest) reqTest = req;
-
-        if (!resTest) resTest = res;
-
+    async onCall(req, res, payload, done) {
         let headers = [];
         const method =
             req.method && req.method.toUpperCase && req.method.toUpperCase();
 
         if (method === 'OPTIONS') {
-            headers.push(this.configureOrigin(this.options, reqTest));
+            headers.push(this.configureOrigin(this.options, req));
             headers.push(this.configureCredentials(this.options));
             headers.push(this.configureMethods(this.options));
-            headers.push(this.configureAllowedHeaders(this.options, reqTest));
+            headers.push(this.configureAllowedHeaders(this.options, req));
             headers.push(this.configureMaxAge(this.options));
             headers.push(this.configureExposedHeaders(this.options));
-            this.applyHeaders(headers, resTest);
+            this.applyHeaders(headers, res);
 
             if (this.options.preflightContinue) {
-                next();
+                done();
             } else {
                 // Safari (and potentially other browsers) need content-length 0,
                 //   for 204 or they just hang waiting for a body
-                resTest.statusCode = this.options.optionsSuccessStatus;
-                resTest.setHeader('Content-Length', '0');
-                (resTest as http.ServerResponse).end();
+                res.statusCode = this.options.optionsSuccessStatus;
+                res.setHeader('Content-Length', '0');
+                (res as http.ServerResponse).end();
             }
         } else {
-            headers.push(this.configureOrigin(this.options, reqTest));
+            headers.push(this.configureOrigin(this.options, req));
             headers.push(this.configureCredentials(this.options));
             headers.push(this.configureExposedHeaders(this.options));
-            this.applyHeaders(headers, resTest);
+            this.applyHeaders(headers, res);
 
-            next();
+            done();
         }
     }
 
@@ -267,19 +243,24 @@ export class CMMVCors extends ServerMiddleware {
                 if (Array.isArray(header)) this.applyHeaders(header, res);
                 else if (header.key === 'Vary' && header.value)
                     vary(res, header.value);
-                else if (header.value) res.setHeader(header.key, header.value);
+                else if (header.value) res.set(header.key, header.value);
             }
         }
     }
 }
 
-export default function (options?: CorsOptions | Function) {
-    let middleware;
+export default async function (options?: CorsOptions) {
+    const middleware = new CorsMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+}
 
-    middleware =
-        typeof options !== 'function' ? new CMMVCors(options) : new CMMVCors();
+export const cors = function (options?: CorsOptions | Function) {
+    let middleware =
+        typeof options !== 'function'
+            ? new CorsMiddleware(options)
+            : new CorsMiddleware();
 
-    if (typeof options === 'function' || options?.express === true) {
+    if (typeof options === 'function') {
         let optionsCallback = null;
 
         const defaults = {
@@ -324,7 +305,9 @@ export default function (options?: CorsOptions | Function) {
                                     next(err2);
                                 } else {
                                     corsOptions.origin = origin;
-                                    middleware = new CMMVCors(corsOptions);
+                                    middleware = new CorsMiddleware(
+                                        corsOptions,
+                                    );
                                     middleware.process(req, res, next);
                                 }
                             },
@@ -335,5 +318,5 @@ export default function (options?: CorsOptions | Function) {
                 }
             });
         };
-    } else return middleware;
-}
+    } else return (req, res, next) => middleware.process(req, res, next);
+};

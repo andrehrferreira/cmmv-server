@@ -1,5 +1,6 @@
 import cmmv from '@cmmv/server';
 import etag from '@cmmv/etag';
+import cors from '@cmmv/cors';
 import cookieParser from '@cmmv/cookie-parser';
 
 /*const app = CmmvServer({
@@ -13,6 +14,7 @@ const app = cmmv();
 const host = '0.0.0.0';
 const port = 3000;
 
+app.use(cors());
 app.use(etag({ algorithm: 'fnv1a' }));
 app.use(cookieParser());
 
