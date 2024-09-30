@@ -15,7 +15,7 @@
 
 ## Description
 
-``@cmmv/server`` is inspired by the popular [Express.js](https://expressjs.com/pt-br/) framework but has been entirely rewritten in TypeScript with performance improvements in mind. The project integrates common plugins like ``body-parser``, ``compression``, ``cookie-parser``, ``cors`` and ``serve-static`` out of the box. Additionally, it plans to support any Express.js-compatible plugin in the near future.
+``@cmmv/server`` is inspired by the popular [Express.js](https://expressjs.com/pt-br/) framework but has been entirely rewritten in TypeScript with performance improvements in mind. The project integrates common plugins like ``body-parser``, ``compression``, ``cookie-parser``, ``cors``, ``etag`` and ``serve-static`` out of the box. Additionally, it plans to support any Express.js-compatible plugin in the near future.
 
 
 ## Installation
@@ -31,56 +31,53 @@ $ npm install @cmmv/server @cmmv/server-static
 Below is a simple example of how to create a new CMMV application:
 
 ```typescript
-import { readFileSync } from 'node:fs';
+//import { readFileSync } from "node:fs";
 
-import cmmv, { json, serverStatic } from '@cmmv/server';
-import compression from '@cmmv/compression';
+import cmmv, { json, urlencoded } from '@cmmv/server';
+import etag from '@cmmv/etag';
 import cors from '@cmmv/cors';
-
-/*const app = CmmvServer({
-    key: readFileSync("./cert/private-key.pem"),
-    cert: readFileSync("./cert/certificate.pem"),
-    passphrase: "1234"
-});*/
+import cookieParser from '@cmmv/cookie-parser';
+import compression from '@cmmv/compression';
 
 const app = cmmv({
     /*http2: true,
-    key: readFileSync('./cert/private-key.pem'),
-    cert: readFileSync('./cert/certificate.pem'),
-    passphrase: '1234',*/
+    https: {
+        key: readFileSync("./cert/private-key.pem"),
+        cert: readFileSync("./cert/certificate.pem"),
+        passphrase: "1234"
+    }*/
 });
 
 const host = '0.0.0.0';
 const port = 3000;
 
-app.use(json({ limit: '50mb' }));
-app.use(compression({ threshold: 0 }));
-app.use(serverStatic('public'));
 app.use(cors());
+app.use(etag({ algorithm: 'fnv1a' }));
+app.use(cookieParser());
+app.use(json({ limit: '50mb' }));
+app.use(urlencoded({ limit: '50mb', extended: true }));
+app.use(compression());
 
-app.post('/', function () {});
-app.get('/users', function (req, res) {});
-app.put('/users', function (req, res) {});
-
-app.get('/docs/:id', (req, res) => {
-    console.log(req.params);
-    res.send('Ok');
-});
-
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     res.send('Hello World');
 });
 
-app.post('/test', (req, res) => {
+app.get('/json', async (req, res) => {
+    res.json({ hello: 'world' });
+});
+
+app.post('/test', async (req, res) => {
     console.log(req.body);
-    res.send('Ok');
+    res.send("ok");
 });
 
-app.get('/test', (req, res) => res.sendFile('./public/test.html'));
-
-app.listen(3000, host, () => {
-    console.log(`Listen on http://${host}:${port}`);
-});
+app.listen({ host, port })
+    .then(address => {
+        console.log(`Listen on http://${address.address}:${address.port}`);
+    })
+    .catch(err => {
+        throw Error(err.message);
+    });
 ```
 
 ## Features

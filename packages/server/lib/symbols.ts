@@ -4,6 +4,7 @@ export const kChildren = Symbol('cmmv.children');
 export const kState = Symbol('cmmv.state');
 export const kOptions = Symbol('cmmv.options');
 export const kMiddlewares = Symbol('cmmv.middlewares');
+export const kContentTypeParsers = Symbol('cmmv.contentTypeParsers');
 
 //Schema
 export const kSchemaResponse = Symbol('cmmv.schema.response');

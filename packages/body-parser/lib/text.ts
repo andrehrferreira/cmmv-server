@@ -8,7 +8,6 @@
  */
 
 import * as http from 'node:http';
-import * as http2 from 'node:http2';
 
 import * as typeis from 'type-is';
 import * as bytes from 'bytes';
@@ -17,30 +16,20 @@ import { isFinished } from 'on-finished';
 
 import { read } from './read';
 
-import {
-    ServerMiddleware,
-    IRequest,
-    IRespose,
-    INext,
-} from '@cmmv/server-common';
-
 export interface BodyParserTextOptions {
     defaultCharset?: string;
     limit?: number | string;
     inflate?: boolean;
     type?: string;
     verify?: boolean | Function;
-    express?: boolean;
 }
 
-export class CMMVBodyParserText extends ServerMiddleware {
+export class BodyParserTextMiddleware {
     public middlewareName: string = 'body-parse-text';
 
     private options: BodyParserTextOptions;
 
     constructor(options?: BodyParserTextOptions) {
-        super();
-
         this.options = {
             limit:
                 typeof options?.limit !== 'number'
@@ -50,26 +39,16 @@ export class CMMVBodyParserText extends ServerMiddleware {
             type: options?.type || 'text/plain',
             verify: options?.verify || false,
             defaultCharset: options?.defaultCharset || 'utf-8',
-            express: options?.express || false,
         };
     }
 
-    async process(
-        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
-        res: IRespose | http.ServerResponse | http2.Http2ServerResponse,
-        next?: INext,
-    ) {
-        const reqTest =
-            req instanceof http.IncomingMessage ||
-            req instanceof http2.Http2ServerRequest
-                ? req
-                : req.httpRequest;
-        const resTest =
-            res instanceof http.ServerResponse ||
-            res instanceof http2.Http2ServerResponse
-                ? res
-                : res.httpResponse;
+    async process(req, res, next?) {
+        if (req.app && typeof req.app.addContentTypeParser == 'function')
+            req.app.addContentTypeParser('text/plain', this.onCall.bind(this));
+        else this.onCall.call(this, req, res, null, next);
+    }
 
+    onCall(req, res, payload, done) {
         const shouldParse =
             typeof this.options?.type !== 'function'
                 ? this.typeChecker(this.options.type)
@@ -79,26 +58,26 @@ export class CMMVBodyParserText extends ServerMiddleware {
             return buf;
         }
 
-        if (isFinished(reqTest as http.IncomingMessage)) {
-            next();
+        if (isFinished(req as http.IncomingMessage)) {
+            done();
             return;
         }
 
-        if (!('body' in reqTest)) reqTest['body'] = undefined;
+        if (!('body' in req)) req['body'] = undefined;
 
-        if (!typeis.hasBody(reqTest as http.IncomingMessage)) {
-            next();
+        if (!typeis.hasBody(req as http.IncomingMessage)) {
+            done();
             return;
         }
 
-        if (!shouldParse(reqTest)) {
-            next();
+        if (!shouldParse(req)) {
+            done();
             return;
         }
 
         const charset = this.getCharset(req) || this.options.defaultCharset;
 
-        read(reqTest, resTest, next, parse.bind(this), {
+        read(req, res, done, parse.bind(this), {
             encoding: charset,
             inflate: this.options.inflate,
             limit: this.options.limit,
@@ -146,5 +125,6 @@ export default function (options?: BodyParserTextOptions) {
         throw new TypeError('option verify must be function');
     }
 
-    return new CMMVBodyParserText(options);
+    const middleware = new BodyParserTextMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
 }

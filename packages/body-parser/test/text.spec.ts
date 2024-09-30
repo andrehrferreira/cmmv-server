@@ -18,7 +18,7 @@ const nobrotlit = !hasBrotliSupport ? it : it.skip;
 
 describe('bodyParser.text()', function () {
     before(function () {
-        this.server = createServer({ express: true });
+        this.server = createServer();
     });
 
     it('should parse text/plain', function (done) {
@@ -30,7 +30,7 @@ describe('bodyParser.text()', function () {
     });
 
     it('should 400 when invalid content-length', function (done) {
-        const textParser = bodyParser.text({ express: true });
+        const textParser = bodyParser.textExpress();
         const server = createServer(function (req, res, next) {
             req.headers['content-length'] = '20'; // bad length
             textParser(req, res, next);
@@ -44,7 +44,7 @@ describe('bodyParser.text()', function () {
     });
 
     it('should handle Content-Length: 0', function (done) {
-        request(createServer({ limit: '1kb', express: true }))
+        request(createServer({ limit: '1kb' }))
             .post('/')
             .set('Content-Type', 'text/plain')
             .set('Content-Length', '0')
@@ -52,7 +52,7 @@ describe('bodyParser.text()', function () {
     });
 
     it('should handle empty message-body', function (done) {
-        request(createServer({ limit: '1kb', express: true }))
+        request(createServer({ limit: '1kb' }))
             .post('/')
             .set('Content-Type', 'text/plain')
             .set('Transfer-Encoding', 'chunked')
@@ -61,7 +61,7 @@ describe('bodyParser.text()', function () {
     });
 
     it('should handle consumed stream', function (done) {
-        const textParser = bodyParser.text({ express: true });
+        const textParser = bodyParser.textExpress();
         const server = createServer(function (req, res, next) {
             req.on('end', function () {
                 textParser(req, res, next);
@@ -77,7 +77,7 @@ describe('bodyParser.text()', function () {
     });
 
     it('should handle duplicated middleware', function (done) {
-        const textParser = bodyParser.text({ express: true });
+        const textParser = bodyParser.textExpress();
         const server = createServer(function (req, res, next) {
             textParser(req, res, function (err) {
                 if (err) return next(err);
@@ -96,7 +96,6 @@ describe('bodyParser.text()', function () {
         it('should change default charset', function (done) {
             const server = createServer({
                 defaultCharset: 'koi8-r',
-                express: true,
             });
             const test = request(server).post('/');
             test.set('Content-Type', 'text/plain');
@@ -107,7 +106,6 @@ describe('bodyParser.text()', function () {
         it('should honor content-type charset', function (done) {
             const server = createServer({
                 defaultCharset: 'koi8-r',
-                express: true,
             });
             const test = request(server).post('/');
             test.set('Content-Type', 'text/plain; charset=utf-8');
@@ -120,7 +118,7 @@ describe('bodyParser.text()', function () {
         it('should 413 when over limit with Content-Length', function (done) {
             const buf = Buffer.alloc(1028, '.');
 
-            request(createServer({ limit: '1kb', express: true }))
+            request(createServer({ limit: '1kb' }))
                 .post('/')
                 .set('Content-Type', 'text/plain')
                 .set('Content-Length', '1028')
@@ -130,7 +128,7 @@ describe('bodyParser.text()', function () {
 
         it('should 413 when over limit with chunked encoding', function (done) {
             const buf = Buffer.alloc(1028, '.');
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Type', 'text/plain');
             test.set('Transfer-Encoding', 'chunked');
@@ -139,7 +137,7 @@ describe('bodyParser.text()', function () {
         });
 
         it('should 413 when inflated body over limit', function (done) {
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Encoding', 'gzip');
             test.set('Content-Type', 'text/plain');
@@ -155,7 +153,7 @@ describe('bodyParser.text()', function () {
         it('should accept number of bytes', function (done) {
             const buf = Buffer.alloc(1028, '.');
 
-            request(createServer({ limit: 1024, express: true }))
+            request(createServer({ limit: 1024 }))
                 .post('/')
                 .set('Content-Type', 'text/plain')
                 .send(buf.toString())
@@ -164,7 +162,7 @@ describe('bodyParser.text()', function () {
 
         it('should not change when options altered', function (done) {
             const buf = Buffer.alloc(1028, '.');
-            const options = { limit: '1kb', express: true };
+            const options = { limit: '1kb' };
             const server = createServer(options);
 
             options.limit = '100kb';
@@ -178,7 +176,7 @@ describe('bodyParser.text()', function () {
 
         it('should not hang response', function (done) {
             const buf = Buffer.alloc(10240, '.');
-            const server = createServer({ limit: '8kb', express: true });
+            const server = createServer({ limit: '8kb' });
             const test = request(server).post('/');
             test.set('Content-Type', 'text/plain');
             test.write(buf);
@@ -188,7 +186,7 @@ describe('bodyParser.text()', function () {
         });
 
         it('should not error when inflating', function (done) {
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Encoding', 'gzip');
             test.set('Content-Type', 'text/plain');
@@ -207,7 +205,7 @@ describe('bodyParser.text()', function () {
     describe('with inflate option', function () {
         describe('when false', function () {
             before(function () {
-                this.server = createServer({ inflate: false, express: true });
+                this.server = createServer({ inflate: false });
             });
 
             it('should not accept content-encoding', function (done) {
@@ -230,7 +228,7 @@ describe('bodyParser.text()', function () {
 
         describe('when true', function () {
             before(function () {
-                this.server = createServer({ inflate: true, express: true });
+                this.server = createServer({ inflate: true });
             });
 
             it('should accept content-encoding', function (done) {
@@ -253,7 +251,6 @@ describe('bodyParser.text()', function () {
             before(function () {
                 this.server = createServer({
                     type: 'text/html',
-                    express: true,
                 });
             });
 
@@ -278,7 +275,6 @@ describe('bodyParser.text()', function () {
             before(function () {
                 this.server = createServer({
                     type: ['text/html', 'text/plain'],
-                    express: true,
                 });
             });
 
@@ -309,7 +305,7 @@ describe('bodyParser.text()', function () {
 
         describe('when a function', function () {
             it('should parse when truthy value returned', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     return req.headers['content-type'] === 'text/vnd.something';
@@ -323,7 +319,7 @@ describe('bodyParser.text()', function () {
             });
 
             it('should work without content-type', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     return true;
@@ -335,7 +331,7 @@ describe('bodyParser.text()', function () {
             });
 
             it('should not invoke without a body', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     throw new Error('oops!');
@@ -349,7 +345,6 @@ describe('bodyParser.text()', function () {
     describe('with verify option', function () {
         it('should error from verify', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x20) throw new Error('no leading space');
                 },
@@ -364,7 +359,6 @@ describe('bodyParser.text()', function () {
 
         it('should allow custom codes', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] !== 0x20) return;
                     const err: any = new Error('no leading space');
@@ -383,7 +377,6 @@ describe('bodyParser.text()', function () {
 
         it('should allow pass-through', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x20) throw new Error('no leading space');
                 },
@@ -398,7 +391,6 @@ describe('bodyParser.text()', function () {
 
         it('should 415 on unknown charset prior to verify', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     throw new Error('unexpected verify call');
                 },
@@ -417,7 +409,7 @@ describe('bodyParser.text()', function () {
 
     describeAsyncHooks('async local storage', function () {
         before(function () {
-            const textParser = bodyParser.text({ express: true });
+            const textParser = bodyParser.textExpress();
             const store = { foo: 'bar' };
 
             this.server = createServer(function (req, res, next) {
@@ -502,7 +494,7 @@ describe('bodyParser.text()', function () {
 
     describe('charset', function () {
         before(function () {
-            this.server = createServer({ express: true });
+            this.server = createServer();
         });
 
         it('should parse utf-8', function (done) {
@@ -548,7 +540,7 @@ describe('bodyParser.text()', function () {
 
     describe('encoding', function () {
         before(function () {
-            this.server = createServer({ limit: '10kb', express: true });
+            this.server = createServer({ limit: '10kb' });
         });
 
         it('should parse without encoding', function (done) {
@@ -639,7 +631,7 @@ describe('bodyParser.text()', function () {
 
 function createServer(opts?: any) {
     const _bodyParser =
-        typeof opts !== 'function' ? bodyParser.text(opts) : opts;
+        typeof opts !== 'function' ? bodyParser.textExpress(opts) : opts;
 
     return http.createServer(function (req: any, res) {
         _bodyParser(req, res, function (err) {

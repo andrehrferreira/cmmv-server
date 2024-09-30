@@ -324,10 +324,16 @@ export default {
      * @return {Number|void}
      * @api public
      */
+    _length: undefined,
+
     get length(): number {
-        const len = this.get('Content-Length');
+        const len = this._length || this.get('Content-Length');
         if (len === '') return;
         return ~~len;
+    },
+
+    set length(value) {
+        this._length = value;
     },
 
     /**

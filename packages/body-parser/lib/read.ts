@@ -32,6 +32,7 @@ export function read(req, res, next, parse, options) {
         length = stream.length;
         stream.length = undefined;
     } catch (err) {
+        console.error(err);
         return next(err);
     }
 
@@ -105,6 +106,7 @@ export function read(req, res, next, parse, options) {
                 typeof body !== 'string' && encoding !== null
                     ? iconv.decode(body, encoding)
                     : body;
+
             req.body = parse(str, encoding);
         } catch (err) {
             next(
@@ -129,12 +131,12 @@ export function read(req, res, next, parse, options) {
  * @return {object}
  * @api private
  */
-export function contentstream(req, inflate) {
+export function contentstream(request, inflate) {
     const encoding = (
-        req.headers['content-encoding'] || 'identity'
+        request.headers['content-encoding'] || 'identity'
     ).toLowerCase();
-    const length = req.headers['content-length'];
-    let stream;
+    const length = request.headers['content-length'];
+    let stream: any = {};
 
     if (inflate === false && encoding !== 'identity') {
         throw createError(415, 'content encoding unsupported', {
@@ -146,33 +148,22 @@ export function contentstream(req, inflate) {
     switch (encoding) {
         case 'deflate':
             stream = zlib.createInflate();
-            req.pipe(stream);
+            request.req.pipe(stream);
             break;
         case 'gzip':
             stream = zlib.createGunzip();
-            req.pipe(stream);
-            break;
-        case 'identity':
-            stream = req;
-            stream.length = length;
+            request.req.pipe(stream);
             break;
         case 'br':
             if (hasBrotliSupport) {
                 stream = zlib.createBrotliDecompress();
-                req.pipe(stream);
+                request.req.pipe(stream);
             }
             break;
-    }
-
-    if (stream === undefined) {
-        throw createError(
-            415,
-            'unsupported content encoding "' + encoding + '"',
-            {
-                encoding: encoding,
-                type: 'encoding.unsupported',
-            },
-        );
+        default:
+            stream = request.req;
+            stream.length = length;
+            break;
     }
 
     return stream;

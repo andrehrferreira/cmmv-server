@@ -57,8 +57,6 @@ export class CompressionMiddleware {
 
             let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
-            //if (method === 'gzip' && accept.encoding(['br'])) method = 'br';
-
             if (this.filter(res) && this.shouldTransform(res)) {
                 if (express)
                     this.expressCompatibility(req, res, done, this.options);
@@ -261,10 +259,16 @@ export class CompressionMiddleware {
         return new Promise<Buffer>((resolve, reject) => {
             const chunks: Buffer[] = [];
 
-            compressionStream.on('data', chunk => chunks.push(chunk));
-            compressionStream.on('end', () => resolve(Buffer.concat(chunks)));
-            compressionStream.on('error', err => reject(err));
-            compressionStream.end(inputBuffer);
+            if (compressionStream) {
+                compressionStream.on('data', chunk => chunks.push(chunk));
+                compressionStream.on('end', () =>
+                    resolve(Buffer.concat(chunks)),
+                );
+                compressionStream.on('error', err => reject(err));
+                compressionStream.end(inputBuffer);
+            } else {
+                reject('Compress method invalid!');
+            }
         });
     }
 

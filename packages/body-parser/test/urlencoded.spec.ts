@@ -20,7 +20,7 @@ const nobrotlit = !hasBrotliSupport ? it : it.skip;
 
 describe('bodyParser.urlencoded()', function () {
     before(function () {
-        this.server = createServer({ express: true });
+        this.server = createServer();
     });
 
     it('should parse x-www-form-urlencoded', function (done) {
@@ -32,7 +32,7 @@ describe('bodyParser.urlencoded()', function () {
     });
 
     it('should 400 when invalid content-length', function (done) {
-        const urlencodedParser = bodyParser.urlencoded({ express: true });
+        const urlencodedParser = bodyParser.urlencodedExpress();
         const server = createServer(function (req, res, next) {
             req.headers['content-length'] = '20'; // bad length
             urlencodedParser(req, res, next);
@@ -63,7 +63,6 @@ describe('bodyParser.urlencoded()', function () {
                 it.skip('should parse x-www-form-urlencoded with an explicit iso-8859-1 encoding', function (done) {
                     const server = createServer({
                         extended: extended,
-                        express: true,
                     });
                     request(server)
                         .post('/')
@@ -79,7 +78,6 @@ describe('bodyParser.urlencoded()', function () {
                     const server = createServer({
                         defaultCharset: 'iso-8859-1',
                         extended: extended,
-                        express: true,
                     });
                     request(server)
                         .post('/')
@@ -95,7 +93,6 @@ describe('bodyParser.urlencoded()', function () {
                     const server = createServer({
                         charsetSentinel: true,
                         extended: extended,
-                        express: true,
                     });
                     request(server)
                         .post('/')
@@ -111,7 +108,6 @@ describe('bodyParser.urlencoded()', function () {
                     const server = createServer({
                         charsetSentinel: true,
                         extended: extended,
-                        express: true,
                     });
 
                     request(server)
@@ -128,7 +124,6 @@ describe('bodyParser.urlencoded()', function () {
                     const server = createServer({
                         charsetSentinel: true,
                         extended: extended,
-                        express: true,
                     });
 
                     request(server)
@@ -145,7 +140,6 @@ describe('bodyParser.urlencoded()', function () {
                     const server = createServer({
                         charsetSentinel: true,
                         extended: extended,
-                        express: true,
                     });
 
                     request(server)
@@ -162,7 +156,6 @@ describe('bodyParser.urlencoded()', function () {
                     const server = createServer({
                         charsetSentinel: true,
                         extended: extended,
-                        express: true,
                     });
 
                     request(server)
@@ -179,7 +172,7 @@ describe('bodyParser.urlencoded()', function () {
     });
 
     it('should handle empty message-body', function (done) {
-        request(createServer({ limit: '1kb', express: true }))
+        request(createServer({ limit: '1kb' }))
             .post('/')
             .set('Content-Type', 'application/x-www-form-urlencoded')
             .set('Transfer-Encoding', 'chunked')
@@ -188,7 +181,7 @@ describe('bodyParser.urlencoded()', function () {
     });
 
     it('should handle consumed stream', function (done) {
-        const urlencodedParser = bodyParser.urlencoded({ express: true });
+        const urlencodedParser = bodyParser.urlencodedExpress();
 
         const server = createServer(function (req, res, next) {
             req.on('end', function () {
@@ -205,7 +198,7 @@ describe('bodyParser.urlencoded()', function () {
     });
 
     it('should handle duplicated middleware', function (done) {
-        const urlencodedParser = bodyParser.urlencoded({ express: true });
+        const urlencodedParser = bodyParser.urlencodedExpress();
         const server = createServer(function (req, res, next) {
             urlencodedParser(req, res, function (err) {
                 if (err) return next(err);
@@ -231,7 +224,7 @@ describe('bodyParser.urlencoded()', function () {
     describe('with extended option', function () {
         describe('when false', function () {
             before(function () {
-                this.server = createServer({ extended: false, express: true });
+                this.server = createServer({ extended: false });
             });
 
             it('should not parse extended syntax', function (done) {
@@ -253,7 +246,7 @@ describe('bodyParser.urlencoded()', function () {
 
         describe('when true', function () {
             before(function () {
-                this.server = createServer({ extended: true, express: true });
+                this.server = createServer({ extended: true });
             });
 
             it('should parse multiple key instances', function (done) {
@@ -361,7 +354,6 @@ describe('bodyParser.urlencoded()', function () {
                 this.server = createServer({
                     extended: true,
                     depth: 10,
-                    express: true,
                 });
 
                 request(this.server)
@@ -375,7 +367,6 @@ describe('bodyParser.urlencoded()', function () {
                 this.server = createServer({
                     extended: true,
                     depth: 1,
-                    express: true,
                 });
 
                 request(this.server)
@@ -392,7 +383,7 @@ describe('bodyParser.urlencoded()', function () {
 
         describe('when default value', function () {
             before(function () {
-                this.server = createServer({ extended: true, express: true });
+                this.server = createServer({ extended: true });
             });
 
             it('should parse deeply nested objects', function (done) {
@@ -440,7 +431,7 @@ describe('bodyParser.urlencoded()', function () {
     describe('with inflate option', function () {
         describe('when false', function () {
             before(function () {
-                this.server = createServer({ inflate: false, express: true });
+                this.server = createServer({ inflate: false });
             });
 
             it('should not accept content-encoding', function (done) {
@@ -463,7 +454,7 @@ describe('bodyParser.urlencoded()', function () {
 
         describe('when true', function () {
             before(function () {
-                this.server = createServer({ inflate: true, express: true });
+                this.server = createServer({ inflate: true });
             });
 
             it('should accept content-encoding', function (done) {
@@ -485,7 +476,7 @@ describe('bodyParser.urlencoded()', function () {
         it('should 413 when over limit with Content-Length', function (done) {
             const buf = Buffer.alloc(1024, '.');
 
-            request(createServer({ limit: '1kb', express: true }))
+            request(createServer({ limit: '1kb' }))
                 .post('/')
                 .set('Content-Type', 'application/x-www-form-urlencoded')
                 .set('Content-Length', '1028')
@@ -495,7 +486,7 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should 413 when over limit with chunked encoding', function (done) {
             const buf = Buffer.alloc(1024, '.');
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Type', 'application/x-www-form-urlencoded');
             test.set('Transfer-Encoding', 'chunked');
@@ -505,7 +496,7 @@ describe('bodyParser.urlencoded()', function () {
         });
 
         it('should 413 when inflated body over limit', function (done) {
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Encoding', 'gzip');
             test.set('Content-Type', 'application/x-www-form-urlencoded');
@@ -520,7 +511,7 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should accept number of bytes', function (done) {
             const buf = Buffer.alloc(1024, '.');
-            request(createServer({ limit: 1024, express: true }))
+            request(createServer({ limit: 1024 }))
                 .post('/')
                 .set('Content-Type', 'application/x-www-form-urlencoded')
                 .send('str=' + buf.toString())
@@ -529,7 +520,7 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should not change when options altered', function (done) {
             const buf = Buffer.alloc(1024, '.');
-            const options = { limit: '1kb', express: true };
+            const options = { limit: '1kb' };
             const server = createServer(options);
 
             options.limit = '100kb';
@@ -543,7 +534,7 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should not hang response', function (done) {
             const buf = Buffer.alloc(10240, '.');
-            const server = createServer({ limit: '8kb', express: true });
+            const server = createServer({ limit: '8kb' });
             const test = request(server).post('/');
             test.set('Content-Type', 'application/x-www-form-urlencoded');
             test.write(buf);
@@ -553,7 +544,7 @@ describe('bodyParser.urlencoded()', function () {
         });
 
         it('should not error when inflating', function (done) {
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Encoding', 'gzip');
             test.set('Content-Type', 'application/x-www-form-urlencoded');
@@ -574,7 +565,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: false,
                         parameterLimit: 10,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -592,7 +582,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: false,
                         parameterLimit: 10,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -607,7 +596,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: false,
                         parameterLimit: 10.1,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -621,7 +609,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: false,
                         parameterLimit: 5000,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -636,7 +623,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: false,
                         parameterLimit: Infinity,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -653,7 +639,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: true,
                         parameterLimit: 10,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -671,7 +656,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: true,
                         parameterLimit: 10,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -686,7 +670,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: true,
                         parameterLimit: 10.1,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -700,7 +683,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: true,
                         parameterLimit: 5000,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -715,7 +697,6 @@ describe('bodyParser.urlencoded()', function () {
                     createServer({
                         extended: true,
                         parameterLimit: Infinity,
-                        express: true,
                     }),
                 )
                     .post('/')
@@ -732,7 +713,6 @@ describe('bodyParser.urlencoded()', function () {
             before(function () {
                 this.server = createServer({
                     type: 'application/vnd.x-www-form-urlencoded',
-                    express: true,
                 });
             });
 
@@ -759,7 +739,6 @@ describe('bodyParser.urlencoded()', function () {
         describe('when ["urlencoded", "application/x-pairs"]', function () {
             before(function () {
                 this.server = createServer({
-                    express: true,
                     type: ['urlencoded', 'application/x-pairs'],
                 });
             });
@@ -791,7 +770,7 @@ describe('bodyParser.urlencoded()', function () {
 
         describe('when a function', function () {
             it('should parse when truthy value returned', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     return (
@@ -808,7 +787,7 @@ describe('bodyParser.urlencoded()', function () {
             });
 
             it('should work without content-type', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     return true;
@@ -820,7 +799,7 @@ describe('bodyParser.urlencoded()', function () {
             });
 
             it('should not invoke without a body', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     throw new Error('oops!');
@@ -834,7 +813,6 @@ describe('bodyParser.urlencoded()', function () {
     describe('with verify option', function () {
         it('should error from verify', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x20) throw new Error('no leading space');
                 },
@@ -849,7 +827,6 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should allow custom codes', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] !== 0x20) return;
                     const err: any = new Error('no leading space');
@@ -868,7 +845,6 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should allow custom type', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] !== 0x20) return;
                     const err: any = new Error('no leading space');
@@ -887,7 +863,6 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should allow pass-through', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x5b) throw new Error('no arrays');
                 },
@@ -902,7 +877,6 @@ describe('bodyParser.urlencoded()', function () {
 
         it('should 415 on unknown charset prior to verify', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     throw new Error('unexpected verify call');
                 },
@@ -924,7 +898,7 @@ describe('bodyParser.urlencoded()', function () {
 
     describeAsyncHooks('async local storage', function () {
         before(function () {
-            const urlencodedParser = bodyParser.urlencoded({ express: true });
+            const urlencodedParser = bodyParser.urlencodedExpress();
             const store = { foo: 'bar' };
 
             this.server = createServer(function (req, res, next) {
@@ -1009,7 +983,7 @@ describe('bodyParser.urlencoded()', function () {
 
     describe('charset', function () {
         before(function () {
-            this.server = createServer({ express: true });
+            this.server = createServer();
         });
 
         it('should parse utf-8', function (done) {
@@ -1057,7 +1031,7 @@ describe('bodyParser.urlencoded()', function () {
 
     describe('encoding', function () {
         before(function () {
-            this.server = createServer({ limit: '10kb', express: true });
+            this.server = createServer({ limit: '10kb' });
         });
 
         it('should parse without encoding', function (done) {
@@ -1161,7 +1135,7 @@ function createManyParams(count) {
 
 function createServer(opts?: any) {
     const _bodyParser =
-        typeof opts !== 'function' ? bodyParser.urlencoded(opts) : opts;
+        typeof opts !== 'function' ? bodyParser.urlencodedExpress(opts) : opts;
 
     return http.createServer(function (req: any, res) {
         _bodyParser(req, res, function (err) {

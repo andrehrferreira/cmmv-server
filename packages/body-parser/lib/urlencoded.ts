@@ -8,7 +8,6 @@
  */
 
 import * as http from 'node:http';
-import * as http2 from 'node:http2';
 
 import * as typeis from 'type-is';
 import * as bytes from 'bytes';
@@ -19,13 +18,6 @@ import { isFinished } from 'on-finished';
 
 import { read } from './read';
 
-import {
-    ServerMiddleware,
-    IRequest,
-    IRespose,
-    INext,
-} from '@cmmv/server-common';
-
 export interface BodyParserUrlEncodedOptions {
     extended?: boolean;
     limit?: number | string;
@@ -33,21 +25,18 @@ export interface BodyParserUrlEncodedOptions {
     type?: string;
     verify?: boolean | Function;
     defaultCharset?: string;
-    express?: boolean;
     interpretNumericEntities?: boolean;
     charsetSentinel?: boolean;
     depth?: number;
     parameterLimit?: number;
 }
 
-export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
+export class BodyParserUrlEncodedMiddleware {
     public middlewareName: string = 'body-parse-urlencoded';
 
     private options: BodyParserUrlEncodedOptions;
 
     constructor(options?: BodyParserUrlEncodedOptions) {
-        super();
-
         this.options = {
             limit:
                 typeof options?.limit !== 'number'
@@ -58,7 +47,6 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
             verify: options?.verify || false,
             extended: Boolean(options?.extended),
             defaultCharset: options?.defaultCharset || 'utf-8',
-            express: options?.express || false,
             interpretNumericEntities: options?.interpretNumericEntities,
             charsetSentinel: options?.charsetSentinel,
             depth: Boolean(options?.extended)
@@ -73,22 +61,16 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
         };
     }
 
-    async process(
-        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
-        res: IRespose | http.ServerResponse | http2.Http2ServerResponse,
-        next?: INext,
-    ) {
-        const reqTest =
-            req instanceof http.IncomingMessage ||
-            req instanceof http2.Http2ServerRequest
-                ? req
-                : req.httpRequest;
-        const resTest =
-            res instanceof http.ServerResponse ||
-            res instanceof http2.Http2ServerResponse
-                ? res
-                : res.httpResponse;
+    async process(req, res, next?) {
+        if (req.app && typeof req.app.addContentTypeParser == 'function')
+            req.app.addContentTypeParser(
+                'application/x-www-form-urlencoded',
+                this.onCall.bind(this),
+            );
+        else this.onCall.call(this, req, res, null, next);
+    }
 
+    onCall(req, res, payload, done) {
         if (
             this.options?.defaultCharset !== 'utf-8' &&
             this.options?.defaultCharset !== 'iso-8859-1'
@@ -112,27 +94,27 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
             return body.length ? queryparse(body, encoding) : {};
         }
 
-        if (isFinished(reqTest as http.IncomingMessage)) {
-            next();
+        if (isFinished(req as http.IncomingMessage)) {
+            done();
             return;
         }
 
-        if (!('body' in reqTest)) reqTest['body'] = undefined;
+        if (!('body' in req)) req['body'] = undefined;
 
-        if (!typeis.hasBody(reqTest as http.IncomingMessage)) {
-            next();
+        if (!typeis.hasBody(req as http.IncomingMessage)) {
+            done();
             return;
         }
 
-        if (!shouldParse(reqTest)) {
-            next();
+        if (!shouldParse(req)) {
+            done();
             return;
         }
 
         const charset = this.getCharset(req) || this.options.defaultCharset;
 
         if (charset !== 'utf-8' && charset !== 'iso-8859-1') {
-            next(
+            done(
                 createError(
                     415,
                     'unsupported charset "' + charset.toUpperCase() + '"',
@@ -146,7 +128,7 @@ export class CMMVBodyParserUrlEncoded extends ServerMiddleware {
             return;
         }
 
-        read(reqTest, resTest, next, parse.bind(this), {
+        read(req, res, done, parse.bind(this), {
             encoding: charset,
             inflate: this.options.inflate,
             limit: this.options.limit,
@@ -284,9 +266,8 @@ export default function (options?: BodyParserUrlEncodedOptions) {
     const parameterLimit =
         options.parameterLimit !== undefined ? options.parameterLimit : 1000;
 
-    if (isNaN(parameterLimit) || parameterLimit < 1) {
+    if (isNaN(parameterLimit) || parameterLimit < 1)
         throw new TypeError('option parameterLimit must be a positive number');
-    }
 
-    return new CMMVBodyParserUrlEncoded(options);
+    return new BodyParserUrlEncodedMiddleware(options);
 }

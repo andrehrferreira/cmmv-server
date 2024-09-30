@@ -34,9 +34,8 @@ export const handleRequest = (err, request, res) => {
                 (contentLength === undefined || contentLength === '0') &&
                 transferEncoding === undefined
             ) {
-                handler(request, res);
             } else {
-                //context.contentTypeParser.run('', handler, request, reply)
+                request.app.contentTypeParser('', handler, request, res);
             }
         } else {
             if (
@@ -48,7 +47,7 @@ export const handleRequest = (err, request, res) => {
                 return;
             }
 
-            //context.contentTypeParser.run(contentType, handler, request, reply)
+            request.app.contentTypeParser(contentType, handler, request, res);
         }
         return;
     }

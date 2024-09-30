@@ -8,22 +8,13 @@
  */
 
 import * as http from 'node:http';
-import * as http2 from 'node:http2';
 
 import * as typeis from 'type-is';
 import * as bytes from 'bytes';
 import * as contentType from 'content-type';
-import * as createError from 'http-errors';
 import { isFinished } from 'on-finished';
 
 import { read } from './read';
-
-import {
-    ServerMiddleware,
-    IRequest,
-    IRespose,
-    INext,
-} from '@cmmv/server-common';
 
 export interface BodyParserJSONOptions {
     limit?: number | string;
@@ -32,21 +23,19 @@ export interface BodyParserJSONOptions {
     strict?: boolean;
     type?: string;
     verify?: boolean | Function;
-    express?: boolean;
 }
 
 const FIRST_CHAR_REGEXP = /^[\x20\x09\x0a\x0d]*([^\x20\x09\x0a\x0d])/; // eslint-disable-line no-control-regex
 const JSON_SYNTAX_CHAR = '#';
 const JSON_SYNTAX_REGEXP = /#+/g;
+const bodywith = new Set(['DELETE', 'OPTIONS', 'PATCH', 'PUT', 'POST']);
 
-export class CMMVBodyParserJSON extends ServerMiddleware {
+export class BodyParserJSONMiddleware {
     public middlewareName: string = 'body-parse-json';
 
     private options: BodyParserJSONOptions;
 
     constructor(options?: BodyParserJSONOptions) {
-        super();
-
         this.options = {
             limit:
                 typeof options?.limit !== 'number'
@@ -57,69 +46,55 @@ export class CMMVBodyParserJSON extends ServerMiddleware {
             strict: options?.strict !== false,
             type: options?.type || 'application/json',
             verify: options?.verify || false,
-            express: options?.express || false,
         };
     }
 
-    async process(
-        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
-        res: IRespose | http.ServerResponse | http2.Http2ServerResponse,
-        next?: INext,
-    ) {
-        const reqTest =
-            req instanceof http.IncomingMessage ||
-            req instanceof http2.Http2ServerRequest
-                ? req
-                : req.httpRequest;
-        const resTest =
-            res instanceof http.ServerResponse ||
-            res instanceof http2.Http2ServerResponse
-                ? res
-                : res.httpResponse;
-
-        if (isFinished(reqTest as http.IncomingMessage)) {
-            next();
-            return;
-        }
-
-        if (!('body' in reqTest)) reqTest['body'] = undefined;
-
-        if (!typeis.hasBody(reqTest as http.IncomingMessage)) {
-            next();
-            return;
-        }
-
-        const shouldParse =
-            typeof this.options?.type !== 'function'
-                ? this.typeChecker(this.options.type)
-                : this.options.type;
-
-        if (!shouldParse(reqTest)) {
-            next();
-            return;
-        }
-
-        const charset = this.getCharset(reqTest) || 'utf-8';
-
-        if (charset.slice(0, 4) !== 'utf-') {
-            next(
-                createError(
-                    415,
-                    'unsupported charset "' + charset.toUpperCase() + '"',
-                    {
-                        charset: charset,
-                        type: 'charset.unsupported',
-                    },
-                ),
+    async process(req, res, next?) {
+        if (req.app && typeof req.app.addContentTypeParser == 'function') {
+            req.app.addContentTypeParser(
+                ['application/json', 'text/json', 'application/vnd.api+json'],
+                this.onCall.bind(this),
             );
-            return;
-        }
+        } else this.onCall.call(this, req, res, null, next);
+    }
 
-        read(reqTest, resTest, next, this.parse.bind(this), {
-            encoding: charset,
-            inflate: this.options.inflate,
-            limit: this.options.limit,
-            verify: this.options.verify,
+    onCall(req, res, payload, done) {
+        return new Promise((resolve, reject) => {
+            if (!bodywith.has(req.method.toUpperCase())) {
+                resolve(null);
+                return;
+            }
+
+            if (isFinished(req as http.IncomingMessage)) {
+                resolve(null);
+                return;
+            }
+
+            if (!('body' in req)) req['body'] = undefined;
+
+            if (!typeis.hasBody(req as http.IncomingMessage)) {
+                resolve(null);
+                return;
+            }
+
+            const shouldParse =
+                typeof this.options?.type !== 'function'
+                    ? this.typeChecker(this.options.type)
+                    : this.options.type;
+
+            if (!shouldParse(req)) {
+                resolve(null);
+                return;
+            }
+
+            const charset = this.getCharset(req) || 'utf-8';
+
+            read(req, res, resolve, this.parse.bind(this), {
+                encoding: charset,
+                inflate: this.options.inflate,
+                limit: this.options.limit,
+                verify: this.options.verify,
+            });
         });
     }
 
@@ -202,17 +177,10 @@ export class CMMVBodyParserJSON extends ServerMiddleware {
      * @param {object} req
      * @api private
      */
-    private getCharset(
-        req: IRequest | http.IncomingMessage | http2.Http2ServerRequest,
-    ) {
+    private getCharset(req) {
         try {
             return (
-                contentType.parse(
-                    req instanceof http.IncomingMessage ||
-                        req instanceof http2.Http2ServerRequest
-                        ? req
-                        : req.httpRequest,
-                ).parameters.charset || ''
+                contentType.parse(req).parameters.charset || ''
             ).toLowerCase();
         } catch (e) {
             return undefined;
@@ -256,7 +224,7 @@ export class CMMVBodyParserJSON extends ServerMiddleware {
     }
 }
 
-export default function (options?: BodyParserJSONOptions) {
+export default async function (options?: BodyParserJSONOptions) {
     if (
         options.verify !== false &&
         options.verify !== undefined &&
@@ -266,5 +234,6 @@ export default function (options?: BodyParserJSONOptions) {
         throw new TypeError('option verify must be function');
     }
 
-    return new CMMVBodyParserJSON(options);
+    const middleware = new BodyParserJSONMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
 }

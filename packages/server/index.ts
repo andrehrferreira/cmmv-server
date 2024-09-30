@@ -10,19 +10,18 @@ export * from './lib';
  * MIT Licensed
  */
 
-//import { json as bodyParserJSON } from '@cmmv/body-parser';
-//import { urlencoded as bodyParserURLEncoded } from '@cmmv/body-parser';
-//import { text as bodyParserText } from '@cmmv/body-parser';
-//import { raw as bodyParserRaw } from '@cmmv/body-parser';
+import { json as bodyParserJSON } from '@cmmv/body-parser';
+import { urlencoded as bodyParserURLEncoded } from '@cmmv/body-parser';
+import { text as bodyParserText } from '@cmmv/body-parser';
+import { raw as bodyParserRaw } from '@cmmv/body-parser';
 //import { default as ss } from '@cmmv/server-static';
 import app from './lib/application';
 import { Router as router } from './lib/router';
 import * as Utils from './utils';
 
-import { ServerOptions } from '@cmmv/server-common';
 import { onListenHookRunner } from './lib/hooks';
 
-function CmmvServer(this: any, options?: ServerOptions): any {
+function CmmvServer(this: any, options?): any {
     const { server, listen } = app(options);
     const props = server.props?.slice();
 
@@ -46,10 +45,10 @@ function CmmvServer(this: any, options?: ServerOptions): any {
 
 export default CmmvServer;
 export const application = app;
-//export const json = bodyParserJSON;
-//export const urlencoded = bodyParserURLEncoded;
-//export const text = bodyParserText;
-//export const raw = bodyParserRaw;
+export const json = bodyParserJSON;
+export const urlencoded = bodyParserURLEncoded;
+export const text = bodyParserText;
+export const raw = bodyParserRaw;
 
 //export const serverStatic = ss;
 export const Router = router;

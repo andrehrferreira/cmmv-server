@@ -15,6 +15,7 @@ import {
 
 import {
     kChildren,
+    kContentTypeParsers,
     kErrorHandler,
     kHooks,
     kMiddlewares,
@@ -249,6 +250,60 @@ export class Application extends EventEmitter {
             return this;
         };
 
+        app.addContentTypeParser = function addContentTypeParser(
+            contentType,
+            fn,
+        ) {
+            if (fn == null)
+                throw new CM_ERR_HOOK_INVALID_HANDLER(contentType, fn);
+
+            if (Array.isArray(contentType)) {
+                for (let key in contentType)
+                    this[kContentTypeParsers][contentType[key]] = fn;
+            } else if (typeof contentType === 'string')
+                this[kContentTypeParsers][contentType] = fn;
+
+            return this;
+        };
+
+        app.contentTypeParser = function contentTypeParser(
+            contentType,
+            handler,
+            req,
+            res,
+        ) {
+            if (
+                this[kContentTypeParsers][contentType] &&
+                typeof this[kContentTypeParsers][contentType] === 'function'
+            ) {
+                let result;
+                try {
+                    result = this[kContentTypeParsers][contentType].call(
+                        this,
+                        req,
+                        res,
+                        null,
+                        handler,
+                    );
+                } catch (error) {
+                    console.log(error);
+                    handler(req, res);
+                    return;
+                }
+
+                if (result && typeof result.then === 'function')
+                    result
+                        .then(() => {
+                            handler(req, res);
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+            } else {
+                handler(req, res);
+            }
+        };
+
         for (const method in app)
             if (!server[method]) server[method] = app[method];
 
@@ -262,6 +317,7 @@ export class Application extends EventEmitter {
 
         server.app = app;
         server[kHooks] = new Hooks();
+        server[kContentTypeParsers] = {};
         server[kMiddlewares] = [];
         server[kChildren] = [];
         server[kState] = {};

@@ -11,45 +11,61 @@ export * from './lib';
 
 import {
     BodyParserJSONOptions,
-    CMMVBodyParserJSON,
+    BodyParserJSONMiddleware,
     BodyParserRawOptions,
-    CMMVBodyParserRaw,
+    BodyParserRawMiddleware,
     BodyParserTextOptions,
-    CMMVBodyParserText,
+    BodyParserTextMiddleware,
     BodyParserUrlEncodedOptions,
-    CMMVBodyParserUrlEncoded,
+    BodyParserUrlEncodedMiddleware,
 } from './lib';
 
-export const json = function (options?: BodyParserJSONOptions): any {
-    const middleware = new CMMVBodyParserJSON(options);
-
-    if (options?.express === true)
-        return (req, res, next) => middleware.process(req, res, next);
-    else return middleware;
+export const json = async function (
+    options?: BodyParserJSONOptions,
+): Promise<any> {
+    const middleware = new BodyParserJSONMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
 };
 
-export const raw = function (options?: BodyParserRawOptions): any {
-    const middleware = new CMMVBodyParserRaw(options);
-
-    if (options?.express === true)
-        return (req, res, next) => middleware.process(req, res, next);
-    else return middleware;
+export const jsonExpress = function (options?: BodyParserJSONOptions): any {
+    const middleware = new BodyParserJSONMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
 };
 
-export const text = function (options?: BodyParserTextOptions): any {
-    const middleware = new CMMVBodyParserText(options);
-
-    if (options?.express === true)
-        return (req, res, next) => middleware.process(req, res, next);
-    else return middleware;
+export const raw = async function (
+    options?: BodyParserRawOptions,
+): Promise<any> {
+    const middleware = new BodyParserRawMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
 };
 
-export const urlencoded = function (
+export const rawExpress = function (options?: BodyParserRawOptions): any {
+    const middleware = new BodyParserRawMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+};
+
+export const text = async function (
+    options?: BodyParserTextOptions,
+): Promise<any> {
+    const middleware = new BodyParserTextMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+};
+
+export const textExpress = function (options?: BodyParserTextOptions): any {
+    const middleware = new BodyParserTextMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+};
+
+export const urlencoded = async function (
+    options?: BodyParserUrlEncodedOptions,
+): Promise<any> {
+    const middleware = new BodyParserUrlEncodedMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
+};
+
+export const urlencodedExpress = function (
     options?: BodyParserUrlEncodedOptions,
 ): any {
-    const middleware = new CMMVBodyParserUrlEncoded(options);
-
-    if (options?.express === true)
-        return (req, res, next) => middleware.process(req, res, next);
-    else return middleware;
+    const middleware = new BodyParserUrlEncodedMiddleware(options);
+    return (req, res, next) => middleware.process(req, res, next);
 };

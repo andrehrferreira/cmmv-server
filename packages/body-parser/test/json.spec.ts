@@ -21,7 +21,7 @@ const nobrotlit = !hasBrotliSupport ? it : it.skip;
 
 describe('bodyParser.json()', function () {
     it('should parse JSON', function (done) {
-        request(createServer({ express: true }))
+        request(createServer())
             .post('/')
             .set('Content-Type', 'application/json')
             .send('{"user":"tobi"}')
@@ -29,7 +29,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should handle Content-Length: 0', function (done) {
-        request(createServer({ express: true }))
+        request(createServer())
             .get('/')
             .set('Content-Type', 'application/json')
             .set('Content-Length', '0')
@@ -37,7 +37,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should handle empty message-body', function (done) {
-        request(createServer({ express: true }))
+        request(createServer())
             .get('/')
             .set('Content-Type', 'application/json')
             .set('Transfer-Encoding', 'chunked')
@@ -45,7 +45,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should handle no message-body', function (done) {
-        request(createServer({ express: true }))
+        request(createServer())
             .get('/')
             .set('Content-Type', 'application/json')
             .unset('Transfer-Encoding')
@@ -53,7 +53,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should 400 when only whitespace', function (done) {
-        request(createServer({ express: true }))
+        request(createServer())
             .post('/')
             .set('Content-Type', 'application/json')
             .send('  \n')
@@ -61,7 +61,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should 400 when invalid content-length', function (done) {
-        const jsonParser = bodyParser.json({ express: true });
+        const jsonParser = bodyParser.jsonExpress();
 
         const server = createServer(function (req, res, next) {
             req.headers['content-length'] = '20'; // bad length
@@ -76,7 +76,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should handle consumed request', function (done) {
-        const jsonParser = bodyParser.json({ express: true });
+        const jsonParser = bodyParser.jsonExpress();
 
         const server = createServer(function (req, res, next) {
             req.on('end', function () {
@@ -94,7 +94,7 @@ describe('bodyParser.json()', function () {
     });
 
     it('should handle duplicated middleware', function (done) {
-        const jsonParser = bodyParser.json({ express: true });
+        const jsonParser = bodyParser.jsonExpress();
 
         const server = createServer(function (req, res, next) {
             jsonParser(req, res, function (err) {
@@ -112,7 +112,7 @@ describe('bodyParser.json()', function () {
 
     describe('when JSON is invalid', function () {
         before(function () {
-            this.server = createServer({ express: true });
+            this.server = createServer();
         });
 
         it('should 400 for bad token', function (done) {
@@ -149,7 +149,7 @@ describe('bodyParser.json()', function () {
         it('should 413 when over limit with Content-Length', function (done) {
             const buf = Buffer.alloc(1024, '.');
 
-            request(createServer({ limit: '1kb', express: true }))
+            request(createServer({ limit: '1kb' }))
                 .post('/')
                 .set('Content-Type', 'application/json')
                 .set('Content-Length', '1034')
@@ -163,7 +163,7 @@ describe('bodyParser.json()', function () {
 
         it('should 413 when over limit with chunked encoding', function (done) {
             const buf = Buffer.alloc(1024, '.');
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Type', 'application/json');
             test.set('Transfer-Encoding', 'chunked');
@@ -173,7 +173,7 @@ describe('bodyParser.json()', function () {
         });
 
         it('should 413 when inflated body over limit', function (done) {
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Encoding', 'gzip');
             test.set('Content-Type', 'application/json');
@@ -189,7 +189,7 @@ describe('bodyParser.json()', function () {
         it('should accept number of bytes', function (done) {
             const buf = Buffer.alloc(1024, '.');
 
-            request(createServer({ limit: 1024, express: true }))
+            request(createServer({ limit: 1024 }))
                 .post('/')
                 .set('Content-Type', 'application/json')
                 .send(JSON.stringify({ str: buf.toString() }))
@@ -198,7 +198,7 @@ describe('bodyParser.json()', function () {
 
         it('should not change when options altered', function (done) {
             const buf = Buffer.alloc(1024, '.');
-            const options = { limit: '1kb', express: true };
+            const options = { limit: '1kb' };
             const server = createServer(options);
 
             options.limit = '100kb';
@@ -212,7 +212,7 @@ describe('bodyParser.json()', function () {
 
         it('should not hang response', function (done) {
             const buf = Buffer.alloc(10240, '.');
-            const server = createServer({ limit: '8kb', express: true });
+            const server = createServer({ limit: '8kb' });
             const test = request(server).post('/');
             test.set('Content-Type', 'application/json');
             test.write(buf);
@@ -222,7 +222,7 @@ describe('bodyParser.json()', function () {
         });
 
         it('should not error when inflating', function (done) {
-            const server = createServer({ limit: '1kb', express: true });
+            const server = createServer({ limit: '1kb' });
             const test = request(server).post('/');
             test.set('Content-Encoding', 'gzip');
             test.set('Content-Type', 'application/json');
@@ -239,7 +239,7 @@ describe('bodyParser.json()', function () {
     describe('with inflate option', function () {
         describe('when false', function () {
             before(function () {
-                this.server = createServer({ inflate: false, express: true });
+                this.server = createServer({ inflate: false });
             });
 
             it('should not accept content-encoding', function (done) {
@@ -262,7 +262,7 @@ describe('bodyParser.json()', function () {
 
         describe('when true', function () {
             before(function () {
-                this.server = createServer({ inflate: true, express: true });
+                this.server = createServer({ inflate: true });
             });
 
             it('should accept content-encoding', function (done) {
@@ -283,7 +283,7 @@ describe('bodyParser.json()', function () {
     describe('with strict option', function () {
         describe('when undefined', function () {
             before(function () {
-                this.server = createServer({ express: true });
+                this.server = createServer();
             });
 
             it('should 400 on primitives', function (done) {
@@ -302,7 +302,7 @@ describe('bodyParser.json()', function () {
 
         describe('when false', function () {
             before(function () {
-                this.server = createServer({ strict: false, express: true });
+                this.server = createServer({ strict: false });
             });
 
             it('should parse primitives', function (done) {
@@ -316,7 +316,7 @@ describe('bodyParser.json()', function () {
 
         describe('when true', function () {
             before(function () {
-                this.server = createServer({ strict: true, express: true });
+                this.server = createServer({ strict: true });
             });
 
             it('should not parse primitives', function (done) {
@@ -375,7 +375,6 @@ describe('bodyParser.json()', function () {
             before(function () {
                 this.server = createServer({
                     type: 'application/vnd.api+json',
-                    express: true,
                 });
             });
 
@@ -399,7 +398,6 @@ describe('bodyParser.json()', function () {
         describe('when ["application/json", "application/vnd.api+json"]', function () {
             before(function () {
                 this.server = createServer({
-                    express: true,
                     type: ['application/json', 'application/vnd.api+json'],
                 });
             });
@@ -431,7 +429,7 @@ describe('bodyParser.json()', function () {
 
         describe('when a function', function () {
             it('should parse when truthy value returned', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     return (
@@ -448,7 +446,7 @@ describe('bodyParser.json()', function () {
             });
 
             it('should work without content-type', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     return true;
@@ -460,7 +458,7 @@ describe('bodyParser.json()', function () {
             });
 
             it('should not invoke without a body', function (done) {
-                const server = createServer({ type: accept, express: true });
+                const server = createServer({ type: accept });
 
                 function accept(req) {
                     throw new Error('oops!');
@@ -474,7 +472,6 @@ describe('bodyParser.json()', function () {
     describe('with verify option', function () {
         it('should error from verify', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x5b) throw new Error('no arrays');
                 },
@@ -489,7 +486,6 @@ describe('bodyParser.json()', function () {
 
         it('should allow custom codes', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] !== 0x5b) return;
                     const err: any = new Error('no arrays');
@@ -508,7 +504,6 @@ describe('bodyParser.json()', function () {
 
         it('should allow custom type', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] !== 0x5b) return;
                     const err: any = new Error('no arrays');
@@ -527,7 +522,6 @@ describe('bodyParser.json()', function () {
 
         it('should include original body on error object', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x5b) throw new Error('no arrays');
                 },
@@ -543,7 +537,6 @@ describe('bodyParser.json()', function () {
 
         it('should allow pass-through', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x5b) throw new Error('no arrays');
                 },
@@ -558,7 +551,6 @@ describe('bodyParser.json()', function () {
 
         it('should work with different charsets', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     if (buf[0] === 0x5b) throw new Error('no arrays');
                 },
@@ -577,7 +569,6 @@ describe('bodyParser.json()', function () {
 
         it('should 415 on unknown charset prior to verify', function (done) {
             const server = createServer({
-                express: true,
                 verify: function (req, res, buf) {
                     throw new Error('unexpected verify call');
                 },
@@ -596,7 +587,7 @@ describe('bodyParser.json()', function () {
 
     describeAsyncHooks('async local storage', function () {
         before(function () {
-            const jsonParser = bodyParser.json({ express: true });
+            const jsonParser = bodyParser.jsonExpress();
             const store = { foo: 'bar' };
 
             this.server = createServer(function (req, res, next) {
@@ -696,7 +687,7 @@ describe('bodyParser.json()', function () {
 
     describe('charset', function () {
         before(function () {
-            this.server = createServer({ express: true });
+            this.server = createServer();
         });
 
         it('should parse utf-8', function (done) {
@@ -759,7 +750,7 @@ describe('bodyParser.json()', function () {
 
     describe('encoding', function () {
         before(function () {
-            this.server = createServer({ limit: '1kb', express: true });
+            this.server = createServer({ limit: '1kb' });
         });
 
         it('should parse without encoding', function (done) {
@@ -891,7 +882,7 @@ describe('bodyParser.json()', function () {
 
 function createServer(opts?: any) {
     const _bodyParser =
-        typeof opts !== 'function' ? bodyParser.json(opts) : opts;
+        typeof opts !== 'function' ? bodyParser.jsonExpress(opts) : opts;
 
     return http.createServer(function (req: any, res) {
         _bodyParser(req, res, function (err) {
