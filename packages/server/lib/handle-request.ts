@@ -1,4 +1,4 @@
-import { preValidationHookRunner, preHandlerHookRunner } from './hooks';
+import { preHandlerHookRunner } from './hooks';
 
 import { wrapThenable } from './response';
 

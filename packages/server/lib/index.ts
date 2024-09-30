@@ -1,6 +1,7 @@
 export * from './application';
 export * from './error-handler';
 export * from './errors';
+export * from './handle-request';
 export * from './hooks';
 export * from './request';
 export * from './response';

@@ -33,7 +33,7 @@ export class EtagMiddleware {
         else this.onCall.call(this, req, res, res.body, next);
     }
 
-    async onCall(req, res, payload, done) {
+    onCall(req, res, payload, done) {
         const hash = this.buildHashFn(
             this.options.algorithm,
             this.options.weak,

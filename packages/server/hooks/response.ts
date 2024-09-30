@@ -10,8 +10,6 @@ export const onSendHookRunner = (functions, request, res, payload, cb) => {
     let i = 0;
 
     function next(err?, newPayload?) {
-        if (res.sent) return;
-
         if (err) {
             cb(err, request, res, payload);
             return;
@@ -33,7 +31,7 @@ export const onSendHookRunner = (functions, request, res, payload, cb) => {
         }
 
         if (result && typeof result.then === 'function')
-            result.then(handleResolve, handleReject);
+            result.then(handleResolve).catch(handleReject);
     }
 
     function handleResolve(newPayload) {

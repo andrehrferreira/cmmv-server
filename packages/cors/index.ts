@@ -8,7 +8,6 @@
  */
 
 import * as http from 'node:http';
-import * as http2 from 'node:http2';
 
 import * as assign from 'object-assign';
 import * as vary from 'vary';
@@ -50,7 +49,7 @@ export class CorsMiddleware {
         else this.onCall.call(this, req, res, res.body, next);
     }
 
-    async onCall(req, res, payload, done) {
+    onCall(req, res, payload, done) {
         let headers = [];
         const method =
             req.method && req.method.toUpperCase && req.method.toUpperCase();

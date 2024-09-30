@@ -2,6 +2,7 @@ import cmmv from '@cmmv/server';
 import etag from '@cmmv/etag';
 import cors from '@cmmv/cors';
 import cookieParser from '@cmmv/cookie-parser';
+import compression from '@cmmv/compression';
 
 /*const app = CmmvServer({
     http2: true,
@@ -17,6 +18,7 @@ const port = 3000;
 app.use(cors());
 app.use(etag({ algorithm: 'fnv1a' }));
 app.use(cookieParser());
+app.use(compression({ threshold: 0 }));
 
 app.get('/', async (req, res) => {
     res.send('Hello World');

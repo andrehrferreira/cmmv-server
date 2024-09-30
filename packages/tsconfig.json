@@ -7,7 +7,6 @@
         { "path": "./cors/tsconfig.build.json" },
         { "path": "./etag/tsconfig.build.json" },
         { "path": "./server/tsconfig.build.json" },
-        { "path": "./server-common/tsconfig.build.json" },
         { "path": "./server-static/tsconfig.build.json" }
     ]
 }

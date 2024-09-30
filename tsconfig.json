@@ -30,8 +30,6 @@
         "types": ["node", "mocha"],
         "paths": {
             "*": ["node_modules/*", "packages/*"],
-            "@cmmv/server-common": ["packages/server-common"],
-            "@cmmv/server-common/*": ["packages/server-common/*"],
             "@cmmv/server": ["packages/server"],
             "@cmmv/server/*": ["packages/server/*"],
             "@cmmv/body-parser": ["packages/body-parser"],
@@ -44,12 +42,8 @@
             "@cmmv/cors/*": ["packages/cors/*"],
             "@cmmv/etag": ["packages/etag"],
             "@cmmv/etag/*": ["packages/etag/*"],
-            "@cmmv/multer": ["packages/multer"],
-            "@cmmv/multer/*": ["packages/multer/*"],
             "@cmmv/server-static": ["packages/server-static"],
-            "@cmmv/server-static/*": ["packages/server-static/*"],
-            "@cmmv/session": ["packages/session"],
-            "@cmmv/session/*": ["packages/session/*"]
+            "@cmmv/server-static/*": ["packages/server-static/*"]
         }
     },
     "include": ["packages/**/*", "src/**/*.ts"],

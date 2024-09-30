@@ -2,6 +2,7 @@
  * cookie
  * Copyright(c) 2012-2014 Roman Shtylman
  * Copyright(c) 2015 Douglas Christopher Wilson
+ * Copyright(c) 2024 Andre Ferreira
  * MIT Licensed
  *
  * @see https://github.com/jshttp/cookie/blob/master/index.js

@@ -6,8 +6,6 @@
         "paths": {
             "@cmmv/body-parser": ["../body-parser"],
             "@cmmv/body-parser/*": ["../body-parser/*"],
-            "@cmmv/server-common": ["../server-common"],
-            "@cmmv/server-common/*": ["../server-common/*"],
             "@cmmv/server-static": ["../server-static"],
             "@cmmv/server-static/*": ["../server-static/*"]
         }
@@ -15,7 +13,6 @@
     "exclude": ["node_modules", "dist"],
     "references": [
         { "path": "../body-parser/tsconfig.build.json" },
-        { "path": "../server-common/tsconfig.build.json" },
         { "path": "../server-static/tsconfig.build.json" }
     ]
 }

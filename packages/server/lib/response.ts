@@ -1061,7 +1061,7 @@ export default {
      * @public
      */
     send(payload: any) {
-        if (this.sent) return;
+        //if (this.sent) return;
 
         if (this[kResponseIsRunningOnErrorHook] === true)
             throw new CM_ERR_SEND_INSIDE_ONERR();
@@ -1408,7 +1408,7 @@ export default {
         opts = Object.create(opts);
         opts.headers = headers;
 
-        var fullPath = !opts.root ? resolve(path) : path;
+        const fullPath = !opts.root ? resolve(path) : path;
 
         return this.sendFile(fullPath, opts, done);
     },

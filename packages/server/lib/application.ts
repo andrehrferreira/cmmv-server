@@ -3,8 +3,6 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import { EventEmitter } from 'node:events';
 
-import { ServerOptions } from '@cmmv/server-common';
-
 import {
     CM_ERR_HTTP2_INVALID_VERSION,
     CM_ERR_OPTIONS_NOT_OBJ,
@@ -53,7 +51,7 @@ export class Application extends EventEmitter {
         this.response = Object.create(response);
     }
 
-    private processOptions(options?: ServerOptions) {
+    private processOptions(options?) {
         if (typeof options !== 'object') throw new CM_ERR_OPTIONS_NOT_OBJ();
 
         if (
@@ -79,7 +77,7 @@ export class Application extends EventEmitter {
         return options;
     }
 
-    private injectApplication(server, options?: ServerOptions) {
+    private injectApplication(server, options?) {
         const slice = Array.prototype.slice;
         const flatten = Array.prototype.flat;
         const self = this;
@@ -279,7 +277,7 @@ export class Application extends EventEmitter {
         server.response = this.response;
     }
 
-    public createServerInstance(options?: ServerOptions, httpHandler?) {
+    public createServerInstance(options?, httpHandler?) {
         let server = null;
 
         options = this.processOptions(options || {});
@@ -436,9 +434,6 @@ export class Application extends EventEmitter {
     }
 }
 
-export default (
-    options?: ServerOptions,
-    httpHandler?: Function,
-): { server; listen } => {
+export default (options?, httpHandler?: Function): { server; listen } => {
     return new Application().createServerInstance(options, httpHandler);
 };

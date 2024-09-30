@@ -2,6 +2,7 @@
  * statuses
  * Copyright(c) 2014 Jonathan Ong
  * Copyright(c) 2016 Douglas Christopher Wilson
+ * Copyright(c) 2024 Andre Ferreira
  * MIT Licensed
  *
  * @see https://github.com/jshttp/statuses
