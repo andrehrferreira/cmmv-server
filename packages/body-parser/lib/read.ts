@@ -32,7 +32,7 @@ export function read(req, res, next, parse, options) {
         length = stream.length;
         stream.length = undefined;
     } catch (err) {
-        console.error(err);
+        //console.error(err);
         return next(err);
     }
 
@@ -136,7 +136,8 @@ export function contentstream(request, inflate) {
         request.headers['content-encoding'] || 'identity'
     ).toLowerCase();
     const length = request.headers['content-length'];
-    let stream: any = {};
+    const req = request.req || request;
+    let stream;
 
     if (inflate === false && encoding !== 'identity') {
         throw createError(415, 'content encoding unsupported', {
@@ -148,22 +149,33 @@ export function contentstream(request, inflate) {
     switch (encoding) {
         case 'deflate':
             stream = zlib.createInflate();
-            request.req.pipe(stream);
+            req.pipe(stream);
             break;
         case 'gzip':
             stream = zlib.createGunzip();
-            request.req.pipe(stream);
+            req.pipe(stream);
             break;
         case 'br':
             if (hasBrotliSupport) {
                 stream = zlib.createBrotliDecompress();
-                request.req.pipe(stream);
+                req.pipe(stream);
             }
             break;
-        default:
-            stream = request.req;
+        case 'identity':
+            stream = req;
             stream.length = length;
             break;
+    }
+
+    if (stream === undefined) {
+        throw createError(
+            415,
+            'unsupported content encoding "' + encoding + '"',
+            {
+                encoding: encoding,
+                type: 'encoding.unsupported',
+            },
+        );
     }
 
     return stream;

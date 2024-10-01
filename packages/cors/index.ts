@@ -235,15 +235,20 @@ export class CorsMiddleware {
     }
 
     applyHeaders(headers, res) {
-        for (let i = 0, n = headers.length; i < n; i++) {
-            let header = headers[i];
+        try {
+            for (let i = 0, n = headers.length; i < n; i++) {
+                let header = headers[i];
 
-            if (header) {
-                if (Array.isArray(header)) this.applyHeaders(header, res);
-                else if (header.key === 'Vary' && header.value)
-                    vary(res, header.value);
-                else if (header.value) res.set(header.key, header.value);
+                if (header) {
+                    if (Array.isArray(header)) this.applyHeaders(header, res);
+                    else if (header.key === 'Vary' && header.value)
+                        vary(res, header.value);
+                    else if (header.value && typeof res.set === 'function')
+                        res.set(header.key, header.value);
+                }
             }
+        } catch (err) {
+            console.error(err);
         }
     }
 }

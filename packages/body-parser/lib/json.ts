@@ -12,6 +12,7 @@ import * as http from 'node:http';
 import * as typeis from 'type-is';
 import * as bytes from 'bytes';
 import * as contentType from 'content-type';
+import * as createError from 'http-errors';
 import { isFinished } from 'on-finished';
 
 import { read } from './read';
@@ -53,12 +54,64 @@ export class BodyParserJSONMiddleware {
         if (req.app && typeof req.app.addContentTypeParser == 'function') {
             req.app.addContentTypeParser(
                 ['application/json', 'text/json', 'application/vnd.api+json'],
-                this.onCall.bind(this),
+                this.cmmvMiddleware.bind(this),
             );
-        } else this.onCall.call(this, req, res, null, next);
+        } else this.expressMiddleware.call(this, req, res, next);
     }
 
-    onCall(req, res, payload, done) {
+    expressMiddleware(req, res, done) {
+        if (!bodywith.has(req.method.toUpperCase())) {
+            done(null);
+            return;
+        }
+
+        if (isFinished(req as http.IncomingMessage)) {
+            done(null);
+            return;
+        }
+
+        if (!('body' in req)) req['body'] = undefined;
+
+        if (!typeis.hasBody(req as http.IncomingMessage)) {
+            done(null);
+            return;
+        }
+
+        const shouldParse =
+            typeof this.options?.type !== 'function'
+                ? this.typeChecker(this.options.type)
+                : this.options.type;
+
+        if (!shouldParse(req)) {
+            done(null);
+            return;
+        }
+
+        const charset = this.getCharset(req) || 'utf-8';
+
+        if (charset.slice(0, 4) !== 'utf-') {
+            done(
+                createError(
+                    415,
+                    'unsupported charset "' + charset.toUpperCase() + '"',
+                    {
+                        charset: charset,
+                        type: 'charset.unsupported',
+                    },
+                ),
+            );
+            return;
+        }
+
+        read(req, res, done, this.parse.bind(this), {
+            encoding: charset,
+            inflate: this.options.inflate,
+            limit: this.options.limit,
+            verify: this.options.verify,
+        });
+    }
+
+    cmmvMiddleware(req, res, payload, done) {
         return new Promise((resolve, reject) => {
             if (!bodywith.has(req.method.toUpperCase())) {
                 resolve(null);
@@ -88,6 +141,20 @@ export class BodyParserJSONMiddleware {
             }
 
             const charset = this.getCharset(req) || 'utf-8';
+
+            if (charset.slice(0, 4) !== 'utf-') {
+                resolve(
+                    createError(
+                        415,
+                        'unsupported charset "' + charset.toUpperCase() + '"',
+                        {
+                            charset: charset,
+                            type: 'charset.unsupported',
+                        },
+                    ),
+                );
+                return;
+            }
 
             read(req, res, resolve, this.parse.bind(this), {
                 encoding: charset,
@@ -143,9 +210,8 @@ export class BodyParserJSONMiddleware {
 
         try {
             JSON.parse(partial);
-            /* istanbul ignore next */ throw new SyntaxError(
-                'strict violation',
-            );
+            /* istanbul ignore next */
+            throw new SyntaxError('strict violation');
         } catch (e) {
             return this.normalizeJsonSyntaxError(e, {
                 message: e.message.replace(

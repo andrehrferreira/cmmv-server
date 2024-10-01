@@ -9,7 +9,7 @@ import * as zlib from 'node:zlib';
 
 import * as request from 'supertest';
 
-import compression, { CMMVCompression } from '../index';
+import compression from '../index';
 
 /*describe('compression()', function () {
     it('should skip HEAD', function (done) {

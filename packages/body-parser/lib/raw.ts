@@ -44,12 +44,12 @@ export class BodyParserRawMiddleware {
         if (req.app && typeof req.app.addContentTypeParser == 'function') {
             req.app.addContentTypeParser(
                 ['*', 'application/vnd+octets', 'application/octet-stream'],
-                this.onCall.bind(this),
+                this.cmmvMiddleware.bind(this),
             );
-        } else this.onCall.call(this, req, res, null, next);
+        } else this.expressMiddleware.call(this, req, res, next);
     }
 
-    onCall(req, res, payload, done) {
+    expressMiddleware(req, res, done) {
         const shouldParse =
             typeof this.options?.type !== 'function'
                 ? this.typeChecker(this.options.type)
@@ -81,6 +81,43 @@ export class BodyParserRawMiddleware {
             inflate: this.options.inflate,
             limit: this.options.limit,
             verify: this.options.verify,
+        });
+    }
+
+    cmmvMiddleware(req, res, payload, done) {
+        return new Promise((resolve, reject) => {
+            const shouldParse =
+                typeof this.options?.type !== 'function'
+                    ? this.typeChecker(this.options.type)
+                    : this.options.type;
+
+            function parse(buf) {
+                return buf;
+            }
+
+            if (isFinished(req as http.IncomingMessage)) {
+                resolve(null);
+                return;
+            }
+
+            if (!('body' in req)) req['body'] = undefined;
+
+            if (!typeis.hasBody(req as http.IncomingMessage)) {
+                resolve(null);
+                return;
+            }
+
+            if (!shouldParse(req)) {
+                resolve(null);
+                return;
+            }
+
+            read(req, res, resolve, parse.bind(this), {
+                encoding: null,
+                inflate: this.options.inflate,
+                limit: this.options.limit,
+                verify: this.options.verify,
+            });
         });
     }
 

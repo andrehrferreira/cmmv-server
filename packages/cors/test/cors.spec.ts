@@ -10,7 +10,7 @@ import { EventEmitter } from 'events';
 import * as util from 'node:util';
 import * as after from 'after';
 
-import { cors as Cors, CorsOptions } from '..';
+import { cors } from '..';
 
 const fakeRequest = function (method: string, headers?: any) {
     return new FakeRequest(method, headers);
@@ -18,14 +18,6 @@ const fakeRequest = function (method: string, headers?: any) {
 
 const fakeResponse = function () {
     return new FakeResponse();
-};
-
-const cors = function (o?: CorsOptions | Function): (req, res, next) => void {
-    return Cors(typeof o === 'function' ? o : { ...o }) as (
-        req,
-        res,
-        next,
-    ) => void;
 };
 
 describe('cors', function () {

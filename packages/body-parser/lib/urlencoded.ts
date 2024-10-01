@@ -62,15 +62,15 @@ export class BodyParserUrlEncodedMiddleware {
     }
 
     async process(req, res, next?) {
-        if (req.app && typeof req.app.addContentTypeParser == 'function')
+        if (req.app && typeof req.app.addContentTypeParser == 'function') {
             req.app.addContentTypeParser(
                 'application/x-www-form-urlencoded',
-                this.onCall.bind(this),
+                this.cmmvMiddleware.bind(this),
             );
-        else this.onCall.call(this, req, res, null, next);
+        } else this.expressMiddleware.call(this, req, res, next);
     }
 
-    onCall(req, res, payload, done) {
+    expressMiddleware(req, res, done) {
         if (
             this.options?.defaultCharset !== 'utf-8' &&
             this.options?.defaultCharset !== 'iso-8859-1'
@@ -112,7 +112,6 @@ export class BodyParserUrlEncodedMiddleware {
         }
 
         const charset = this.getCharset(req) || this.options.defaultCharset;
-
         if (charset !== 'utf-8' && charset !== 'iso-8859-1') {
             done(
                 createError(
@@ -135,6 +134,76 @@ export class BodyParserUrlEncodedMiddleware {
             verify: this.options.verify,
             charsetSentinel: this.options.charsetSentinel,
             interpretNumericEntities: this.options.interpretNumericEntities,
+        });
+    }
+
+    cmmvMiddleware(req, res, payload, done) {
+        return new Promise((resolve, reject) => {
+            if (
+                this.options?.defaultCharset !== 'utf-8' &&
+                this.options?.defaultCharset !== 'iso-8859-1'
+            ) {
+                throw new TypeError(
+                    'option defaultCharset must be either utf-8 or iso-8859-1',
+                );
+            }
+
+            const queryparse = this.createQueryParser(
+                this.options,
+                this.options.extended,
+            );
+
+            const shouldParse =
+                typeof this.options?.type !== 'function'
+                    ? this.typeChecker(this.options.type)
+                    : this.options.type;
+
+            function parse(body, encoding) {
+                return body.length ? queryparse(body, encoding) : {};
+            }
+
+            if (isFinished(req as http.IncomingMessage)) {
+                resolve(null);
+                return;
+            }
+
+            if (!('body' in req)) req['body'] = undefined;
+
+            if (!typeis.hasBody(req as http.IncomingMessage)) {
+                resolve(null);
+                return;
+            }
+
+            if (!shouldParse(req)) {
+                resolve(null);
+                return;
+            }
+
+            const charset = this.getCharset(req) || this.options.defaultCharset;
+
+            if (charset !== 'utf-8' && charset !== 'iso-8859-1') {
+                resolve(
+                    createError(
+                        415,
+                        'unsupported charset "' + charset.toUpperCase() + '"',
+                        {
+                            charset: charset,
+                            type: 'charset.unsupported',
+                        },
+                    ),
+                );
+
+                return;
+            }
+
+            read(req, res, resolve, parse.bind(this), {
+                encoding: charset,
+                inflate: this.options.inflate,
+                limit: this.options.limit,
+                verify: this.options.verify,
+                charsetSentinel: this.options.charsetSentinel,
+                interpretNumericEntities: this.options.interpretNumericEntities,
+            });
         });
     }
 

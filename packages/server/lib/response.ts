@@ -251,6 +251,8 @@ function onSendHook(res, payload) {
 }
 
 function onSendEnd(response, payload) {
+    if (response.sent === true) return;
+
     if (
         response[kResponseTrailers] !== null &&
         response[kResponseTrailers] !== undefined
@@ -530,23 +532,6 @@ export default {
     [kResponseTrailers]: null,
     [kResponseHasStatusCode]: false,
     [kResponseStartTime]: undefined,
-
-    clear() {
-        this[kResponseSerializer] = null;
-        this[kResponseErrorHandlerCalled] = false;
-        this[kResponseHijacked] = false;
-        this[kResponseIsError] = false;
-        this[kResponseIsRunningOnErrorHook] = false;
-        this[kResponseHeaders] = {};
-        this[kResponseTrailers] = null;
-        this[kResponseHasStatusCode] = false;
-        this[kResponseStartTime] = undefined;
-        this.req = undefined;
-        this.res = undefined;
-        this.request = undefined;
-        this._body = undefined;
-        this.locals = undefined;
-    },
 
     /**
      * Return the request socket.

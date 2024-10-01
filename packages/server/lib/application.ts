@@ -20,6 +20,7 @@ import {
     kHooks,
     kMiddlewares,
     kRequestPayloadStream,
+    kResponseHeaders,
     kResponseIsError,
     kState,
 } from './symbols';
@@ -48,8 +49,8 @@ export class Application extends EventEmitter {
 
     constructor() {
         super();
-        this.request = Object.create(request);
-        this.response = Object.create(response);
+        this.request = request;
+        this.response = response;
     }
 
     private processOptions(options?) {
@@ -387,34 +388,30 @@ export class Application extends EventEmitter {
             .then(async route => {
                 const request = Object.create(this.request);
                 const response = Object.create(this.response);
-                response.clear();
+                const hooks = this[kHooks];
+                response[kResponseHeaders] = {};
 
                 request.app = response.app = this;
                 request.req = response.req = req;
                 request.res = response.res = res;
-
-                request.server = this;
-                request.response = response;
-                response.request = request;
                 request.originalUrl = req.url;
 
-                request.preParsing = this[kHooks].preParsing;
-                request.preHandler = this[kHooks].preHandler;
+                request.preParsing = hooks.preParsing;
+                request.preHandler = hooks.preHandler;
+                request.response = response;
+                response.request = request;
 
-                response.onSend = this[kHooks].onSend;
-                response.onError = this[kHooks].onError;
+                response.onSend = hooks.onSend;
+                response.onError = hooks.onError;
                 response.errorHandler = this[kErrorHandler];
 
                 const middlewares = this[kMiddlewares] || [];
                 let stack = [...middlewares, ...route.store.stack].flat();
                 request.handler = stack[stack.length - 1];
 
-                if (
-                    this[kHooks].onRequest &&
-                    this[kHooks].onRequest.length > 0
-                ) {
+                if (hooks.onRequest && hooks.onRequest.length > 0) {
                     onRequestHookRunner(
-                        this[kHooks].onRequest,
+                        hooks.onRequest,
                         request,
                         response,
                         this.runPreParsing,
@@ -424,14 +421,14 @@ export class Application extends EventEmitter {
                 }
 
                 if (
-                    this[kHooks].onRequestAbort !== null &&
-                    this[kHooks].onRequestAbort.length > 0
+                    hooks.onRequestAbort !== null &&
+                    hooks.onRequestAbort.length > 0
                 ) {
                     req.on('close', () => {
                         /* istanbul ignore else */
                         if (req.aborted) {
                             onRequestAbortHookRunner(
-                                this[kHooks].onRequestAbort,
+                                hooks.onRequestAbort,
                                 request,
                                 this.handleOnRequestAbortHooksErrors.bind(
                                     null,
@@ -471,9 +468,13 @@ export class Application extends EventEmitter {
             return;
         }
 
-        request[kRequestPayloadStream] = request.raw;
+        //request[kRequestPayloadStream] = request.raw;
 
-        if ((request.preParsing !== null, request.preParsing.length > 0)) {
+        if (
+            (request.preParsing !== null,
+            request.preParsing !== undefined,
+            request.preParsing?.length > 0)
+        ) {
             preParsingHookRunner(
                 request.preParsing,
                 request,

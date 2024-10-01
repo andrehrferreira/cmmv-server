@@ -57,7 +57,11 @@ export const handleRequest = (err, request, res) => {
 };
 
 function handler(req, res) {
-    if (req.preHandler !== null && req.preHandler.length > 0) {
+    if (
+        req?.preHandler !== null &&
+        req.preHandler !== undefined &&
+        req.preHandler.length > 0
+    ) {
         preHandlerHookRunner(req.preHandler, req, res, preHandlerCallback);
     } else {
         preHandlerCallback(null, req, res);

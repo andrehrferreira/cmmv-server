@@ -9,8 +9,6 @@
  * @see https://github.com/expressjs/serve-static
  */
 
-import * as http from 'node:http';
-import * as http2 from 'node:http2';
 import * as url from 'node:url';
 import * as zlib from 'node:zlib';
 import { resolve } from 'node:path';
@@ -19,8 +17,6 @@ import * as send from 'send';
 import * as encodeUrl from 'encodeurl';
 import * as escapeHtml from 'escape-html';
 import * as parseUrl from 'parseurl';
-
-const compression = require('compression');
 
 export interface StaticOptions {
     root?: string;
@@ -61,9 +57,7 @@ function collapseLeadingSlashes(str) {
     let i;
 
     for (i = 0; i < str.length; i++) {
-        if (str.charCodeAt(i) !== 0x2f) {
-            break;
-        }
+        if (str.charCodeAt(i) !== 0x2f) break;
     }
 
     return i > 1 ? '/' + str.substr(i) : str;
@@ -100,11 +94,7 @@ export class ServerStaticMiddleware {
         };
     }
 
-    async process(
-        req: http.IncomingMessage | http2.Http2ServerRequest,
-        res: http.ServerResponse | http2.Http2ServerResponse,
-        next: Function,
-    ) {
+    async process(req, res, next?) {
         try {
             let pathname = parseUrl(req).pathname;
             const originalUrl = parseUrl.original(req);
@@ -173,19 +163,9 @@ export class ServerStaticMiddleware {
     ): Promise<Buffer> {
         return new Promise<Buffer>((resolve, reject) => {
             const chunks: Buffer[] = [];
-
-            compressionStream.on('data', chunk => {
-                chunks.push(chunk);
-            });
-
-            compressionStream.on('end', () => {
-                resolve(Buffer.concat(chunks));
-            });
-
-            compressionStream.on('error', err => {
-                reject(err);
-            });
-
+            compressionStream.on('data', chunk => chunks.push(chunk));
+            compressionStream.on('end', () => resolve(Buffer.concat(chunks)));
+            compressionStream.on('error', err => reject(err));
             compressionStream.end(inputBuffer);
         });
     }

@@ -30,7 +30,7 @@ describe('bodyParser.json()', function () {
 
     it('should handle Content-Length: 0', function (done) {
         request(createServer())
-            .get('/')
+            .post('/')
             .set('Content-Type', 'application/json')
             .set('Content-Length', '0')
             .expect(200, '{}', done);
@@ -38,7 +38,7 @@ describe('bodyParser.json()', function () {
 
     it('should handle empty message-body', function (done) {
         request(createServer())
-            .get('/')
+            .post('/')
             .set('Content-Type', 'application/json')
             .set('Transfer-Encoding', 'chunked')
             .expect(200, '{}', done);
@@ -46,10 +46,10 @@ describe('bodyParser.json()', function () {
 
     it('should handle no message-body', function (done) {
         request(createServer())
-            .get('/')
+            .post('/')
             .set('Content-Type', 'application/json')
             .unset('Transfer-Encoding')
-            .expect(200, 'undefined', done);
+            .expect(200, '{}', done);
     });
 
     it('should 400 when only whitespace', function (done) {
