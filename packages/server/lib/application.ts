@@ -104,6 +104,11 @@ export class Application extends EventEmitter {
             }).bind(app);
         });
 
+        app.addRoute = function addRoute(options: any) {
+            app.router.route(options);
+            return this;
+        };
+
         /**
          * Proxy `Router#use()` to add middleware to the app router.
          * See Router#use() documentation for details.
@@ -387,6 +392,7 @@ export class Application extends EventEmitter {
         this.route(req.method, req.url)
             .then(async route => {
                 const request = Object.create(this.request);
+                request.routeOptions = route.store;
                 const response = Object.create(this.response);
                 const hooks = this[kHooks];
                 response[kResponseHeaders] = {};

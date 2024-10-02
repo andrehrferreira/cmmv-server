@@ -1,4 +1,8 @@
 import * as FindMyWay from 'find-my-way';
+import {
+    CM_ERR_ROUTE_HANDLER_NOT_FN,
+    CM_ERR_ROUTE_MISSING_HANDLER,
+} from './errors';
 
 export class Router {
     public router: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
@@ -21,19 +25,63 @@ export class Router {
         }
     }
 
-    public route: FindMyWay.Instance<FindMyWay.HTTPVersion.V2>;
+    public hasRoute(method: string, path: string) {
+        const httpMethod = method?.toUpperCase() as FindMyWay.HTTPMethod;
+        return this.router.hasRoute(httpMethod, path);
+    }
 
     public find(method: string, path: string) {
         return new Promise((resolve, reject) => {
-            const httpMethod = method as FindMyWay.HTTPMethod;
+            if (method && path) {
+                const httpMethod =
+                    method?.toUpperCase() as FindMyWay.HTTPMethod;
 
-            if (this.router.hasRoute(httpMethod, path)) {
-                const route = this.router.find(httpMethod, path);
-                resolve(route);
+                if (this.router.hasRoute(httpMethod, path)) {
+                    const route = this.router.find(httpMethod, path);
+                    resolve(route);
+                } else {
+                    reject();
+                }
             } else {
                 reject();
             }
         });
+    }
+
+    public route(options: any) {
+        const opts = { ...options };
+
+        const path = opts.url || opts.path || '';
+        const finalPath = this.path ? this.path + path : path;
+
+        if (!opts.handler)
+            throw new CM_ERR_ROUTE_MISSING_HANDLER(opts.method, path);
+
+        if (
+            opts.errorHandler !== undefined &&
+            typeof opts.errorHandler !== 'function'
+        )
+            throw new CM_ERR_ROUTE_HANDLER_NOT_FN(opts.method, path);
+
+        const methods = Array.isArray(opts.method)
+            ? opts.method
+            : [opts.method];
+
+        for (let method of methods) {
+            if (!this.router.hasRoute(method, finalPath)) {
+                this.router.on(method, finalPath, (req, res) => {}, {
+                    stack: [opts.handler],
+                    config: opts.config,
+                });
+            } else {
+                const handler = this.router.find(method, finalPath);
+                this.router.off(method, finalPath);
+                this.router.on(method, finalPath, (req, res) => {}, {
+                    stack: [...handler.store.stack, ...opts.handler],
+                    config: opts.config,
+                });
+            }
+        }
     }
 
     private mergeRoutes(

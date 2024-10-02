@@ -172,3 +172,20 @@ export const CM_ERR_FAILED_ERROR_SERIALIZATION = createError(
     'CM_ERR_FAILED_ERROR_SERIALIZATION',
     'Failed to serialize an error. Error: %s. Original error: %s.',
 );
+
+/**
+ * router
+ */
+
+export const CM_ERR_ROUTE_MISSING_HANDLER = createError(
+    'CM_ERR_ROUTE_MISSING_HANDLER',
+    'Missing handler function for "%s:%s" route.',
+    500,
+);
+
+export const CM_ERR_ROUTE_HANDLER_NOT_FN = createError(
+    'CM_ERR_ROUTE_HANDLER_NOT_FN',
+    'Error Handler for %s:%s route, if defined, must be a function',
+    500,
+    TypeError,
+);

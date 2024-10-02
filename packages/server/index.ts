@@ -14,7 +14,7 @@ import { json as bodyParserJSON } from '@cmmv/body-parser';
 import { urlencoded as bodyParserURLEncoded } from '@cmmv/body-parser';
 import { text as bodyParserText } from '@cmmv/body-parser';
 import { raw as bodyParserRaw } from '@cmmv/body-parser';
-//import { default as ss } from '@cmmv/server-static';
+import { default as ss } from '@cmmv/server-static';
 import app from './lib/application';
 import { Router as router } from './lib/router';
 import * as Utils from './utils';
@@ -31,12 +31,14 @@ function CmmvServer(this: any, options?): any {
     _Server.props = props;
     _Server.listen = (listenOptions: { host: string; port: number }) => {
         return new Promise((resolve, reject) => {
-            server.on('error', reject);
-            server.on('listening', () => {
-                resolve(server.address());
-                onListenHookRunner(server);
-            });
-            listen(listenOptions);
+            setTimeout(() => {
+                server.on('error', reject);
+                server.on('listening', () => {
+                    resolve(server.address());
+                    onListenHookRunner(server);
+                });
+                listen(listenOptions);
+            }, 100);
         });
     };
 
@@ -50,7 +52,7 @@ export const urlencoded = bodyParserURLEncoded;
 export const text = bodyParserText;
 export const raw = bodyParserRaw;
 
-//export const serverStatic = ss;
+export const serverStatic = ss;
 export const Router = router;
 export const Route = router;
 

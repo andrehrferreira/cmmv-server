@@ -437,32 +437,44 @@ function logStreamError(logger, err, res) {
     }
 }
 
-function sendStream(payload, res) {
+function sendStream(payload, response) {
     let sourceOpen = true;
     let errorLogged = false;
 
-    sendStreamTrailer(payload, res);
+    if (
+        !(
+            payload instanceof Readable ||
+            (payload && typeof payload.pipe === 'function')
+        )
+    ) {
+        console.error('The payload is not a readable stream');
+        response.res.statusCode = 500;
+        response.res.end('Internal Server Error');
+        return;
+    }
+
+    sendStreamTrailer(payload, response);
 
     eos(payload, { readable: true, writable: false }, function (err) {
         sourceOpen = false;
         if (err != null) {
-            if (res.headersSent || res.request.aborted === true) {
+            if (response.headersSent || response.request.aborted === true) {
                 if (!errorLogged) {
                     errorLogged = true;
-                    logStreamError(console, err, res);
+                    logStreamError(console, err, response);
                 }
-                res.destroy();
+                response.destroy();
             } else {
-                onErrorHook(res, err);
+                onErrorHook(response, err);
             }
         }
     });
 
-    eos(res, function (err) {
+    eos(response.res, function (err) {
         if (sourceOpen) {
-            if (err != null && res.headersSent && !errorLogged) {
+            if (err != null && response.headersSent && !errorLogged) {
                 errorLogged = true;
-                logStreamError(console, err, res);
+                logStreamError(console, err, response);
             }
 
             if (typeof payload.destroy === 'function') {
@@ -477,16 +489,16 @@ function sendStream(payload, res) {
         }
     });
 
-    if (!res.headersSent) {
-        for (const key in res[kResponseHeaders])
-            res.setHeader(key, res[kResponseHeaders][key]);
+    if (!response.headersSent) {
+        for (const key in response[kResponseHeaders])
+            response.res.setHeader(key, response[kResponseHeaders][key]);
     } else {
         console.warn(
             "response will send, but you shouldn't use res.writeHead in stream mode",
         );
     }
 
-    payload.pipe(res);
+    payload.pipe(response.res);
 }
 
 function sendWebStream(payload, res) {
@@ -512,6 +524,19 @@ function serialize(context, data, statusCode, contentType?) {
     //    return fnSerialize(data)
 
     return JSON.stringify(data);
+}
+
+function createReadableStream(payload) {
+    if (Buffer.isBuffer(payload)) {
+        return Readable.from(payload);
+    } else if (typeof payload === 'string') {
+        return Readable.from([payload]);
+    } else if (typeof payload === 'object') {
+        const jsonString = JSON.stringify(payload);
+        return Readable.from([jsonString]);
+    } else {
+        throw new Error('Unsupported payload type');
+    }
 }
 
 function noop() {}

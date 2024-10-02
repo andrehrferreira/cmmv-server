@@ -47,59 +47,54 @@ export class CompressionMiddleware {
 
     async process(req, res, next?) {
         if (req.app && typeof req.app.addHook == 'function')
-            req.app.addHook('onSend', this.onCall.bind(this));
-        else this.onCall.call(this, req, res, res.body, next);
+            req.app.addHook('onSend', this.cmmvMiddleware.bind(this));
+        else this.expressCompatibility.call(this, req, res, res.body, next);
     }
 
-    async onCall(req, res, payload, done, express = false) {
+    async cmmvMiddleware(req, res, payload, done) {
         try {
             const accept = accepts(req as http.IncomingMessage);
 
             let method = accept.encoding(['br', 'gzip', 'deflate', 'identity']);
 
             if (this.filter(res) && this.shouldTransform(res)) {
-                if (express)
-                    this.expressCompatibility(req, res, done, this.options);
-                else {
-                    vary(res as http.ServerResponse, 'Accept-Encoding');
+                vary(res as http.ServerResponse, 'Accept-Encoding');
 
-                    if (req.method === 'HEAD') return;
+                if (req.method === 'HEAD') return;
 
-                    const encoding =
-                        res.getHeader('Content-Encoding') || 'identity';
-                    const contentLenght = payload.length;
+                const encoding =
+                    res.getHeader('Content-Encoding') || 'identity';
+                const contentLenght = payload.length;
 
-                    if (
-                        (Number(contentLenght) < this.options.threshold &&
-                            !Number.isNaN(contentLenght)) ||
-                        (res instanceof Response &&
-                            payload.length < this.options.threshold)
-                    ) {
-                        return;
-                    }
+                if (
+                    (Number(contentLenght) < this.options.threshold &&
+                        !Number.isNaN(contentLenght)) ||
+                    (res instanceof Response &&
+                        payload.length < this.options.threshold)
+                ) {
+                    return;
+                }
 
-                    if (encoding !== 'identity') return;
+                if (encoding !== 'identity') return;
 
-                    if (!method || method === 'identity') return;
+                if (!method || method === 'identity') return;
 
-                    const stream = this.createCompressionStream(method);
+                const stream = this.createCompressionStream(method);
 
-                    if (!stream) return;
+                if (!stream) return;
 
-                    if (!express) {
-                        res.set('Content-Encoding', method);
-                        res.remove('Content-Length');
+                if (typeof payload == 'string' || Buffer.isBuffer(payload)) {
+                    res.set('Content-Encoding', method);
+                    res.remove('Content-Length');
 
-                        const compressedBuffer = await this.compressData(
-                            Buffer.from(payload),
-                            stream,
-                        );
+                    const compressedBuffer = await this.compressData(
+                        Buffer.from(payload),
+                        stream,
+                    );
 
-                        return compressedBuffer;
-                    } else {
-                        res.setHeader('Content-Encoding', method);
-                        res.removeHeader('Content-Length');
-                    }
+                    return compressedBuffer;
+                } else {
+                    return payload;
                 }
             }
         } catch (err) {
@@ -273,9 +268,13 @@ export class CompressionMiddleware {
     }
 
     filter(res: any) {
-        const type =
-            res.getHeader('Content-Type') || res.headers['Content-Type'];
-        return !(type === undefined || !compressible(type));
+        try {
+            const type =
+                res.getHeader('Content-Type') || res.headers['Content-Type'];
+            return !(type === undefined || !compressible(type));
+        } catch {
+            return false;
+        }
     }
 
     shouldTransform(res: any) {

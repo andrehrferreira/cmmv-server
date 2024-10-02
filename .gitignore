@@ -50,3 +50,5 @@ newrelic.js
 
 http
 old
+packages/**/*.js
+packages/**/*.d.ts
