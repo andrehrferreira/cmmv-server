@@ -1,9 +1,16 @@
 /*!
+ * CMMV Cookie Parser
+ * Copyright(c) 2024 Andre Ferreira
+ * MIT Licensed
+ */
+
+/*!
  * cookie-parser
  * Copyright(c) 2014 TJ Holowaychuk
  * Copyright(c) 2015 Douglas Christopher Wilson
- * Copyright(c) 2024 Andre Ferreira
  * MIT Licensed
+ *
+ * @see https://github.com/expressjs/cookie-parser
  */
 
 /*!
@@ -18,6 +25,7 @@
  * @fastify/cookie
  * Copyright (c) Fastify
  * MIT Licensed
+ *
  * @see https://github.com/fastify/fastify-cookie
  */
 

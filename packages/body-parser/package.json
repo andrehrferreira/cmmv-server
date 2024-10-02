@@ -15,6 +15,13 @@
         "url": "https://github.com/andrehrferreira/cmmv-server/issues"
     },
     "homepage": "https://cmmv.io",
+    "keywords": [
+        "cmmv",
+        "body-parser",
+        "express",
+        "connect",
+        "middleware"
+    ],
     "dependencies": {
         "async_hooks": "^1.0.0",
         "bytes": "^3.1.2",

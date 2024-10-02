@@ -29,9 +29,7 @@
         "lib": ["esnext", "dom"],
         "types": ["node", "mocha"],
         "paths": {
-            "*": ["node_modules/*", "packages/*"],
-            "@cmmv/server": ["packages/server"],
-            "@cmmv/server/*": ["packages/server/*"],
+            "*": ["node_modules/*", "packages/*"],            
             "@cmmv/body-parser": ["packages/body-parser"],
             "@cmmv/body-parser/*": ["packages/body-parser/*"],
             "@cmmv/compression": ["packages/compression"],
@@ -42,6 +40,10 @@
             "@cmmv/cors/*": ["packages/cors/*"],
             "@cmmv/etag": ["packages/etag"],
             "@cmmv/etag/*": ["packages/etag/*"],
+            "@cmmv/helmet": ["packages/helmet"],
+            "@cmmv/helmet/*": ["packages/helmet/*"],
+            "@cmmv/server": ["packages/server"],
+            "@cmmv/server/*": ["packages/server/*"],
             "@cmmv/server-static": ["packages/server-static"],
             "@cmmv/server-static/*": ["packages/server-static/*"]
         }

@@ -414,6 +414,7 @@ export class Application extends EventEmitter {
                 const middlewares = this[kMiddlewares] || [];
                 let stack = [...middlewares, ...route.store.stack].flat();
                 request.handler = stack[stack.length - 1];
+                stack.pop();
 
                 if (hooks.onRequest && hooks.onRequest.length > 0) {
                     onRequestHookRunner(

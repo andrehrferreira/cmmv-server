@@ -1,4 +1,10 @@
 /*!
+ * CMMV Server Static
+ * Copyright(c) 2024 Andre Ferreira
+ * MIT Licensed
+ */
+
+/*!
  * serve-static
  * Copyright(c) 2010 Sencha Inc.
  * Copyright(c) 2011 TJ Holowaychuk
@@ -421,8 +427,4 @@ export default async function serveStatic(
 
     return (server, done) =>
         new ServerStaticMiddleware(root, options).process(server, done);
-}
-
-function statAsync(indexPath: string) {
-    throw new Error('Function not implemented.');
 }

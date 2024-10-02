@@ -1,7 +1,12 @@
 /*!
  * CMMV Cors
- * Copyright(c) 2013 Troy Goode <troygoode@gmail.com>
  * Copyright(c) 2024 Andre Ferreira
+ * MIT Licensed
+ */
+
+/*!
+ * cors
+ * Copyright(c) 2013 Troy Goode <troygoode@gmail.com>
  * MIT Licensed
  *
  * @see https://github.com/expressjs/cors

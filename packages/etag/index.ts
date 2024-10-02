@@ -1,7 +1,12 @@
 /*!
- * CMMV Cors
- * Copyright(c) Fastify
+ * CMMV Etag
  * Copyright(c) 2024 Andre Ferreira
+ * MIT Licensed
+ */
+
+/*!
+ * fastify-etag
+ * Copyright(c) Fastify
  * MIT Licensed
  *
  * @see https://github.com/fastify/fastify-etag

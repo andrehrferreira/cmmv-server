@@ -1,7 +1,13 @@
 /*!
- * CMMV Compression
- * Copyright(c) 2014-2015 Douglas Christopher Wilson
+ * CMMV Body-Parser
  * Copyright(c) 2024 Andre Ferreira
+ * MIT Licensed
+ */
+
+/**
+ * body-parser
+ * Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>
+ * Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>
  * MIT Licensed
  *
  * @see https://github.com/expressjs/body-parser

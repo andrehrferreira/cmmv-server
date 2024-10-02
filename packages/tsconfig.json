@@ -6,6 +6,7 @@
         { "path": "./cookie-parser/tsconfig.build.json" },
         { "path": "./cors/tsconfig.build.json" },
         { "path": "./etag/tsconfig.build.json" },
+        { "path": "./helmet/tsconfig.build.json" },
         { "path": "./server/tsconfig.build.json" },
         { "path": "./server-static/tsconfig.build.json" }
     ]

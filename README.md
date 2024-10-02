@@ -15,7 +15,7 @@
 
 ## Description
 
-``@cmmv/server`` is inspired by the popular [Express.js](https://expressjs.com/pt-br/) framework but has been entirely rewritten in TypeScript with performance improvements in mind. The project integrates common plugins like ``body-parser``, ``compression``, ``cookie-parser``, ``cors``, ``etag`` and ``serve-static`` out of the box. Additionally, it plans to support any Express.js-compatible plugin in the near future.
+``@cmmv/server`` is inspired by the popular [Express.js](https://expressjs.com/pt-br/) framework but has been entirely rewritten in TypeScript with performance improvements in mind. The project integrates common plugins like ``body-parser``, ``compression``, ``cookie-parser``, ``cors``, ``etag``, ``helmet`` and ``serve-static`` out of the box. Additionally, it plans to support any Express.js-compatible plugin in the near future.
 
 
 ## Installation
@@ -33,11 +33,12 @@ Below is a simple example of how to create a new CMMV application:
 ```typescript
 //import { readFileSync } from "node:fs";
 
-import cmmv, { json, urlencoded } from '@cmmv/server';
+import cmmv, { json, urlencoded, serverStatic } from '@cmmv/server';
 import etag from '@cmmv/etag';
 import cors from '@cmmv/cors';
 import cookieParser from '@cmmv/cookie-parser';
 import compression from '@cmmv/compression';
+import helmet from '@cmmv/helmet';
 
 const app = cmmv({
     /*http2: true,
@@ -51,12 +52,24 @@ const app = cmmv({
 const host = '0.0.0.0';
 const port = 3000;
 
+app.use(serverStatic('public'));
 app.use(cors());
 app.use(etag({ algorithm: 'fnv1a' }));
 app.use(cookieParser());
 app.use(json({ limit: '50mb' }));
 app.use(urlencoded({ limit: '50mb', extended: true }));
-app.use(compression());
+app.use(compression({ level: 6 }));
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+    },
+}));
 
 app.get('/', async (req, res) => {
     res.send('Hello World');
@@ -68,16 +81,16 @@ app.get('/json', async (req, res) => {
 
 app.post('/test', async (req, res) => {
     console.log(req.body);
-    res.send("ok");
+    res.send('ok');
 });
 
 app.listen({ host, port })
-    .then(address => {
-        console.log(`Listen on http://${address.address}:${address.port}`);
-    })
-    .catch(err => {
-        throw Error(err.message);
-    });
+.then(address => {
+    console.log(`Listen on http://${address.address}:${address.port}`);
+})
+.catch(err => {
+    throw Error(err.message);
+});
 ```
 
 ## Features

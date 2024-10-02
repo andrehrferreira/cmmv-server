@@ -5,6 +5,7 @@ import etag from '@cmmv/etag';
 import cors from '@cmmv/cors';
 import cookieParser from '@cmmv/cookie-parser';
 import compression from '@cmmv/compression';
+import helmet from '@cmmv/helmet';
 
 const app = cmmv({
     /*http2: true,
@@ -25,6 +26,19 @@ app.use(cookieParser());
 app.use(json({ limit: '50mb' }));
 app.use(urlencoded({ limit: '50mb', extended: true }));
 app.use(compression({ level: 6 }));
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            useDefaults: false,
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", 'example.com'],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: [],
+            },
+        },
+    }),
+);
 
 app.get('/', async (req, res) => {
     res.send('Hello World');
