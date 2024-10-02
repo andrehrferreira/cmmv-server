@@ -4,10 +4,17 @@
  * Copyright(c) 2011 TJ Holowaychuk
  * Copyright(c) 2014 Jonathan Ong
  * Copyright(c) 2014-2015 Douglas Christopher Wilson
- * Copyright(c) 2024 Andre Ferreira
  * MIT Licensed
  *
  * @see https://github.com/expressjs/compression
+ */
+
+/**
+ * fastify-compress
+ * Copyright (c) 2017 Fastify
+ * MIT Licensed
+ *
+ * @see https://github.com/fastify/fastify-compress
  */
 
 import * as compressible from 'compressible';
@@ -18,6 +25,7 @@ import * as bytes from 'bytes';
 import * as http from 'node:http';
 import * as zlib from 'node:zlib';
 import * as crypto from 'node:crypto';
+import { Readable } from 'node:stream';
 
 export type CompressionOptions = zlib.ZlibOptions & {
     threshold?: number;
@@ -64,7 +72,7 @@ export class CompressionMiddleware {
 
                 const encoding =
                     res.getHeader('Content-Encoding') || 'identity';
-                const contentLenght = payload.length;
+                let contentLenght = payload.length;
 
                 if (
                     (Number(contentLenght) < this.options.threshold &&
@@ -72,16 +80,15 @@ export class CompressionMiddleware {
                     (res instanceof Response &&
                         payload.length < this.options.threshold)
                 ) {
-                    return;
+                    return payload;
                 }
 
-                if (encoding !== 'identity') return;
-
-                if (!method || method === 'identity') return;
+                if (!method || method === 'identity' || encoding !== 'identity')
+                    return payload;
 
                 const stream = this.createCompressionStream(method);
 
-                if (!stream) return;
+                if (!stream) return payload;
 
                 if (typeof payload == 'string' || Buffer.isBuffer(payload)) {
                     res.set('Content-Encoding', method);
@@ -93,9 +100,9 @@ export class CompressionMiddleware {
                     );
 
                     return compressedBuffer;
-                } else {
-                    return payload;
                 }
+
+                return payload;
             }
         } catch (err) {
             console.error(err);
@@ -304,6 +311,46 @@ export class CompressionMiddleware {
             if (now - value.timestamp >= this.options.cacheTimeout)
                 this.cache.delete(key);
         });
+    }
+
+    /**
+     * Provide a async iteratable for Readable.from
+     */
+    async *intoAsyncIterator(payload) {
+        if (typeof payload === 'object') {
+            if (Buffer.isBuffer(payload)) {
+                yield payload;
+                return;
+            }
+
+            if (payload instanceof ArrayBuffer) {
+                yield Buffer.from(new Uint8Array(payload));
+                return;
+            }
+
+            if (ArrayBuffer.isView(payload)) {
+                yield Buffer.from(
+                    payload.buffer,
+                    payload.byteOffset,
+                    payload.byteLength,
+                );
+                return;
+            }
+
+            if (Symbol.iterator in payload) {
+                for (const chunk of payload) yield chunk;
+
+                return;
+            }
+
+            if (Symbol.asyncIterator in payload) {
+                for await (const chunk of payload) yield chunk;
+
+                return;
+            }
+        }
+
+        yield payload;
     }
 }
 

@@ -294,11 +294,21 @@ export class ServerStaticMiddleware {
                     res.set('content-type', this.getContentType(pathname));
                 }
 
-                await res.send(stream);
+                const buffer = await this.streamToBuffer(stream);
+                await res.send(buffer);
 
                 break;
             }
         }
+    }
+
+    async streamToBuffer(stream) {
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            stream.on('data', chunk => chunks.push(chunk));
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+            stream.on('error', err => reject(err));
+        });
     }
 
     async compressData(
