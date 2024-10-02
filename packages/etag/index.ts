@@ -52,10 +52,9 @@ export class EtagMiddleware {
         }
 
         if (
-            res.statusCode === 304 &&
-            (req.headers['if-none-match'] === etag ||
-                req.headers['if-none-match'] === 'W/' + etag ||
-                'W/' + req.headers['if-none-match'] === etag)
+            req.headers['if-none-match'] === etag ||
+            req.headers['if-none-match'] === 'W/' + etag ||
+            'W/' + req.headers['if-none-match'] === etag
         ) {
             res.code(304);
             newPayload = '';

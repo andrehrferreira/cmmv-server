@@ -291,6 +291,8 @@ function onSendEnd(response, payload) {
 
     const statusCode = response.res.statusCode;
 
+    if (statusCode === 304 || statusCode === 204) payload = null;
+
     if (payload === undefined || payload === null) {
         if (
             statusCode >= 200 &&
