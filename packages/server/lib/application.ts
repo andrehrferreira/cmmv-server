@@ -37,10 +37,13 @@ import {
 import { buildErrorHandler, rootErrorHandler } from './error-handler';
 
 import { HTTPMethod } from '../constants';
+import { handleRequest } from './handle-request';
 import { Router } from './router';
 import request from './request';
 import response from './response';
-import { handleRequest } from './handle-request';
+import View from './view';
+
+import { utilsMerge } from '../utils';
 
 export class Application extends EventEmitter {
     request: any;
@@ -164,6 +167,81 @@ export class Application extends EventEmitter {
         };
 
         /**
+         * Render the given view `name` name with `options`
+         * and a callback accepting an error and the
+         * rendered template string.
+         *
+         * Example:
+         *
+         *    app.render('email', { name: 'Tobi' }, function(err, html){
+         *      // ...
+         *    })
+         *
+         * @param {String} name
+         * @param {Object|Function} options or fn
+         * @param {Function} callback
+         * @public
+         */
+        app.render = function render(name, options, callback) {
+            const cache = this.cache;
+            let done = callback;
+            const engines = this.engines;
+            let opts = options;
+            const renderOptions: any = {};
+            let view;
+
+            if (typeof options === 'function') {
+                done = options;
+                opts = {};
+            }
+
+            utilsMerge(renderOptions, this.locals);
+
+            if (opts._locals) utilsMerge(renderOptions, opts._locals);
+
+            utilsMerge(renderOptions, opts);
+
+            if (renderOptions.cache == null)
+                renderOptions.cache = this.enabled('view cache');
+
+            if (renderOptions.cache) view = cache[name];
+
+            if (!view) {
+                let View = this.get('view');
+
+                view = new View(name, {
+                    defaultEngine: this.get('view engine'),
+                    root: this.get('views'),
+                    engines: engines,
+                });
+
+                if (!view.path) {
+                    const dirs =
+                        Array.isArray(view.root) && view.root.length > 1
+                            ? 'directories "' +
+                              view.root.slice(0, -1).join('", "') +
+                              '" or "' +
+                              view.root[view.root.length - 1] +
+                              '"'
+                            : 'directory "' + view.root + '"';
+                    let err: any = new Error(
+                        'Failed to lookup view "' + name + '" in views ' + dirs,
+                    );
+                    err.view = view;
+                    return done(err);
+                }
+
+                if (renderOptions.cache) cache[name] = view;
+            }
+
+            try {
+                view.render(renderOptions, done);
+            } catch (err) {
+                callback(err);
+            }
+        };
+
+        /**
          * Proxy to the app `Router#route()`
          * Returns a new `Route` instance for the _path_.
          *
@@ -174,6 +252,50 @@ export class Application extends EventEmitter {
          */
         app.route = function route(method: string, path: string) {
             return this.router.find(method, path);
+        };
+
+        /**
+         * Register the given template engine callback `fn`
+         * as `ext`.
+         *
+         * By default will `require()` the engine based on the
+         * file extension. For example if you try to render
+         * a "foo.ejs" file Express will invoke the following internally:
+         *
+         *     app.engine('ejs', require('ejs').__express);
+         *
+         * For engines that do not provide `.__express` out of the box,
+         * or if you wish to "map" a different extension to the template engine
+         * you may use this method. For example mapping the EJS template engine to
+         * ".html" files:
+         *
+         *     app.engine('html', require('ejs').renderFile);
+         *
+         * In this case EJS provides a `.renderFile()` method with
+         * the same signature that Express expects: `(path, options, callback)`,
+         * though note that it aliases this method as `ejs.__express` internally
+         * so if you're using ".ejs" extensions you don't need to do anything.
+         *
+         * Some template engines do not follow this convention, the
+         * [Consolidate.js](https://github.com/tj/consolidate.js)
+         * library was created to map all of node's popular template
+         * engines to follow this convention, thus allowing them to
+         * work seamlessly within Express.
+         *
+         * @param {String} ext
+         * @param {Function} fn
+         * @return {app} for chaining
+         * @public
+         */
+        app.engine = function engine(ext, fn) {
+            if (typeof fn !== 'function')
+                throw new Error('callback function required');
+
+            const extension = ext[0] !== '.' ? '.' + ext : ext;
+
+            this.engines[extension] = fn;
+
+            return this;
         };
 
         /**
@@ -211,6 +333,81 @@ export class Application extends EventEmitter {
             }
 
             return this;
+        };
+
+        /**
+         * Return the app's absolute pathname
+         * based on the parent(s) that have
+         * mounted it.
+         *
+         * For example if the application was
+         * mounted as "/admin", which itself
+         * was mounted as "/blog" then the
+         * return value would be "/blog/admin".
+         *
+         * @return {String}
+         * @private
+         */
+        app.path = function path() {
+            return this.parent ? this.parent.path() + this.mountpath : '';
+        };
+
+        /**
+         * Check if `setting` is enabled (truthy).
+         *
+         *    app.enabled('foo')
+         *    // => false
+         *
+         *    app.enable('foo')
+         *    app.enabled('foo')
+         *    // => true
+         *
+         * @param {String} setting
+         * @return {Boolean}
+         * @public
+         */
+        app.enabled = function enabled(setting) {
+            return Boolean(this.set(setting));
+        };
+
+        /**
+         * Check if `setting` is disabled.
+         *
+         *    app.disabled('foo')
+         *    // => true
+         *
+         *    app.enable('foo')
+         *    app.disabled('foo')
+         *    // => false
+         *
+         * @param {String} setting
+         * @return {Boolean}
+         * @public
+         */
+        app.disabled = function disabled(setting) {
+            return !this.set(setting);
+        };
+
+        /**
+         * Enable `setting`.
+         *
+         * @param {String} setting
+         * @return {app} for chaining
+         * @public
+         */
+        app.enable = function enable(setting) {
+            return this.set(setting, true);
+        };
+
+        /**
+         * Disable `setting`.
+         *
+         * @param {String} setting
+         * @return {app} for chaining
+         * @public
+         */
+        app.disable = function disable(setting) {
+            return this.set(setting, false);
         };
 
         app.setErrorHandler = function setErrorHandler(func) {
@@ -319,6 +516,7 @@ export class Application extends EventEmitter {
         app.set('subdomain offset', 2);
         app.set('trust proxy', false);
         app.set('jsonp callback name', 'callback');
+        app.set('view', View);
         app.set('views', path.resolve('views'));
 
         server.app = app;

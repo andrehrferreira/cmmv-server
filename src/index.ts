@@ -40,6 +40,12 @@ app.use(
     }),
 );
 
+app.set('view engine', 'pug');
+
+app.get('/view', function (req, res) {
+    res.render('index', { title: 'Hey', message: 'Hello there!' });
+});
+
 app.get('/', async (req, res) => {
     res.send('Hello World');
 });

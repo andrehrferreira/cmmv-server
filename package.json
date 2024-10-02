@@ -142,6 +142,7 @@
 		"nodemon": "^3.1.5",
 		"nyc": "^17.0.0",
 		"prettier": "^3.3.3",
+		"pug": "^3.0.3",
 		"restify": "^11.1.0",
 		"seedrandom": "^3.0.5",
 		"server-static": "^2.0.5",
