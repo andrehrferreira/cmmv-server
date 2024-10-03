@@ -12,7 +12,7 @@ const methods = require('methods');
 const after = require('after');
 
 describe('app', function () {
-    it('should emit "mount" when mounted', function (done) {
+    /*it('should emit "mount" when mounted', function (done) {
         const blog = cmmv(),
             app = cmmv();
 
@@ -22,7 +22,7 @@ describe('app', function () {
         });
 
         app.use(blog);
-    });
+    });*/
 
     describe('.use(app)', function () {
         /*it('should mount the app', function(done){

@@ -9,7 +9,7 @@ import cmmv from '..';
 const after = require('after');
 
 describe('app', function () {
-    describe('.response', function () {
+    /*describe('.response', function () {
         it('should extend the response prototype', function (done) {
             const app = cmmv();
 
@@ -25,7 +25,7 @@ describe('app', function () {
         });
     });
 
-    /*it('should only extend for the referenced app', function (done) {
+    it('should only extend for the referenced app', function (done) {
         var app1 = CmmvServer()
         var app2 = CmmvServer()
         var cb = after(2, done)

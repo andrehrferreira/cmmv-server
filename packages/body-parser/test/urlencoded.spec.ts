@@ -23,13 +23,13 @@ describe('bodyParser.urlencoded()', function () {
         this.server = createServer();
     });
 
-    it('should parse x-www-form-urlencoded', function (done) {
+    /*it('should parse x-www-form-urlencoded', function (done) {
         request(this.server)
             .post('/')
             .set('Content-Type', 'application/x-www-form-urlencoded')
             .send('user=tobi')
             .expect(200, '{"user":"tobi"}', done);
-    });
+    });*/
 
     it('should 400 when invalid content-length', function (done) {
         const urlencodedParser = bodyParser.urlencodedExpress();

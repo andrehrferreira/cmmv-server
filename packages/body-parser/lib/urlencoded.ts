@@ -61,7 +61,7 @@ export class BodyParserUrlEncodedMiddleware {
                     : 32
                 : 0,
             parameterLimit:
-                options.parameterLimit !== undefined
+                options?.parameterLimit !== undefined
                     ? options.parameterLimit
                     : 1000,
         };
