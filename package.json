@@ -168,6 +168,7 @@
 		"fast-glob": "^3.3.2",
 		"fast-json-stringify": "^6.0.0",
 		"find-my-way": "^9.0.1",
+		"helmet": "^8.0.0",
 		"http-errors": "^2.0.0",
 		"merge-descriptors": "^2.0.0",
 		"on-finished": "^2.4.1",
