@@ -34,6 +34,8 @@ import * as encodeUrl from 'encodeurl';
 import * as escapeHtml from 'escape-html';
 import * as parseUrl from 'parseurl';
 
+import { mime } from './mime';
+
 export interface StaticOptions {
     root?: string;
     prefix?: string;
@@ -367,7 +369,7 @@ export class ServerStaticMiddleware {
     }
 
     getContentType(path) {
-        const type = send.mime.getType(path) || 'application/octet-stream';
+        const type = mime.getType(path) || 'application/octet-stream';
 
         if (!send.isUtf8MimeType(type)) return type;
 
