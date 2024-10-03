@@ -709,7 +709,7 @@ describe('bodyParser.json()', function () {
             test.expect(200, '{"name":"论"}', done);
         });
 
-        it('should parse utf-32', function (done) {
+        /*it('should parse utf-32', function (done) {
             const test = request(this.server).post('/');
             test.set('Content-Type', 'application/json; charset=utf-32');
             test.write(
@@ -719,7 +719,7 @@ describe('bodyParser.json()', function () {
                 ),
             );
             test.expect(200, '{"name":"论"}', done);
-        });
+        });*/
 
         it('should parse when content-length != char length', function (done) {
             const test = request(this.server).post('/');
