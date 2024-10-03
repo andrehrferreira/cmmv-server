@@ -9,7 +9,7 @@
  */
 
 import * as qs from 'qs';
-import * as querystring from 'querystring';
+import { parse } from 'querystring';
 
 /**
  * Compile "query parser" value to function.
@@ -28,7 +28,7 @@ export const compileQueryParser = function compileQueryParser(
     switch (val) {
         case true:
         case 'simple':
-            fn = querystring.parse;
+            fn = qs.parse;
             break;
         case false:
             break;

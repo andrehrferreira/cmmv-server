@@ -31,14 +31,18 @@ function CmmvServer(this: any, options?): any {
     _Server.props = props;
     _Server.listen = (listenOptions: { host: string; port: number }) => {
         return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                server.on('error', reject);
-                server.on('listening', () => {
-                    resolve(server.address());
-                    onListenHookRunner(server);
-                });
-                listen(listenOptions);
-            }, 100);
+            try {
+                setTimeout(() => {
+                    server.on('error', reject);
+                    server.on('listening', () => {
+                        resolve(server);
+                        onListenHookRunner(server);
+                    });
+                    listen(listenOptions);
+                }, 100);
+            } catch (err) {
+                reject(err);
+            }
         });
     };
 

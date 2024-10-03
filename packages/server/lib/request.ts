@@ -22,6 +22,7 @@
 import { isIP } from 'node:net';
 
 import * as proxyaddr from 'proxy-addr';
+import * as qs from 'qs';
 
 export default {
     app: undefined,
@@ -42,7 +43,7 @@ export default {
     get query(): number {
         const { parseurl, compileQueryParser } = require('../utils');
         var querystring = parseurl(this).query;
-        return compileQueryParser(querystring);
+        return qs.parse(querystring);
     },
 
     /**

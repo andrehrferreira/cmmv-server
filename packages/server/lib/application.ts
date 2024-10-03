@@ -43,7 +43,10 @@ import request from './request';
 import response from './response';
 import View from './view';
 
-import { utilsMerge } from '../utils';
+import { utilsMerge, setPrototypeOf } from '../utils';
+
+const trustProxyDefaultSymbol = '@@symbol:trust_proxy_default';
+const mixin = require('merge-descriptors');
 
 export class Application extends EventEmitter {
     request: any;
@@ -95,6 +98,8 @@ export class Application extends EventEmitter {
             locals: Object.create(null),
             mountpath: '/',
         };
+
+        mixin(app, EventEmitter.prototype, false);
 
         HTTPMethod.forEach(method => {
             app[method] = ((path?: string, ...callbacks) => {
@@ -336,6 +341,29 @@ export class Application extends EventEmitter {
         };
 
         /**
+         * Proxy to `Router#param()` with one added api feature. The _name_ parameter
+         * can be an array of names.
+         *
+         * See the Router#param() docs for more details.
+         *
+         * @param {String|Array} name
+         * @param {Function} fn
+         * @return {app} for chaining
+         * @public
+         */
+        app.param = function param(name, fn) {
+            if (Array.isArray(name)) {
+                for (var i = 0; i < name.length; i++) this.param(name[i], fn);
+
+                return this;
+            }
+
+            this.router.param(name, fn);
+
+            return this;
+        };
+
+        /**
          * Return the app's absolute pathname
          * based on the parent(s) that have
          * mounted it.
@@ -519,6 +547,27 @@ export class Application extends EventEmitter {
         app.set('view', View);
         app.set('views', path.resolve('views'));
 
+        if (process.env.NODE_ENV === 'production') app.enable('view cache');
+
+        app.on('mount', function onmount(parent) {
+            // inherit trust proxy
+            if (
+                app.settings[trustProxyDefaultSymbol] === true &&
+                typeof parent.settings['trust proxy fn'] === 'function'
+            ) {
+                delete app.settings['trust proxy'];
+                delete app.settings['trust proxy fn'];
+            }
+
+            // inherit protos
+            setPrototypeOf(app.request, parent.request);
+            setPrototypeOf(app.response, parent.response);
+            setPrototypeOf(app.engines, parent.engines);
+            setPrototypeOf(app.settings, parent.settings);
+        });
+
+        app.locals.settings = app.settings;
+
         server.app = app;
         server[kHooks] = new Hooks();
         server[kContentTypeParsers] = {};
@@ -591,6 +640,8 @@ export class Application extends EventEmitter {
             .then(async route => {
                 const request = Object.create(this.request);
                 request.routeOptions = route.store;
+                request.params = route.params;
+                //request.query = route.searchParams;
                 const response = Object.create(this.response);
                 const hooks = this[kHooks];
                 response[kResponseHeaders] = {};

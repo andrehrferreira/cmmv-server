@@ -100,6 +100,10 @@ export const normalizeTypes = types => {
     return ret;
 };
 
+export const setPrototypeOf =
+    Object.setPrototypeOf ||
+    ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);
+
 /**
  * Parse accept params `str` returning an
  * object with `.value`, `.quality` and `.params`.
@@ -120,4 +124,24 @@ function acceptParams(str) {
     }
 
     return ret;
+}
+
+/**
+ * setprototypeof
+ * Copyright (c) 2015, Wes Todd
+ * ISC Licensed
+ * @see https://github.com/wesleytodd/setprototypeof
+ */
+function setProtoOf(obj, proto) {
+    obj.__proto__ = proto;
+    return obj;
+}
+
+function mixinProperties(obj, proto) {
+    for (var prop in proto) {
+        if (!Object.prototype.hasOwnProperty.call(obj, prop))
+            obj[prop] = proto[prop];
+    }
+
+    return obj;
 }

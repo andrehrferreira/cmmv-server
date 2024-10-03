@@ -17,7 +17,7 @@ describe('HEAD', function () {
             res.send('tobi');
         });
 
-        request(app.socket).head('/tobi').expect(200, done);
+        request(app).head('/tobi').expect(200, done);
     });
 
     it('should output the same headers as GET requests', function (done) {
@@ -28,14 +28,14 @@ describe('HEAD', function () {
             res.send('tobi');
         });
 
-        request(app.socket)
+        request(app)
             .head('/tobi')
             .expect(200, function (err, res) {
                 if (err) return done(err);
 
                 const headers = res.headers;
 
-                request(app.socket)
+                request(app)
                     .get('/tobi')
                     .expect(200, function (err, res) {
                         if (err) return done(err);

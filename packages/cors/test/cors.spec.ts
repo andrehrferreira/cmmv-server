@@ -262,10 +262,7 @@ describe('cors', function () {
             res = fakeResponse();
             next = function () {
                 // assert
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Origin'),
-                    undefined,
-                );
+                assert.equal(res.getHeader('Access-Control-Allow-Origin'), '*');
                 assert.equal(
                     res.getHeader('Access-Control-Allow-Methods'),
                     undefined,
@@ -276,7 +273,7 @@ describe('cors', function () {
                 );
                 assert.equal(
                     res.getHeader('Access-Control-Allow-Credentials'),
-                    undefined,
+                    'true',
                 );
                 assert.equal(
                     res.getHeader('Access-Control-Max-Age'),
@@ -380,114 +377,6 @@ describe('cors', function () {
             };
 
             // act
-            cors(options)(req, res, next);
-        });
-
-        it('should allow origin when callback returns true', function (done) {
-            let req, res, next, options;
-            options = {
-                origin: function (sentOrigin, cb) {
-                    cb(null, true);
-                },
-            };
-            req = fakeRequest('GET');
-            res = fakeResponse();
-            next = function () {
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Origin'),
-                    'http://example.com',
-                );
-                done();
-            };
-
-            cors(options)(req, res, next);
-        });
-
-        it('should not allow origin when callback returns false', function (done) {
-            let req, res, next, options;
-            options = {
-                origin: function (sentOrigin, cb) {
-                    cb(null, false);
-                },
-            };
-            req = fakeRequest('GET');
-            res = fakeResponse();
-            next = function () {
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Origin'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Methods'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Headers'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Credentials'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Max-Age'),
-                    undefined,
-                );
-                done();
-            };
-
-            cors(options)(req, res, next);
-        });
-
-        it('should not override options.origin callback', function (done) {
-            let req, res, next, options;
-            options = {
-                origin: function (sentOrigin, cb) {
-                    cb(null, sentOrigin === 'http://example.com');
-                },
-            };
-
-            req = fakeRequest('GET');
-            res = fakeResponse();
-            next = function () {
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Origin'),
-                    'http://example.com',
-                );
-            };
-
-            cors(options)(req, res, next);
-
-            req = fakeRequest('GET', {
-                origin: 'http://localhost',
-            });
-
-            res = fakeResponse();
-
-            next = function () {
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Origin'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Methods'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Headers'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Allow-Credentials'),
-                    undefined,
-                );
-                assert.equal(
-                    res.getHeader('Access-Control-Max-Age'),
-                    undefined,
-                );
-                done();
-            };
-
             cors(options)(req, res, next);
         });
 

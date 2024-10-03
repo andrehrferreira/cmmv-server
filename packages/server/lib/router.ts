@@ -12,6 +12,19 @@ export class Router {
         Array<Function>
     >();
 
+    public params: Map<string, Function[]> = new Map<string, Function[]>();
+
+    public optionsAllow: Map<string, Set<string>> = new Map<
+        string,
+        Set<string>
+    >();
+
+    public registeredRoutes: {
+        method: FindMyWay.HTTPMethod;
+        path: string;
+        options: any;
+    }[] = [];
+
     constructor(private path: string = '') {
         if (!this.router) {
             this.router = FindMyWay({
@@ -22,6 +35,30 @@ export class Router {
             });
 
             this.stack = new Map<FindMyWay.HTTPMethod, Array<Function>>();
+        }
+    }
+
+    public param(valueOrObject: string | string[], cb) {
+        //compatibility Expressjs
+        if (
+            typeof valueOrObject === 'string' &&
+            !this.params.has(valueOrObject)
+        )
+            this.params.set(valueOrObject, []);
+
+        if (typeof valueOrObject === 'string') {
+            const stack = this.params.get(valueOrObject);
+            stack.push(cb);
+            this.params.set(valueOrObject, stack);
+        } else if (Array.isArray(valueOrObject)) {
+            valueOrObject.forEach(item => {
+                if (typeof item === 'string' && !this.params.has(item))
+                    this.params.set(item, []);
+
+                const stack = this.params.get(item);
+                stack.push(cb);
+                this.params.set(item, stack);
+            });
         }
     }
 
@@ -36,12 +73,10 @@ export class Router {
                 const httpMethod =
                     method?.toUpperCase() as FindMyWay.HTTPMethod;
 
-                if (this.router.hasRoute(httpMethod, path)) {
-                    const route = this.router.find(httpMethod, path);
-                    resolve(route);
-                } else {
-                    reject();
-                }
+                const route = this.router.find(httpMethod, path);
+
+                if (route) resolve(route);
+                else reject();
             } else {
                 reject();
             }
@@ -94,17 +129,32 @@ export class Router {
         if (typeof path !== 'function') {
             let finalPath = this.path ? this.path + path : path;
 
-            if (!this.router.hasRoute(method, finalPath)) {
-                this.router.on(method, finalPath, (req, res) => {}, {
-                    stack: callbacks,
-                });
-            } else {
-                const handler = this.router.find(method, finalPath);
-                this.router.off(method, finalPath);
-                this.router.on(method, finalPath, (req, res) => {}, {
-                    stack: [...handler.store.stack, ...callbacks],
-                });
+            if (typeof finalPath === 'string') {
+                if (!this.optionsAllow.has(finalPath))
+                    this.optionsAllow.set(finalPath, new Set<string>());
+
+                if (!this.router.hasRoute(method, finalPath)) {
+                    this.router.on(method, finalPath, (req, res) => {}, {
+                        stack: callbacks,
+                    });
+
+                    this.registeredRoutes.push({
+                        method,
+                        path: finalPath,
+                        options: { callbacks },
+                    });
+                } else {
+                    const handler = this.router.find(method, finalPath);
+                    this.router.off(method, finalPath);
+                    this.router.on(method, finalPath, (req, res) => {}, {
+                        stack: [...handler.store.stack, ...callbacks],
+                    });
+                }
             }
+        } else {
+            const stack = this.stack.has(method) ? this.stack.get(method) : [];
+            stack.push(path);
+            this.stack.set(method, stack);
         }
     }
 

@@ -54,16 +54,18 @@ export class CorsMiddleware {
         else this.onCall.call(this, req, res, res.body, next);
     }
 
-    onCall(req, res, payload, done) {
+    onCall(request, res, payload, done) {
         let headers = [];
         const method =
-            req.method && req.method.toUpperCase && req.method.toUpperCase();
+            request.method &&
+            request.method.toUpperCase &&
+            request.method.toUpperCase();
 
         if (method === 'OPTIONS') {
-            headers.push(this.configureOrigin(this.options, req));
+            headers.push(this.configureOrigin(this.options, request));
             headers.push(this.configureCredentials(this.options));
             headers.push(this.configureMethods(this.options));
-            headers.push(this.configureAllowedHeaders(this.options, req));
+            headers.push(this.configureAllowedHeaders(this.options, request));
             headers.push(this.configureMaxAge(this.options));
             headers.push(this.configureExposedHeaders(this.options));
             this.applyHeaders(headers, res);
@@ -78,7 +80,7 @@ export class CorsMiddleware {
                 (res as http.ServerResponse).end();
             }
         } else {
-            headers.push(this.configureOrigin(this.options, req));
+            headers.push(this.configureOrigin(this.options, request));
             headers.push(this.configureCredentials(this.options));
             headers.push(this.configureExposedHeaders(this.options));
             this.applyHeaders(headers, res);
@@ -93,9 +95,8 @@ export class CorsMiddleware {
 
     isOriginAllowed(origin, allowedOrigin) {
         if (Array.isArray(allowedOrigin)) {
-            for (var i = 0; i < allowedOrigin.length; ++i) {
+            for (var i = 0; i < allowedOrigin.length; ++i)
                 if (this.isOriginAllowed(origin, allowedOrigin[i])) return true;
-            }
 
             return false;
         } else if (this.isString(allowedOrigin)) {
@@ -184,7 +185,7 @@ export class CorsMiddleware {
         const headers = [];
 
         if (!allowedHeaders) {
-            allowedHeaders = req.headers['access-control-request-headers']; // .headers wasn't specified, so reflect the request headers
+            allowedHeaders = req.headers['access-control-request-headers'];
 
             headers.push([
                 {
@@ -193,7 +194,7 @@ export class CorsMiddleware {
                 },
             ]);
         } else if (allowedHeaders.join) {
-            allowedHeaders = allowedHeaders.join(','); // .headers is an array, so turn it into a string
+            allowedHeaders = allowedHeaders.join(',');
         }
 
         if (allowedHeaders && allowedHeaders.length) {
@@ -250,6 +251,11 @@ export class CorsMiddleware {
                         vary(res, header.value);
                     else if (header.value && typeof res.set === 'function')
                         res.set(header.key, header.value);
+                    else if (
+                        header.value &&
+                        typeof res.setHeader === 'function'
+                    )
+                        res.setHeader(header.key, header.value);
                 }
             }
         } catch (err) {

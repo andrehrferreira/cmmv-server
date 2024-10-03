@@ -54,15 +54,25 @@ app.get('/json', async (req, res) => {
     res.json({ hello: 'world' });
 });
 
+app.get('/user/:id', async (req, res) => {
+    res.send('User ' + req.params.id);
+});
+
+app.get('/users', async (req, res) => {
+    res.json(req.query);
+});
+
 app.post('/test', async (req, res) => {
     console.log(req.body);
     res.send('ok');
 });
 
 app.listen({ host, port })
-    .then(address => {
+    .then(server => {
         //console.log(app.server)
-        console.log(`Listen on http://${address.address}:${address.port}`);
+        console.log(
+            `Listen on http://${server.address().address}:${server.address().port}`,
+        );
     })
     .catch(err => {
         throw Error(err.message);

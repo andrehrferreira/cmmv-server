@@ -416,10 +416,7 @@ export class ServerStaticMiddleware {
     }
 }
 
-export default async function serveStatic(
-    root: string,
-    options?: StaticOptions,
-) {
+export default async function (root: string, options?: StaticOptions) {
     if (!root) throw new TypeError('root path required');
 
     if (typeof root !== 'string')
@@ -428,3 +425,13 @@ export default async function serveStatic(
     return (server, done) =>
         new ServerStaticMiddleware(root, options).process(server, done);
 }
+
+export const serveStatic = (root: string, options?: StaticOptions) => {
+    if (!root) throw new TypeError('root path required');
+
+    if (typeof root !== 'string')
+        throw new TypeError('root path must be a string');
+
+    return (server, done) =>
+        new ServerStaticMiddleware(root, options).process(server, done);
+};
