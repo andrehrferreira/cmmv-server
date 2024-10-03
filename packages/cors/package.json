@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/cors",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "CMMV (@cors)",
     "publishConfig": {
         "access": "public"
