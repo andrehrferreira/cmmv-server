@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/compression",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "description": "CMMV (@compression)",
     "publishConfig": {
         "access": "public"
@@ -29,5 +29,5 @@
         "safe-buffer": "^5.2.1",
         "vary": "^1.1.2"
     },
-    "gitHead": "57d24e33529317be8346fa492acc581b4cd3dce9"
+    "gitHead": "b67dd94c7f27e907f23ec73b25683ed3f75bfb5e"
 }

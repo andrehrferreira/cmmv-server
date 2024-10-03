@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/helmet",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "description": "CMMV (@helmet)",
     "publishConfig": {
         "access": "public"
@@ -25,5 +25,5 @@
     "dependencies": {
         "helmet": "^8.0.0"
     },
-    "gitHead": "57d24e33529317be8346fa492acc581b4cd3dce9"
+    "gitHead": "b67dd94c7f27e907f23ec73b25683ed3f75bfb5e"
 }
