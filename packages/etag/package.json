@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/etag",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "CMMV (@etag)",
     "publishConfig": {
         "access": "public"
@@ -22,5 +22,5 @@
         "middleware"
     ],
     "homepage": "https://cmmv.io",
-    "gitHead": "7d77815d4d7939dbbf2c6e928650337b74ab09cf"
+    "gitHead": "fefa230717689037dc9ee06095384f20270c1ca9"
 }
