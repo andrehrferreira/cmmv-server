@@ -120,6 +120,30 @@ app.listen({ host, port })
 * **Express.js Compatibility:** Plans to support Express.js-compatible plugins.
 * **HTTP/2 Support:** Native support for HTTP/2, improving speed and connection performance.
 
+## Benchmarks
+
+Below is the current performance comparison result between CMMV and other HTTP server projects in Node.js
+
+```npm run benchmarks:all```
+| (index) | Framework | Reqs/s | Total Reqs | Transfer/s | Transfer Total | Latency  |
+|---------|-----------|--------|------------|------------|----------------|----------|
+| 0       | http      | 25051  | 250511     | 4.25 MB    | 42.53 MB       | 300 ms   |
+| 1       | fastify   | 23491  | 234912     | 3.58 MB    | 35.84 MB       | 230 ms   |
+| 2       | cmmv      | 21787  | 217850     | 3.32 MB    | 33.24 MB       | 186 ms   |
+| 3       | koa       | 21521  | 215214     | 3.59 MB    | 35.92 MB       | 264 ms   |
+| 4       | hapi      | 16009  | 160086     | 3.37 MB    | 33.74 MB       | 163 ms   |
+| 5       | express   | 6607   | 66061      | 1.5 MB     | 14.99 MB       | 115 ms   |
+
+
+Following the performance test adding ``json``, ``server static``, ``compression`` middlewares
+
+```npm run benchmarks:complex```
+| (index) | Framework | Reqs/s | Total Reqs | Transfer/s | Transfer Total | Latency  |
+|---------|-----------|--------|------------|------------|----------------|----------|
+| 0       | fastify   | 25490  | 254886     | 4.28 MB    | 42.78 MB       | 286 ms   |
+| 1       | cmmv      | 18518  | 185149     | 3.23 MB    | 32.31 MB       | 179 ms   |
+| 2       | express   | 4796   | 47963      | 1.19 MB    | 11.94 MB       | 226 ms   |
+
 ## Documentation
 
 The complete documentation is available [here](https://cmmv.io).
