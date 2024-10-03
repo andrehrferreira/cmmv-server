@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/body-parser",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "CMMV (@body-parser)",
     "publishConfig": {
         "access": "public"
@@ -40,5 +40,5 @@
         "@types/raw-body": "^2.3.0",
         "@types/type-is": "^1.6.6"
     },
-    "gitHead": "b67dd94c7f27e907f23ec73b25683ed3f75bfb5e"
+    "gitHead": "42573e70c4200c0925a28d9eb10dff99dbb6831b"
 }

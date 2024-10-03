@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/server",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "CMMV (@server)",
     "publishConfig": {
         "access": "public"
@@ -49,5 +49,5 @@
         "deep-equal": "^2.2.3",
         "mime-types": "^2.1.35"
     },
-    "gitHead": "b67dd94c7f27e907f23ec73b25683ed3f75bfb5e"
+    "gitHead": "42573e70c4200c0925a28d9eb10dff99dbb6831b"
 }
