@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/cookie-parser",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "CMMV (@cookie-parser)",
     "publishConfig": {
         "access": "public"
@@ -33,5 +33,5 @@
     "devDependencies": {
         "@types/cookie": "^0.6.0"
     },
-    "gitHead": "fefa230717689037dc9ee06095384f20270c1ca9"
+    "gitHead": "4597e72b30a7b4eac57feda44c52b1d872fd9b25"
 }

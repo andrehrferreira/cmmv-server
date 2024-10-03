@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/cors",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "CMMV (@cors)",
     "publishConfig": {
         "access": "public"
@@ -34,5 +34,5 @@
     "devDependencies": {
         "@types/node": "^22.6.1"
     },
-    "gitHead": "fefa230717689037dc9ee06095384f20270c1ca9"
+    "gitHead": "4597e72b30a7b4eac57feda44c52b1d872fd9b25"
 }
