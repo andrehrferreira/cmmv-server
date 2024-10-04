@@ -53,9 +53,9 @@ async function runBenchmarkOfLib(lib) {
   	await sleep(10000);
 
 	const result = await autocannon({
-		workers: 8,
-		duration: 10,
-		connections: 1024,
+		duration: 40,
+		connections: 100,
+		pipelining: 10,
 		url: `http://localhost:${port}`,
 	});
 

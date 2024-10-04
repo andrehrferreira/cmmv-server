@@ -299,7 +299,7 @@ function onSendEnd(response, payload) {
             statusCode !== 204 &&
             statusCode !== 304 &&
             response.request.method !== 'HEAD' &&
-            response[kResponseTrailers] === null
+            response[kResponseTrailers] !== null
         ) {
             response[kResponseTrailers]['content-length'] = '0';
         }
