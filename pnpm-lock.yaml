@@ -12,15 +12,24 @@ importers:
 
   .:
     dependencies:
+      '@fastify/accept-negotiator':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@fastify/send':
         specifier: ^3.1.1
         version: 3.1.1
       accepts:
         specifier: ^1.3.8
         version: 1.3.8
+      after:
+        specifier: ^0.8.2
+        version: 0.8.2
       async_hooks:
         specifier: ^1.0.0
         version: 1.0.0
+      compressible:
+        specifier: ^2.0.18
+        version: 2.0.18
       content-disposition:
         specifier: ^0.5.4
         version: 0.5.4
@@ -57,27 +66,51 @@ importers:
       http-errors:
         specifier: ^2.0.0
         version: 2.0.0
+      iconv-lite:
+        specifier: ^0.6.3
+        version: 0.6.3
       merge-descriptors:
         specifier: ^2.0.0
         version: 2.0.0
+      mime-types:
+        specifier: ^2.1.35
+        version: 2.1.35
+      object-assign:
+        specifier: ^4.1.1
+        version: 4.1.1
       on-finished:
         specifier: ^2.4.1
         version: 2.4.1
+      parseurl:
+        specifier: ^1.3.3
+        version: 1.3.3
+      proxy-addr:
+        specifier: ^2.0.7
+        version: 2.0.7
       qs:
         specifier: ^6.13.0
         version: 6.13.0
+      raw-body:
+        specifier: ^3.0.0
+        version: 3.0.0
       safe-buffer:
         specifier: ^5.2.1
         version: 5.2.1
       send:
         specifier: ^0.19.0
         version: 0.19.0
+      tslib:
+        specifier: ^2.7.0
+        version: 2.7.0
       type-is:
         specifier: ^1.6.18
         version: 1.6.18
       uid-safe:
         specifier: ^2.1.5
         version: 2.1.5
+      unpipe:
+        specifier: ^1.0.0
+        version: 1.0.0
       utils-merge:
         specifier: ^1.0.1
         version: 1.0.1
@@ -139,6 +172,9 @@ importers:
       '@types/mime':
         specifier: '4'
         version: 4.0.0
+      '@types/mime-types':
+        specifier: ^2.1.4
+        version: 2.1.4
       '@types/mocha':
         specifier: ^10.0.8
         version: 10.0.9
@@ -148,6 +184,12 @@ importers:
       '@types/on-headers':
         specifier: ^1.0.3
         version: 1.0.3
+      '@types/parseurl':
+        specifier: ^1.3.3
+        version: 1.3.3
+      '@types/proxy-addr':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@types/send':
         specifier: ^0.17.4
         version: 0.17.4
@@ -879,6 +921,10 @@ packages:
   '@eslint/js@8.57.1':
     resolution: {integrity: sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@fastify/accept-negotiator@1.1.0':
+    resolution: {integrity: sha512-OIHZrb2ImZ7XG85HXOONLcJWGosv7sIvM2ifAPQVhg9Lv7qdmMBNVaai4QTdyuaqbKM5eO6sLSQOYI7wEQeCJQ==}
+    engines: {node: '>=14'}
 
   '@fastify/accept-negotiator@2.0.0':
     resolution: {integrity: sha512-/Sce/kBzuTxIq5tJh85nVNOq9wKD8s+viIgX0fFMDBdw95gnpf53qmF1oBgJym3cPFliWUuSloVg/1w/rH0FcQ==}
@@ -1902,6 +1948,9 @@ packages:
   '@types/methods@1.1.4':
     resolution: {integrity: sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==}
 
+  '@types/mime-types@2.1.4':
+    resolution: {integrity: sha512-lfU4b34HOri+kAY5UheuFMWPDOI+OPceBSHZKp69gEyTL/mmJ4cnU6Y/rlme3UL3GyOn6Y42hyIEw0/q8sWx5w==}
+
   '@types/mime@1.3.5':
     resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
 
@@ -1926,6 +1975,12 @@ packages:
 
   '@types/on-headers@1.0.3':
     resolution: {integrity: sha512-jvGNvFo8uOL6fiBGvD4Ul4lT8mZoJ57l3h0ZN/a1oHziTTXUV3slaRcYm2K1wvvLX1fhIg9AvKykxKFt3mM+Xg==}
+
+  '@types/parseurl@1.3.3':
+    resolution: {integrity: sha512-eamlh+uXpNIG2yVdl6UdBTR3B6jtmJl/JWTNTQAN1K3VH1s5F6UPOhgLwCnU9FJ7R/PnUsRN9zFSpMcxwa2Ndg==}
+
+  '@types/proxy-addr@2.0.3':
+    resolution: {integrity: sha512-TgAHHO4tNG3HgLTUhB+hM4iwW6JUNeQHCLnF1DjaDA9c69PN+IasoFu2MYDhubFc+ZIw5c5t9DMtjvrD6R3Egg==}
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
@@ -8816,6 +8871,8 @@ snapshots:
 
   '@eslint/js@8.57.1': {}
 
+  '@fastify/accept-negotiator@1.1.0': {}
+
   '@fastify/accept-negotiator@2.0.0': {}
 
   '@fastify/ajv-compiler@4.0.1':
@@ -10124,6 +10181,8 @@ snapshots:
 
   '@types/methods@1.1.4': {}
 
+  '@types/mime-types@2.1.4': {}
+
   '@types/mime@1.3.5': {}
 
   '@types/mime@4.0.0':
@@ -10143,6 +10202,14 @@ snapshots:
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/on-headers@1.0.3':
+    dependencies:
+      '@types/node': 22.7.5
+
+  '@types/parseurl@1.3.3':
+    dependencies:
+      '@types/node': 22.7.5
+
+  '@types/proxy-addr@2.0.3':
     dependencies:
       '@types/node': 22.7.5
 

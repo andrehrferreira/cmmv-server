@@ -296,9 +296,9 @@ export default {
      * @return {String}
      * @public
      */
-    get ip(): boolean {
+    get ip(): string {
         const trust = this.app.get('trust proxy fn');
-        return proxyaddr(this, trust);
+        return proxyaddr(this.req, trust); // Retorna o IP como string
     },
 
     /**
@@ -312,9 +312,9 @@ export default {
      * @return {Array}
      * @public
      */
-    get ips(): boolean {
+    get ips(): string[] {
         const trust = this.app.get('trust proxy fn');
-        const addrs = proxyaddr.all(this, trust);
+        const addrs = proxyaddr.all(this.req, trust);
         addrs.reverse().pop();
         return addrs;
     },
