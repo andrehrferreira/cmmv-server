@@ -1,63 +1,46 @@
+# This config was automatically generated from your source code
+# Stacks detected: deps:node:.,test:jest:
 version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
   test-node:
-    # Testar nas versões LTS de Node.js 18.12 e superiores
+    # Install node dependencies and run tests
     executor: node/default
-    parameters:
-      node-version:
-        type: string
-        default: "18.17"
-    docker:
-      - image: cimg/node:<< parameters.node-version >>
     environment:
       JEST_JUNIT_OUTPUT_DIR: ./test-results/
     steps:
       - checkout
+      - node/install-packages:
+          cache-path: ~/project/node_modules
+          override-ci-command: npm install
       - run:
-          name: Install pnpm
-          command: 'sudo npm install -g pnpm'
-      - run:
-          name: Install dependencies
-          command: pnpm install --frozen-lockfile
-      - run:
-          command: pnpm add jest-junit --save-dev
+          command: npm install jest-junit
       - run:
           name: Run tests
-          command: pnpm run test --ci --runInBand --reporters=default --reporters=jest-junit
+          command: npm run test --ci --runInBand --reporters=default --reporters=jest-junit
       - store_test_results:
           path: ./test-results/
-
   build-node:
-    # Build node project nas versões LTS de Node.js 18.12 e superiores
+    # Build node project
     executor: node/default
-    parameters:
-      node-version:
-        type: string
-        default: "18.17"
-    docker:
-      - image: cimg/node:<< parameters.node-version >>
     steps:
       - checkout
+      - node/install-packages:
+          cache-path: ~/project/node_modules
+          override-ci-command: npm install
       - run:
-          name: Install pnpm
-          command: 'sudo npm install -g pnpm'
-      - run:
-          name: Install dependencies
-          command: pnpm install --frozen-lockfile
-      - run:
-          command: pnpm run build:prod
+          command: npm run build:prod
       - run:
           name: Create the ~/artifacts directory if it doesn't exist
           command: mkdir -p ~/artifacts
+      # Copy output to artifacts dir
       - run:
           name: Copy artifacts
           command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
       - store_artifacts:
           path: ~/artifacts
           destination: node-build
-
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
@@ -67,30 +50,13 @@ jobs:
       - run:
           name: deploy
           command: '#e.g. ./deploy.sh'
-
 workflows:
   build-and-test:
     jobs:
-      - test-node:
-          matrix:
-            parameters:
-              node-version:
-                [
-                  "18.12",
-                  "18.17",
-                  "20.5",
-                ]
+      - test-node
       - build-node:
           requires:
             - test-node
-          matrix:
-            parameters:
-              node-version:
-                [
-                  "18.12",
-                  "18.17",
-                  "20.5",
-                ]
     # - deploy:
     #     requires:
     #       - build-node
