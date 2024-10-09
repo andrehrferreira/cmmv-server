@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/server-static",
-    "version": "0.0.12",
+    "version": "0.4.0",
     "description": "CMMV (@server-static)",
     "publishConfig": {
         "access": "public"
