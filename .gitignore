@@ -52,3 +52,4 @@ http
 old
 packages/**/*.js
 packages/**/*.d.ts
+packages/session/

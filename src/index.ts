@@ -42,7 +42,7 @@ app.use(
 
 app.set('view engine', 'pug');
 
-app.get('/view', function (req, res) {
+app.get('/view', (req, res) => {
     res.render('index', { title: 'Hey', message: 'Hello there!' });
 });
 
@@ -69,7 +69,6 @@ app.post('/test', async (req, res) => {
 
 app.listen({ host, port })
     .then(server => {
-        //console.log(app.server)
         console.log(
             `Listen on http://${server.address().address}:${server.address().port}`,
         );
