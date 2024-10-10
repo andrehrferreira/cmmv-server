@@ -26,7 +26,6 @@
         "accepts": "^1.3.8",
         "compressible": "^2.0.18",
         "on-headers": "^1.0.2",
-        "safe-buffer": "^5.2.1",
         "vary": "^1.1.2"
     },
     "gitHead": "d284a6c25a70c0e99d6e3588c5b3a664e17443d1"

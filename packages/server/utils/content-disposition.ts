@@ -8,7 +8,6 @@
  */
 
 import { basename } from 'node:path';
-const Buffer = require('safe-buffer').Buffer;
 
 /**
  * RegExp to match non attr-char, *after* encodeURIComponent (i.e. not including "%")
