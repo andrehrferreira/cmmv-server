@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://cmmv.io/" target="blank"><img src="https://raw.githubusercontent.com/andrehrferreira/cmmv/main/public/assets/logo.png" width="300" alt="CMMV Logo" /></a>
+  <a href="https://cmmv.io/" target="blank"><img src="https://raw.githubusercontent.com/andrehrferreira/cmmv/main/public/assets/logo_CMMV_negativa.svg" width="300" alt="CMMV Logo" /></a>
 </p>
 <p align="center">Contract-Model-Model-View (CMMV) <br/> A minimalistic framework for building scalable and modular applications using TypeScript contracts.</p>
 <p align="center">
@@ -17,13 +17,12 @@
 
 ``@cmmv/server`` is inspired by the popular [Express.js](https://expressjs.com/pt-br/) framework but has been entirely rewritten in TypeScript with performance improvements in mind. The project integrates common plugins like ``body-parser``, ``compression``, ``cookie-parser``, ``cors``, ``etag``, ``helmet`` and ``serve-static`` out of the box. Additionally, it plans to support any Express.js-compatible plugin in the near future.
 
-
 ## Installation
 
 Install the ``@cmmv/server`` package via npm:
 
 ```bash
-$ npm install @cmmv/server @cmmv/server-static
+$ pnpm add @cmmv/server
 ```
 
 ## Quick Start
@@ -75,7 +74,7 @@ app.use(
 
 app.set('view engine', 'pug');
 
-app.get('/view', function (req, res) {
+app.get('/view', async (req, res) => {
     res.render('index', { title: 'Hey', message: 'Hello there!' });
 });
 
@@ -102,7 +101,6 @@ app.post('/test', async (req, res) => {
 
 app.listen({ host, port })
 .then(server => {
-    //console.log(app.server)
     console.log(
         `Listen on http://${server.address().address}:${server.address().port}`,
     );
@@ -126,37 +124,37 @@ app.listen({ host, port })
 * Machine: linux x64 | 32 vCPUs | 256.6GB Mem
 * Node: v20.17.0
 * Run: Thu Oct 02 2024 15:23:41 GMT+0000 (Coordinated Universal Time)
-* Method: autocannon -c 100 -d 40 -p 10 localhost:3000
+* Method: ``autocannon -c 100 -d 40 -p 10 localhost:3000``
 
-| Framework                | Version  | Router | Requests/s | Latency (ms) | Throughput/Mb |
+|                          | Version  | Router | Requests/s | Latency (ms) | Throughput/Mb |
 |--------------------------|----------|--------|------------|--------------|---------------|
-| polka                    | 0.5.2    | ✓      | 47499.2    | 20.61        | 8.47          |
-| connect                  | 3.7.0    | ✗      | 47233.6    | 20.70        | 8.42          |
-| bare                     | v20.17.0 | ✗      | 46587.2    | 20.99        | 8.31          |
-| fastify                  | 5.0.0    | ✓      | 46321.0    | 21.17        | 8.30          |
-| server-base-router       | 7.1.32   | ✓      | 46158.6    | 21.19        | 8.23          |
-| micro                    | 10.0.1   | ✗      | 45477.4    | 21.55        | 8.11          |
-| rayo                     | 1.4.6    | ✓      | 45397.6    | 21.59        | 8.10          |
-| server-base              | 7.1.32   | ✗      | 44877.0    | 21.85        | 8.00          |
-| micro-route              | 2.5.0    | ✓      | 43836.6    | 22.37        | 7.82          |
-| connect-router           | 1.3.8    | ✓      | 43080.0    | 22.78        | 7.68          |
-| cmmv                     | 0.0.11   | ✓      | 41603.9    | 23.60        | 7.46          |
-| restana                  | 4.9.9    | ✓      | 41601.8    | 23.57        | 7.42          |
-| hono                     | 4.6.3    | ✓      | 41482.1    | 23.66        | 7.40          |
-| polkadot                 | 1.0.0    | ✗      | 40766.6    | 24.08        | 7.27          |
-| 0http                    | 3.5.3    | ✓      | 38630.6    | 25.44        | 6.89          |
-| koa                      | 2.15.3   | ✗      | 38582.8    | 25.46        | 6.88          |
-| take-five                | 2.0.0    | ✓      | 37030.6    | 26.59        | 13.31         |
-| h3                       | 1.13.0   | ✗      | 36602.2    | 26.86        | 6.53          |
-| koa-isomorphic-router    | 1.0.1    | ✓      | 36570.6    | 26.88        | 6.52          |
-| h3-router                | 1.13.0   | ✓      | 35513.8    | 27.70        | 6.33          |
-| koa-router               | 12.0.1   | ✓      | 35363.8    | 27.84        | 6.31          |
-| hapi                     | 21.3.10  | ✓      | 32379.0    | 30.42        | 5.77          |
-| microrouter              | 3.1.3    | ✓      | 32073.4    | 30.72        | 5.72          |
-| restify                  | 11.1.0   | ✓      | 30820.4    | 31.97        | 5.56          |
-| fastify-big-json         | 5.0.0    | ✓      | 12205.6    | 81.42        | 140.44        |
-| express                  | 5.0.0    | ✓      | 10808.0    | 91.93        | 1.93          |
-| express-with-middlewares | 5.0.0    | ✓      | 9815.5     | 101.27       | 3.65          |
+| bare                     | v20.17.0 | ✗      | 45270.4    | 21.62        | 8.07          |
+| micro                    | 10.0.1   | ✗      | 44705.8    | 21.93        | 7.97          |
+| fastify                  | 5.0.0    | ✓      | 44547.8    | 22.01        | 7.99          |
+| connect                  | 3.7.0    | ✗      | 44174.4    | 22.18        | 7.88          |
+| polka                    | 0.5.2    | ✓      | 43791.2    | 22.37        | 7.81          |
+| rayo                     | 1.4.6    | ✓      | 43731.8    | 22.41        | 7.80          |
+| server-base-router       | 7.1.32   | ✓      | 43117.6    | 22.72        | 7.69          |
+| server-base              | 7.1.32   | ✗      | 42169.4    | 23.24        | 7.52          |
+| micro-route              | 2.5.0    | ✓      | 41600.0    | 23.55        | 7.42          |
+| connect-router           | 1.3.8    | ✓      | 41163.3    | 23.85        | 7.34          |
+| cmmv                     | 0.4.0    | ✓      | 40995.2    | 23.92        | 7.35          |
+| hono                     | 4.6.3    | ✓      | 39738.6    | 24.68        | 7.09          |
+| polkadot                 | 1.0.0    | ✗      | 37472.8    | 26.20        | 6.68          |
+| koa                      | 2.15.3   | ✗      | 37181.4    | 26.42        | 6.63          |
+| 0http                    | 3.5.3    | ✓      | 37101.6    | 26.47        | 6.62          |
+| take-five                | 2.0.0    | ✓      | 35171.4    | 27.95        | 12.65         |
+| h3                       | 1.13.0   | ✗      | 34667.4    | 28.35        | 6.18          |
+| koa-isomorphic-router    | 1.0.1    | ✓      | 34542.7    | 28.46        | 6.16          |
+| h3-router                | 1.13.0   | ✓      | 33551.0    | 29.31        | 5.98          |
+| restana                  | 4.9.9    | ✓      | 33532.8    | 29.36        | 5.98          |
+| koa-router               | 12.0.1   | ✓      | 33426.2    | 29.46        | 5.96          |
+| microrouter              | 3.1.3    | ✓      | 30049.2    | 32.79        | 5.36          |
+| hapi                     | 21.3.10  | ✓      | 30014.8    | 32.82        | 5.35          |
+| restify                  | 11.1.0   | ✓      | 28548.0    | 34.55        | 5.15          |
+| fastify-big-json         | 5.0.0    | ✓      | 11675.6    | 85.19        | 134.34        |
+| express                  | 5.0.1    | ✓      | 10058.2    | 98.82        | 1.79          |
+| express-with-middlewares | 5.0.1    | ✓      | 8826.8     | 112.63       | 3.28          |
 | trpc-router              | 10.45.2  | ✓      | N/A        | N/A          | N/A           |
 
 ## Documentation
@@ -165,7 +163,7 @@ The complete documentation is available [here](https://cmmv.io).
 
 ## Support
 
-CMMV is an open-source project, and we are always looking for contributors to help improve it. If you encounter a bug or have a feature request, please open an issue on [GitHub](https://github.com/andrehrferreira/cmmv/issues).
+CMMV is an open-source project, and we are always looking for contributors to help improve it. If you encounter a bug or have a feature request, please open an issue on [GitHub](https://github.com/andrehrferreira/cmmv-server/issues).
 
 ## Stay in Touch
 
