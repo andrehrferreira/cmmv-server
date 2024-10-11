@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/helmet",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "CMMV (@helmet)",
     "publishConfig": {
         "access": "public"
