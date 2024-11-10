@@ -369,11 +369,15 @@ export class ServerStaticMiddleware {
     }
 
     getContentType(path) {
-        const type = mime.getType(path) || 'application/octet-stream';
+        if (path.endsWith('.vue') || path.endsWith('.cmmv')) {
+            return `text/javascript`;
+        } else {
+            const type = mime.getType(path) || 'application/octet-stream';
 
-        if (!send.isUtf8MimeType(type)) return type;
+            if (!send.isUtf8MimeType(type)) return type;
 
-        return `${type}; charset=UTF-8`;
+            return `${type}; charset=UTF-8`;
+        }
     }
 
     getEncodingHeader(headers, checked) {
