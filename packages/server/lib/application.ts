@@ -696,7 +696,7 @@ export class Application extends EventEmitter {
                 }
             })
             .catch(err => {
-                console.error(err);
+                //console.error(err);
                 res.writeHead(404);
                 res.end('Not Found');
             });

@@ -51,7 +51,16 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/json', async (req, res) => {
-    res.json({ hello: 'world' });
+    const schema = {
+        type: 'object',
+        properties: {
+            hello: {
+                type: 'string',
+            },
+        },
+    };
+
+    res.json({ hello: 'world' }, schema);
 });
 
 app.get('/user/:id', async (req, res) => {

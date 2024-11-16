@@ -466,6 +466,6 @@ export class Router {
     }
 
     public use(path: string, fn: Function) {
-        console.log(path, fn);
+        //console.log(path, fn);
     }
 }

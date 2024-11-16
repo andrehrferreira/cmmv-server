@@ -79,6 +79,7 @@ const send = require('@fastify/send');
 const onFinish = require('on-finished');
 const vary = require('vary');
 const createError = require('http-errors');
+const fastJson = require('fast-json-stringify');
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Trailer#directives
 // https://datatracker.ietf.org/doc/html/rfc7230.html#chunked.trailer.part
@@ -1176,13 +1177,20 @@ export default {
      * @param {string|number|boolean|object} obj
      * @public
      */
-    json(obj) {
+    json(obj, schema = null) {
         if (this.sent) return;
 
         const escape = this.app.get('json escape');
         const replacer = this.app.get('json replacer');
         const spaces = this.app.get('json spaces');
-        const body = this.stringify(obj, replacer, spaces, escape);
+        let body = '';
+
+        if (schema) {
+            const stringify = fastJson(schema);
+            body = stringify(obj);
+        } else {
+            body = this.stringify(obj, replacer, spaces, escape);
+        }
 
         if (!this.get('Content-Type'))
             this.set('Content-Type', 'application/json');
