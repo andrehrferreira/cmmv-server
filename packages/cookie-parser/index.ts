@@ -32,7 +32,7 @@
 import * as crypto from 'node:crypto';
 import * as cookie from 'cookie';
 
-type CookieParserOptions = cookie.CookieParseOptions & {
+type CookieParserOptions = cookie.ParseOptions & {
     name?: string;
     secret?: string | string[];
 };

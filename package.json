@@ -1,6 +1,6 @@
 {
 	"name": "@cmmv/server",
-	"version": "0.0.1",
+	"version": "0.5.2",
 	"description": "Contract-Model-Model-View (CMMV) - Minimalistic Node.js Server Framework",
 	"scripts": {
 		"prebuild": "rimraf dist && pnpm run clean",
