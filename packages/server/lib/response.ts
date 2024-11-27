@@ -356,7 +356,7 @@ function onSendEnd(response, payload) {
     if (response.req.method.toLowerCase() !== 'head')
         response.res.write(payload);
 
-    response.res.end(payload || null);
+    response.res.end();
 }
 
 function onResponseCallback(err, req, res) {
@@ -414,9 +414,12 @@ function sendTrailer(payload, response) {
     }
 }
 
-function sendStreamTrailer(payload, res) {
-    if (res[kResponseTrailers] === null) return;
-    payload.on('end', () => sendTrailer(null, res));
+function sendStreamTrailer(payload, response) {
+    if (!shouldSendTrailer(response)) return;
+
+    payload.on('end', () => {
+        process.nextTick(() => sendTrailer(null, response));
+    });
 }
 
 function logStreamError(logger, err, res) {
