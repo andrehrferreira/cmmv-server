@@ -53,3 +53,4 @@ old
 packages/**/*.js
 packages/**/*.d.ts
 packages/session/
+profiles

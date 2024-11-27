@@ -356,7 +356,7 @@ function onSendEnd(response, payload) {
     if (response.req.method.toLowerCase() !== 'head')
         response.res.write(payload);
 
-    sendTrailer(payload, response);
+    response.res.end();
 }
 
 function onResponseCallback(err, req, res) {
@@ -377,55 +377,49 @@ function wrapOnSendEnd(err, req, res, payload) {
     else onSendEnd(res, payload);
 }
 
+function shouldSendTrailer(response) {
+    return (
+        response[kResponseTrailers] !== null &&
+        typeof response.res.addTrailers === 'function'
+    );
+}
+
 function sendTrailer(payload, response) {
-    if (response[kResponseTrailers] === null) {
-        response.res.end(null, null, null);
+    if (!shouldSendTrailer(response)) {
+        response.res.end(payload || null);
         return;
     }
 
     const trailerHeaders = Object.keys(response[kResponseTrailers]);
     const trailers = {};
     let handled = 0;
-    let skipped = true;
 
     function send() {
-        if (handled === 0) {
-            response.addTrailers(trailers);
-            response.res.end(null, null, null);
+        if (handled === trailerHeaders.length) {
+            response.res.addTrailers(trailers);
+            response.res.end(payload || null);
         }
     }
 
     for (const trailerName of trailerHeaders) {
-        if (typeof response[kResponseTrailers][trailerName] !== 'function')
-            continue;
-        skipped = false;
-        handled--;
-
-        function cb(err, value) {
+        const trailerFn = response[kResponseTrailers][trailerName];
+        if (typeof trailerFn === 'function') {
             handled++;
-
-            if (err) console.debug(err);
-            else trailers[trailerName] = value;
-
-            process.nextTick(send);
+            trailerFn(response, payload, (err, value) => {
+                if (!err) trailers[trailerName] = value;
+                handled--;
+                send();
+            });
         }
-
-        const result = response[kResponseTrailers][trailerName](
-            response,
-            payload,
-            cb,
-        );
-
-        if (typeof result === 'object' && typeof result.then === 'function')
-            result.then(v => cb(null, v), cb);
     }
-
-    if (skipped) response.res.end(null, null, null);
 }
 
-function sendStreamTrailer(payload, res) {
-    if (res[kResponseTrailers] === null) return;
-    payload.on('end', () => sendTrailer(null, res));
+function sendStreamTrailer(payload, response) {
+    if (!shouldSendTrailer(response)) return;
+
+    payload.on('end', () => {
+        process.nextTick(() => sendTrailer(null, response));
+    });
 }
 
 function logStreamError(logger, err, res) {
