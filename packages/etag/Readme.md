@@ -130,7 +130,7 @@ app.listen({ host, port })
 ## Benchmarks
 
 * [https://github.com/fastify/benchmarks](https://github.com/fastify/benchmarks)
-* Machine: linux x64 | 32 vCPUs | 256.6GB Mem
+* Machine: linux x64 | 32 vCPUs | 128.0GB Mem
 * Node: v20.17.0
 * Run: Thu Oct 02 2024 15:23:41 GMT+0000 (Coordinated Universal Time)
 * Method: ``autocannon -c 100 -d 40 -p 10 localhost:3000``
