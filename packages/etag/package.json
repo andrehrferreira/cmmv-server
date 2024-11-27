@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/etag",
-    "version": "0.5.2",
+    "version": "0.6.0",
     "description": "CMMV (@etag)",
     "publishConfig": {
         "access": "public"

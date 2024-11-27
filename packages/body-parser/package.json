@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/body-parser",
-    "version": "0.5.2",
+    "version": "0.6.0",
     "description": "CMMV (@body-parser)",
     "publishConfig": {
         "access": "public"
