@@ -165,22 +165,3 @@ app.listen({ host, port })
 | express                  | 5.0.1    | ✓      | 10058.2    | 98.82        | 1.79          |
 | express-with-middlewares | 5.0.1    | ✓      | 8826.8     | 112.63       | 3.28          |
 | trpc-router              | 10.45.2  | ✓      | N/A        | N/A          | N/A           |
-
-## Documentation
-
-The complete documentation is available [here](https://cmmv.io).
-
-## Support
-
-CMMV is an open-source project, and we are always looking for contributors to help improve it. If you encounter a bug or have a feature request, please open an issue on [GitHub](https://github.com/andrehrferreira/cmmv-server/issues).
-
-## Stay in Touch
-
-- Author - [André Ferreira](https://github.com/andrehrferreira)
-- Twitter - [@andrehrferreira](https://twitter.com/andrehrferreira)
-- Linkdin - [@andrehrf](https://www.linkedin.com/in/andrehrf)
-- Youtube - [@Andrehrferreira](https://www.youtube.com/@Andrehrferreira)
-
-## License
-
-CMMV is [MIT licensed](LICENSE).
