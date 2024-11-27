@@ -132,9 +132,6 @@ importers:
       '@fastify/static':
         specifier: ^8.0.3
         version: 8.0.3
-      '@hapi/hapi':
-        specifier: ^21.3.12
-        version: 21.3.12
       '@swc-node/core':
         specifier: ^1.13.3
         version: 1.13.3(@swc/core@1.9.3(@swc/helpers@0.5.15))(@swc/types@0.1.17)
@@ -264,9 +261,6 @@ importers:
       h3:
         specifier: ^1.13.0
         version: 1.13.0
-      hapi:
-        specifier: ^18.1.0
-        version: 18.1.0
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -964,97 +958,6 @@ packages:
   '@gulpjs/to-absolute-glob@4.0.0':
     resolution: {integrity: sha512-kjotm7XJrJ6v+7knhPaRgaT6q8F8K2jiafwYdNHLzmV0uGLuZY43FK6smNSHUPrhq5kX2slCUy+RGG/xGqmIKA==}
     engines: {node: '>=10.13.0'}
-
-  '@hapi/accept@6.0.3':
-    resolution: {integrity: sha512-p72f9k56EuF0n3MwlBNThyVE5PXX40g+aQh+C/xbKrfzahM2Oispv3AXmOIU51t3j77zay1qrX7IIziZXspMlw==}
-
-  '@hapi/ammo@6.0.1':
-    resolution: {integrity: sha512-pmL+nPod4g58kXrMcsGLp05O2jF4P2Q3GiL8qYV7nKYEh3cGf+rV4P5Jyi2Uq0agGhVU63GtaSAfBEZOlrJn9w==}
-
-  '@hapi/b64@6.0.1':
-    resolution: {integrity: sha512-ZvjX4JQReUmBheeCq+S9YavcnMMHWqx3S0jHNXWIM1kQDxB9cyfSycpVvjfrKcIS8Mh5N3hmu/YKo4Iag9g2Kw==}
-
-  '@hapi/boom@10.0.1':
-    resolution: {integrity: sha512-ERcCZaEjdH3OgSJlyjVk8pHIFeus91CjKP3v+MpgBNp5IvGzP2l/bRiD78nqYcKPaZdbKkK5vDBVPd2ohHBlsA==}
-
-  '@hapi/bounce@3.0.2':
-    resolution: {integrity: sha512-d0XmlTi3H9HFDHhQLjg4F4auL1EY3Wqj7j7/hGDhFFe6xAbnm3qiGrXeT93zZnPH8gH+SKAFYiRzu26xkXcH3g==}
-
-  '@hapi/bourne@3.0.0':
-    resolution: {integrity: sha512-Waj1cwPXJDucOib4a3bAISsKJVb15MKi9IvmTI/7ssVEm6sywXGjVJDhl6/umt1pK1ZS7PacXU3A1PmFKHEZ2w==}
-
-  '@hapi/call@9.0.1':
-    resolution: {integrity: sha512-uPojQRqEL1GRZR4xXPqcLMujQGaEpyVPRyBlD8Pp5rqgIwLhtveF9PkixiKru2THXvuN8mUrLeet5fqxKAAMGg==}
-
-  '@hapi/catbox-memory@6.0.2':
-    resolution: {integrity: sha512-H1l4ugoFW/ZRkqeFrIo8p1rWN0PA4MDTfu4JmcoNDvnY975o29mqoZblqFTotxNHlEkMPpIiIBJTV+Mbi+aF0g==}
-
-  '@hapi/catbox@12.1.1':
-    resolution: {integrity: sha512-hDqYB1J+R0HtZg4iPH3LEnldoaBsar6bYp0EonBmNQ9t5CO+1CqgCul2ZtFveW1ReA5SQuze9GPSU7/aecERhw==}
-
-  '@hapi/content@6.0.0':
-    resolution: {integrity: sha512-CEhs7j+H0iQffKfe5Htdak5LBOz/Qc8TRh51cF+BFv0qnuph3Em4pjGVzJMkI2gfTDdlJKWJISGWS1rK34POGA==}
-
-  '@hapi/cryptiles@6.0.1':
-    resolution: {integrity: sha512-9GM9ECEHfR8lk5ASOKG4+4ZsEzFqLfhiryIJ2ISePVB92OHLp/yne4m+zn7z9dgvM98TLpiFebjDFQ0UHcqxXQ==}
-    engines: {node: '>=14.0.0'}
-
-  '@hapi/file@3.0.0':
-    resolution: {integrity: sha512-w+lKW+yRrLhJu620jT3y+5g2mHqnKfepreykvdOcl9/6up8GrQQn+l3FRTsjHTKbkbfQFkuksHpdv2EcpKcJ4Q==}
-
-  '@hapi/hapi@21.3.12':
-    resolution: {integrity: sha512-GCUP12dkb3QMjpFl+wEFO73nqKRmsnD5um/QDOn6lj2GjGBrDXPcT194mNARO+PPNXZOR4KmvIpHt/lceUncfg==}
-    engines: {node: '>=14.15.0'}
-
-  '@hapi/heavy@8.0.1':
-    resolution: {integrity: sha512-gBD/NANosNCOp6RsYTsjo2vhr5eYA3BEuogk6cxY0QdhllkkTaJFYtTXv46xd6qhBVMbMMqcSdtqey+UQU3//w==}
-
-  '@hapi/hoek@11.0.7':
-    resolution: {integrity: sha512-HV5undWkKzcB4RZUusqOpcgxOaq6VOAH7zhhIr2g3G8NF/MlFO75SjOr2NfuSx0Mh40+1FqCkagKLJRykUWoFQ==}
-
-  '@hapi/iron@7.0.1':
-    resolution: {integrity: sha512-tEZnrOujKpS6jLKliyWBl3A9PaE+ppuL/+gkbyPPDb/l2KSKQyH4lhMkVb+sBhwN+qaxxlig01JRqB8dk/mPxQ==}
-
-  '@hapi/mimos@7.0.1':
-    resolution: {integrity: sha512-b79V+BrG0gJ9zcRx1VGcCI6r6GEzzZUgiGEJVoq5gwzuB2Ig9Cax8dUuBauQCFKvl2YWSWyOc8mZ8HDaJOtkew==}
-
-  '@hapi/nigel@5.0.1':
-    resolution: {integrity: sha512-uv3dtYuB4IsNaha+tigWmN8mQw/O9Qzl5U26Gm4ZcJVtDdB1AVJOwX3X5wOX+A07qzpEZnOMBAm8jjSqGsU6Nw==}
-    engines: {node: '>=14.0.0'}
-
-  '@hapi/pez@6.1.0':
-    resolution: {integrity: sha512-+FE3sFPYuXCpuVeHQ/Qag1b45clR2o54QoonE/gKHv9gukxQ8oJJZPR7o3/ydDTK6racnCJXxOyT1T93FCJMIg==}
-
-  '@hapi/podium@5.0.1':
-    resolution: {integrity: sha512-eznFTw6rdBhAijXFIlBOMJJd+lXTvqbrBIS4Iu80r2KTVIo4g+7fLy4NKp/8+UnSt5Ox6mJtAlKBU/Sf5080TQ==}
-
-  '@hapi/shot@6.0.1':
-    resolution: {integrity: sha512-s5ynMKZXYoDd3dqPw5YTvOR/vjHvMTxc388+0qL0jZZP1+uwXuUD32o9DuuuLsmTlyXCWi02BJl1pBpwRuUrNA==}
-
-  '@hapi/somever@4.1.1':
-    resolution: {integrity: sha512-lt3QQiDDOVRatS0ionFDNrDIv4eXz58IibQaZQDOg4DqqdNme8oa0iPWcE0+hkq/KTeBCPtEOjDOBKBKwDumVg==}
-
-  '@hapi/statehood@8.1.1':
-    resolution: {integrity: sha512-YbK7PSVUA59NArAW5Np0tKRoIZ5VNYUicOk7uJmWZF6XyH5gGL+k62w77SIJb0AoAJ0QdGQMCQ/WOGL1S3Ydow==}
-
-  '@hapi/subtext@8.1.0':
-    resolution: {integrity: sha512-PyaN4oSMtqPjjVxLny1k0iYg4+fwGusIhaom9B2StinBclHs7v46mIW706Y+Wo21lcgulGyXbQrmT/w4dus6ww==}
-
-  '@hapi/teamwork@6.0.0':
-    resolution: {integrity: sha512-05HumSy3LWfXpmJ9cr6HzwhAavrHkJ1ZRCmNE2qJMihdM5YcWreWPfyN0yKT2ZjCM92au3ZkuodjBxOibxM67A==}
-    engines: {node: '>=14.0.0'}
-
-  '@hapi/topo@6.0.2':
-    resolution: {integrity: sha512-KR3rD5inZbGMrHmgPxsJ9dbi6zEK+C3ZwUwTa+eMwWLz7oijWUTWD2pMSNNYJAU6Qq+65NkxXjqHr/7LM2Xkqg==}
-
-  '@hapi/validate@2.0.1':
-    resolution: {integrity: sha512-NZmXRnrSLK8MQ9y/CMqE9WSspgB9xA41/LlYR0k967aSZebWr4yNrpxIbov12ICwKy4APSlWXZga9jN5p6puPA==}
-
-  '@hapi/vise@5.0.1':
-    resolution: {integrity: sha512-XZYWzzRtINQLedPYlIkSkUr7m5Ddwlu99V9elh8CSygXstfv3UnWIXT0QD+wmR0VAG34d2Vx3olqcEhRRoTu9A==}
-
-  '@hapi/wreck@18.1.0':
-    resolution: {integrity: sha512-0z6ZRCmFEfV/MQqkQomJ7sl/hyxvcZM7LtuVqN3vdAO4vM9eBbowl0kaqQj9EJJQab+3Uuh1GxbGIBFy4NfJ4w==}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -2117,10 +2020,6 @@ packages:
   abstract-logging@2.0.1:
     resolution: {integrity: sha512-2BjRTZxTPvheOvGbBslFSYOUkr+SjPtOnrLP33f+VIWLzezQpZcqVg7ja3L4dBXmzzgwT+a029jRx5PCi3JuiA==}
 
-  accept@3.1.3:
-    resolution: {integrity: sha512-OgOEAidVEOKPup+Gv2+2wdH2AgVKI9LxsJ4hicdJ6cY0faUuZdZoi56kkXWlHp9qicN1nWQLmW5ZRGk+SBS5xg==}
-    deprecated: This module has moved and is now available at @hapi/accept. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   accepts@1.3.3:
     resolution: {integrity: sha512-AOPopplFOUlmUugwiZUCDpOwmqvSgdCyE8iJVLWI4NcB7qfMKQN34dn5xYtlUU03XGG5egRWW4NW5gIxpa5hEA==}
     engines: {node: '>= 0.6'}
@@ -2192,10 +2091,6 @@ packages:
 
   ajv@8.17.1:
     resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
-
-  ammo@3.0.3:
-    resolution: {integrity: sha512-vo76VJ44MkUBZL/BzpGXaKzMfroF4ZR6+haRuw9p+eSWfoNaH2AxVc8xmiEPC08jhzJSeM6w7/iMUGet8b4oBQ==}
-    deprecated: This module has moved and is now available at @hapi/ammo. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   ansi-colors@4.1.3:
     resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==}
@@ -2456,10 +2351,6 @@ packages:
   b4a@1.6.7:
     resolution: {integrity: sha512-OnAYlL5b7LEkALw87fUVafQw5rVR9RjwGd4KUwNQ6DrrNmaVaUCgLipfVlzrPQ4tWOR9P0IXGNOx50jYCCdSJg==}
 
-  b64@4.1.2:
-    resolution: {integrity: sha512-+GUspBxlH3CJaxMUGUE1EBoWM6RKgWiYwUDal0qdf8m3ArnXNN1KzKVo5HOnE/FSq4HHyWf3TlHLsZI8PKQgrQ==}
-    deprecated: This module has moved and is now available at @hapi/b64. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   babel-jest@29.7.0:
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -2561,19 +2452,6 @@ packages:
     resolution: {integrity: sha512-SNMk0OONlQ01uk8EPeiBvTW7W4ovpL5b1O3t1sjpPgfxOQ6BqQJ6XjxinDPR79Z6HdcD5zBBwr5ssiTlgdNztQ==}
     engines: {node: '>=18'}
 
-  boom@7.3.0:
-    resolution: {integrity: sha512-Swpoyi2t5+GhOEGw8rEsKvTxFLIDiiKoUc2gsoV6Lyr43LHBIzch3k2MvYUs8RTROrIkVJ3Al0TkaOGjnb+B6A==}
-    deprecated: This module has moved and is now available at @hapi/boom. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
-  bounce@1.2.3:
-    resolution: {integrity: sha512-3G7B8CyBnip5EahCZJjnvQ1HLyArC6P5e+xcolo13BVI9ogFaDOsNMAE7FIWliHtIkYI8/nTRCvCY9tZa3Mu4g==}
-    deprecated: This module has moved and is now available at @hapi/bounce. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
-  bourne@1.3.3:
-    resolution: {integrity: sha512-6K4uuAlRGcorC6aV2Y1rypeQ17grx4XKyVyG6NA963PwRfxyievy0CDXtiSBPKvIc7OTpcJRT86X3mU7j5Zp9A==}
-    engines: {node: '>=6.0.0'}
-    deprecated: This module has moved and is now available at @hapi/bourne. Please update your dependencies as this version is no longer maintained and may contain bugs and security issues.
-
   brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
 
@@ -2659,10 +2537,6 @@ packages:
     resolution: {integrity: sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==}
     engines: {node: '>= 0.4'}
 
-  call@5.0.3:
-    resolution: {integrity: sha512-eX16KHiAYXugbFu6VifstSdwH6aMuWWb4s0qvpq1nR1b+Sf+u68jjttg8ixDBEldPqBi30bDU35OJQWKeTLKxg==}
-    deprecated: This module has moved and is now available at @hapi/call. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   callsite@1.0.0:
     resolution: {integrity: sha512-0vdNRFXn5q+dtOqjfFtmtlI9N2eVZ7LMyEV2iKC5mEEFvSg/69Ml6b/WU2qF8W1nLRa0wiSrDT3Y5jOHZCwKPQ==}
 
@@ -2687,14 +2561,6 @@ packages:
 
   caseless@0.12.0:
     resolution: {integrity: sha512-4tYFyifaFfGacoiObjJegolkwSU4xQNGbVgUiNYVUxbQ2x2lUsFvY4hVgVzGiIe6WLOPqycWXA40l+PWsxthUw==}
-
-  catbox-memory@4.0.1:
-    resolution: {integrity: sha512-ZmqNiLsYCIu9qvBJ/MQbznDV2bFH5gFiH67TgIJgSSffJFtTXArT+MM3AvJQlby9NSkLHOX4eH/uuUqnch/Ldw==}
-    deprecated: This module has moved and is now available at @hapi/catbox-memory. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
-  catbox@10.0.6:
-    resolution: {integrity: sha512-gQWCnF/jbHcfwGbQ4FQxyRiAwLRipqWTTXjpq7rTqqdcsnZosFa0L3LsCZcPTF33QIeMMkS7QmFBHt6QdzGPvg==}
-    deprecated: This module has moved and is now available at @hapi/catbox. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   chai-as-promised@8.0.1:
     resolution: {integrity: sha512-OIEJtOL8xxJSH8JJWbIoRjybbzR52iFuDHuF8eb+nTPD6tgXLjRqsgnUGqQfFODxYvq5QdirT0pN9dZ0+Gz6rA==}
@@ -2991,10 +2857,6 @@ packages:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
     engines: {node: '>= 0.6'}
 
-  content@4.0.6:
-    resolution: {integrity: sha512-lR9ND3dXiMdmsE84K6l02rMdgiBVmtYWu1Vr/gfSGHcIcznBj2QxmSdUgDuNFOA+G9yrb1IIWkZ7aKtB6hDGyA==}
-    deprecated: This module has moved and is now available at @hapi/content. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   conventional-changelog-angular@7.0.0:
     resolution: {integrity: sha512-ROjNchA9LgfNMTTFSIWPzebCwOGFdgkEq45EnvvrmSLvCtAw0HSmrCs7/ty+wAeYUZyNay0YMUNYFTRL72PkBQ==}
     engines: {node: '>=16'}
@@ -3134,10 +2996,6 @@ packages:
 
   crossws@0.3.1:
     resolution: {integrity: sha512-HsZgeVYaG+b5zA+9PbIPGq4+J/CJynJuearykPsXx4V/eMhyQ5EDVg3Ak2FBZtVXCiOLu/U7IiwDHTr9MA+IKw==}
-
-  cryptiles@4.1.3:
-    resolution: {integrity: sha512-gT9nyTMSUC1JnziQpPbxKGBbUg8VL7Zn2NB4E1cJYvuXdElHrwxrV9bmltZGDzet45zSDGyYceueke1TjynGzw==}
-    deprecated: This module has moved and is now available at @hapi/cryptiles. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   cssauron@1.4.0:
     resolution: {integrity: sha512-Ht70DcFBh+/ekjVrYS2PlDMdSQEl3OFNmjK6lcn49HptBgilXf/Zwg4uFh9Xn0pX3Q8YOkSjIFOfK2osvdqpBw==}
@@ -4312,10 +4170,6 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  hapi@18.1.0:
-    resolution: {integrity: sha512-nSU1VLyTAgp7P5gy47QzJIP2JAb+wOFvJIV3gnL0lFj/mD+HuTXhyUsDYXjF/dhADMVXVEz31z6SUHBJhtsvGA==}
-    deprecated: This version contains severe security issues and defects and should not be used! Please upgrade to the latest version of @hapi/hapi or consider a commercial license (https://github.com/hapijs/hapi/issues/4114)
-
   har-schema@2.0.0:
     resolution: {integrity: sha512-Oqluz6zhGX8cyRaTQlFMPw80bSJVG2x/cFb8ZPhUILGgHka9SsokCCOQgpveePerqidZOrT14ipqfJb7ILcW5Q==}
     engines: {node: '>=4'}
@@ -4402,10 +4256,6 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  heavy@6.1.2:
-    resolution: {integrity: sha512-cJp884bqhiebNcEHydW0g6V1MUGYOXRPw9c7MFiHQnuGxtbWuSZpsbojwb2kxb3AA1/Rfs8CNiV9MMOF8pFRDg==}
-    deprecated: This module has moved and is now available at @hapi/heavy. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   helmet@8.0.0:
     resolution: {integrity: sha512-VyusHLEIIO5mjQPUI1wpOAEu+wl6Q0998jzTxqUYGE45xCIcAxy3MsbEK/yyJUJ3ADeMoB6MornPH6GMWAf+Pw==}
     engines: {node: '>=18.0.0'}
@@ -4416,10 +4266,6 @@ packages:
 
   highlight.js@10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==}
-
-  hoek@6.1.3:
-    resolution: {integrity: sha512-YXXAAhmF9zpQbC7LEcREFtXfGq5K1fmd+4PHkBq8NUqmzW3G+Dq10bI/i0KucLRwss3YYFQ0fSfoxBZYiGUqtQ==}
-    deprecated: This module has moved and is now available at @hapi/hoek. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   homedir-polyfill@1.0.3:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
@@ -4646,10 +4492,6 @@ packages:
 
   iron-webcrypto@1.2.1:
     resolution: {integrity: sha512-feOM6FaSr6rEABp/eDfVseKyTMDt+KGpeB35SkVn9Tyn0CqvVsY3EwI0v5i8nMHyJnzCIQf7nsy3p41TPkJZhg==}
-
-  iron@5.0.6:
-    resolution: {integrity: sha512-zYUMOSkEXGBdwlV/AXF9zJC0aLuTJUKHkGeYS5I2g225M5i6SrxQyGJGhPgOR8BK1omL6N5i6TcwfsXbP8/Exw==}
-    deprecated: This module has moved and is now available at @hapi/iron. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   is-absolute@1.0.0:
     resolution: {integrity: sha512-dOWoqflvcydARa360Gvv18DZ/gRuHKi2NU/wU5X1ZFzdYfH29nkiNZsF3mp4OJ3H4yo9Mx8A/uAGNzpzPN3yBA==}
@@ -4993,10 +4835,6 @@ packages:
   isarray@2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
 
-  isemail@3.2.0:
-    resolution: {integrity: sha512-zKqkK+O+dGqevc93KNsbZ/TqTUFd46MwWjYOoMrjIMZ51eU7DtQG3Wmd9SQQT7i7RVnuTPEiYEWHU3MSbxC1Tg==}
-    engines: {node: '>=4.0.0'}
-
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
@@ -5195,10 +5033,6 @@ packages:
   jiti@2.4.0:
     resolution: {integrity: sha512-H5UpaUI+aHOqZXlYOaFP/8AzKsg+guWu+Pr3Y8i7+Y3zr1aXAvCvTAQ1RxSc6oVD8R8c7brgNtTVP91E7upH/g==}
     hasBin: true
-
-  joi@14.3.1:
-    resolution: {integrity: sha512-LQDdM+pkOrpAn4Lp+neNIFV3axv1Vna3j38bisbQhETPMANYRbFJFUyOZcOClYvM/hppMhGWuKSFEK9vjrB+bQ==}
-    deprecated: This module has moved and is now available at @hapi/joi. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   js-levenshtein@1.1.6:
     resolution: {integrity: sha512-X2BB11YZtrRqY4EnQcLX5Rh373zbK4alC1FW7D7MBhL2gtcC17cTnr6DmfHZeS0s2rTHjUTMMHfG7gO8SSdw+g==}
@@ -5701,10 +5535,6 @@ packages:
     resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
     engines: {node: '>=18'}
 
-  mimos@4.0.2:
-    resolution: {integrity: sha512-5XBsDqBqzSN88XPPH/TFpOalWOjHJM5Z2d3AMx/30iq+qXvYKd/8MPhqBwZDOLtoaIWInR3nLzMQcxfGK9djXA==}
-    deprecated: This module has moved and is now available at @hapi/mimos. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   min-indent@1.0.1:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
@@ -5886,10 +5716,6 @@ packages:
 
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
-
-  nigel@3.0.4:
-    resolution: {integrity: sha512-3SZCCS/duVDGxFpTROHEieC+itDo4UqL9JNUyQJv3rljudQbK6aqus5B4470OxhESPJLN93Qqxg16rH7DUjbfQ==}
-    deprecated: This module has moved and is now available at @hapi/nigel. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   nise@6.1.1:
     resolution: {integrity: sha512-aMSAzLVY7LyeM60gvBS423nBmIPP+Wy7St7hsb+8/fc1HmeoHJfLO8CKse4u3BtOZvQLJghYPI2i/1WZrEj5/g==}
@@ -6561,10 +6387,6 @@ packages:
   performance-now@2.1.0:
     resolution: {integrity: sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==}
 
-  pez@4.0.5:
-    resolution: {integrity: sha512-HvL8uiFIlkXbx/qw4B8jKDCWzo7Pnnd65Uvanf9OOCtb20MRcb9gtTVBf9NCnhETif1/nzbDHIjAWC/sUp7LIQ==}
-    deprecated: This module has moved and is now available at @hapi/pez. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -6639,10 +6461,6 @@ packages:
   pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
-
-  podium@3.2.0:
-    resolution: {integrity: sha512-rbwvxwVkI6gRRlxZQ1zUeafrpGxZ7QPHIheinehAvGATvGIPfWRkaTeWedc5P4YjXJXEV8ZbBxPtglNylF9hjw==}
-    deprecated: This module has moved and is now available at @hapi/podium. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   posix-character-classes@0.1.1:
     resolution: {integrity: sha512-xTgYBc3fuo7Yt7JbiuFxSYGToMoz8fLoE6TC9Wx1P/u+LfeThMOAqmuyECnlBaaJb+u1m9hHiXUEtwW4OzfUJg==}
@@ -7292,10 +7110,6 @@ packages:
   shell-quote@1.8.1:
     resolution: {integrity: sha512-6j1W9l1iAs/4xYBI1SYOVZyFcCis9b4KCLQ8fgAGG07QvzaRLVVRQvAy85yNmmZSjYjg4MWh4gNvlPujU/5LpA==}
 
-  shot@4.0.7:
-    resolution: {integrity: sha512-RKaKAGKxJ11EjJl0cf2fYVSsd4KB5Cncb9J0v7w+0iIaXpxNqFWTYNDNhBX7f0XSyDrjOH9a4OWZ9Gp/ZML+ew==}
-    deprecated: This module has moved and is now available at @hapi/shot. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   side-channel@1.0.6:
     resolution: {integrity: sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==}
     engines: {node: '>= 0.4'}
@@ -7382,10 +7196,6 @@ packages:
   socks@2.8.3:
     resolution: {integrity: sha512-l5x7VUUWbjVFbafGLxPWkYsHIhEvmF85tbIeFZWc8ZPtoMyybuEhL7Jye/ooC4/d48FgOjSJXgsF/AJPYCW8Zw==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
-
-  somever@2.0.0:
-    resolution: {integrity: sha512-9JaIPP+HxwYGqCDqqK3tRaTqdtQHoK6Qy3IrXhIt2q5x8fs8RcfU7BMWlFTCOgFazK8p88zIv1tHQXvAwtXMyw==}
-    deprecated: This module has moved and is now available at @hapi/somever. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   sonic-boom@3.8.1:
     resolution: {integrity: sha512-y4Z8LCDBuum+PBP3lSV7RHrXscqksve/bi0as7mhwVnBW+/wUqKT/2Kb7um8yqcFy0duYbbPxzt89Zy2nOCaxg==}
@@ -7496,10 +7306,6 @@ packages:
 
   standard-as-callback@2.1.0:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
-
-  statehood@6.0.9:
-    resolution: {integrity: sha512-jbFg1+MYEqfC7ABAoWZoeF4cQUtp3LUvMDUGExL76cMmleBHG7I6xlZFsE8hRi7nEySIvutHmVlLmBe9+2R5LQ==}
-    deprecated: This module has moved and is now available at @hapi/statehood. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   static-extend@0.1.2:
     resolution: {integrity: sha512-72E9+uLc27Mt718pMHt9VMNiAL4LMsmDbBva8mxWUCkT07fSzEGMYUCk0XWY6lp0j6RBAG4cJ3mWuZv2OE3s0g==}
@@ -7626,10 +7432,6 @@ packages:
   subarg@1.0.0:
     resolution: {integrity: sha512-RIrIdRY0X1xojthNcVtgT9sjpOGagEUKpZdgBUi054OEPFo282yg+zE+t1Rj3+RqKq2xStL7uUHhY+AjbC4BXg==}
 
-  subtext@6.0.12:
-    resolution: {integrity: sha512-yT1wCDWVgqvL9BIkWzWqgj5spUSYo/Enu09iUV8t2ZvHcr2tKGTGg2kc9tUpVEsdhp1ihsZeTAiDqh0TQciTPQ==}
-    deprecated: This module has moved and is now available at @hapi/subtext. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   superagent@9.0.2:
     resolution: {integrity: sha512-xuW7dzkUpcJq7QnhOsnNUgtYp3xRwpt2F7abdRYIpCsAt0hhUqia0EdxyXZQQpNmGtsCzYHryaKSV3q3GJnq7w==}
     engines: {node: '>=14.18.0'}
@@ -7675,10 +7477,6 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
-
-  teamwork@3.2.0:
-    resolution: {integrity: sha512-xAmJ8PIVjRZMXAHgUuOP8ITsv0SedyWAit2UWiNImXgg/F+BxrsG46ZegElNBM0Dwp+iMfbigg/Ll/M2oDRYww==}
-    deprecated: This module has moved and is now available at @hapi/teamwork. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
@@ -7794,10 +7592,6 @@ packages:
   token-stream@1.0.0:
     resolution: {integrity: sha512-VSsyNPPW74RpHwR8Fc21uubwHY7wMDeJLys2IX5zJNih+OnAnaifKHo+1LHT7DAdloQ7apeaaWg8l7qnf/TnEg==}
 
-  topo@3.0.3:
-    resolution: {integrity: sha512-IgpPtvD4kjrJ7CRA3ov2FhWQADwv+Tdqbsf1ZnPUSAtCJ9e1Z44MmoSGDXGk4IppoZA7jd/QRkNddlLJWlUZsQ==}
-    deprecated: This module has moved and is now available at @hapi/topo. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   touch@3.1.1:
     resolution: {integrity: sha512-r0eojU4bI8MnHr8c5bNo7lJDdI2qXlWWJk6a9EAFG7vbhTjElYhBVS3/miuE0uOuoLdb8Mc/rVfsmm6eo5o9GA==}
     hasBin: true
@@ -7900,8 +7694,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@4.28.1:
-    resolution: {integrity: sha512-LO/+yb3mf46YqfUC7QkkoAlpa7CTYh//V1Xy9+NQ+pKqDqXIq0NTfPfQRwFfCt+if4Qkwb9gzZfsl6E5TkXZGw==}
+  type-fest@4.29.0:
+    resolution: {integrity: sha512-RPYt6dKyemXJe7I6oNstcH24myUGSReicxcHTvCLgzm4e0n8y05dGvcGB15/SoPRBmhlMthWQ9pvKyL81ko8nQ==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -7988,8 +7782,8 @@ packages:
     resolution: {integrity: sha512-lRfVq8fE8gz6QMBuDM6a+LO3IAzTi05H6gCVaUpir2E1Rwpo4ZUog45KpNXKC/Mn3Yb9UDuHumeFTo9iV/D9FQ==}
     engines: {node: '>=18'}
 
-  unimport@3.13.3:
-    resolution: {integrity: sha512-dr7sjOoRFCSDlnARFPAMB8OmjIMc6j14qd749VmB1yiqFEYFbi+1jWPTuc22JoFs/t1kHJXT3vQNiwCy3ZvsTA==}
+  unimport@3.13.4:
+    resolution: {integrity: sha512-pRr4JO51pCQGjwDPToehYHaJLwZQbMQNBI3eGbZB1TzMHnWbQldApWe+bot7CgA03SFovF1bn03/WYFNi58rCw==}
 
   union-value@1.0.1:
     resolution: {integrity: sha512-tJfXmxMeWYnczCVs7XAEvIV7ieppALdyepWMkHkwciRpZraG/xwT+s2JN8+pr1+8jCRf80FFzvr+MpQeeoF4Xg==}
@@ -8198,10 +7992,6 @@ packages:
     resolution: {integrity: sha512-rC2VRfAVVCGEgjnxHUnpIVh3AGuk62rP3tqVrn+yab0YH7UULisC085+NYH+mnqf3Wx4SpSi1RQMwudL89N03g==}
     engines: {node: '>=10.13.0'}
 
-  vise@3.0.2:
-    resolution: {integrity: sha512-X52VtdRQbSBXdjcazRiY3eRgV3vTQ0B+7Wh8uC9cVv7lKfML5m9+9NHlbcgCY0R9EAqD1v/v7o9mhGh2A3ANFg==}
-    deprecated: This module has moved and is now available at @hapi/vise. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
-
   void-elements@3.1.0:
     resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
     engines: {node: '>=0.10.0'}
@@ -8294,10 +8084,6 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  wreck@14.2.0:
-    resolution: {integrity: sha512-NFFft3SMgqrJbXEVfYifh+QDWFxni+98/I7ut7rLbz3F0XOypluHsdo3mdEYssGSirMobM3fGlqhyikbWKDn2Q==}
-    deprecated: This module has moved and is now available at @hapi/wreck. Please update your dependencies as this version is no longer maintained an may contain bugs and security issues.
 
   write-file-atomic@2.4.3:
     resolution: {integrity: sha512-GaETH5wwsX+GcnzhPgKcKjJ6M2Cq3/iZp1WyY/X1CSqrW+jVNM9Y7D8EC2sM4ZG/V8wZlSniJnCKWPmBYAucRQ==}
@@ -9012,169 +8798,6 @@ snapshots:
   '@gulpjs/to-absolute-glob@4.0.0':
     dependencies:
       is-negated-glob: 1.0.0
-
-  '@hapi/accept@6.0.3':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/ammo@6.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/b64@6.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/boom@10.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/bounce@3.0.2':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/bourne@3.0.0': {}
-
-  '@hapi/call@9.0.1':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/catbox-memory@6.0.2':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/catbox@12.1.1':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/hoek': 11.0.7
-      '@hapi/podium': 5.0.1
-      '@hapi/validate': 2.0.1
-
-  '@hapi/content@6.0.0':
-    dependencies:
-      '@hapi/boom': 10.0.1
-
-  '@hapi/cryptiles@6.0.1':
-    dependencies:
-      '@hapi/boom': 10.0.1
-
-  '@hapi/file@3.0.0': {}
-
-  '@hapi/hapi@21.3.12':
-    dependencies:
-      '@hapi/accept': 6.0.3
-      '@hapi/ammo': 6.0.1
-      '@hapi/boom': 10.0.1
-      '@hapi/bounce': 3.0.2
-      '@hapi/call': 9.0.1
-      '@hapi/catbox': 12.1.1
-      '@hapi/catbox-memory': 6.0.2
-      '@hapi/heavy': 8.0.1
-      '@hapi/hoek': 11.0.7
-      '@hapi/mimos': 7.0.1
-      '@hapi/podium': 5.0.1
-      '@hapi/shot': 6.0.1
-      '@hapi/somever': 4.1.1
-      '@hapi/statehood': 8.1.1
-      '@hapi/subtext': 8.1.0
-      '@hapi/teamwork': 6.0.0
-      '@hapi/topo': 6.0.2
-      '@hapi/validate': 2.0.1
-
-  '@hapi/heavy@8.0.1':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/hoek': 11.0.7
-      '@hapi/validate': 2.0.1
-
-  '@hapi/hoek@11.0.7': {}
-
-  '@hapi/iron@7.0.1':
-    dependencies:
-      '@hapi/b64': 6.0.1
-      '@hapi/boom': 10.0.1
-      '@hapi/bourne': 3.0.0
-      '@hapi/cryptiles': 6.0.1
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/mimos@7.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-      mime-db: 1.53.0
-
-  '@hapi/nigel@5.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-      '@hapi/vise': 5.0.1
-
-  '@hapi/pez@6.1.0':
-    dependencies:
-      '@hapi/b64': 6.0.1
-      '@hapi/boom': 10.0.1
-      '@hapi/content': 6.0.0
-      '@hapi/hoek': 11.0.7
-      '@hapi/nigel': 5.0.1
-
-  '@hapi/podium@5.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-      '@hapi/teamwork': 6.0.0
-      '@hapi/validate': 2.0.1
-
-  '@hapi/shot@6.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-      '@hapi/validate': 2.0.1
-
-  '@hapi/somever@4.1.1':
-    dependencies:
-      '@hapi/bounce': 3.0.2
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/statehood@8.1.1':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/bounce': 3.0.2
-      '@hapi/bourne': 3.0.0
-      '@hapi/cryptiles': 6.0.1
-      '@hapi/hoek': 11.0.7
-      '@hapi/iron': 7.0.1
-      '@hapi/validate': 2.0.1
-
-  '@hapi/subtext@8.1.0':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/bourne': 3.0.0
-      '@hapi/content': 6.0.0
-      '@hapi/file': 3.0.0
-      '@hapi/hoek': 11.0.7
-      '@hapi/pez': 6.1.0
-      '@hapi/wreck': 18.1.0
-
-  '@hapi/teamwork@6.0.0': {}
-
-  '@hapi/topo@6.0.2':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/validate@2.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-      '@hapi/topo': 6.0.2
-
-  '@hapi/vise@5.0.1':
-    dependencies:
-      '@hapi/hoek': 11.0.7
-
-  '@hapi/wreck@18.1.0':
-    dependencies:
-      '@hapi/boom': 10.0.1
-      '@hapi/bourne': 3.0.0
-      '@hapi/hoek': 11.0.7
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
@@ -10476,11 +10099,6 @@ snapshots:
 
   abstract-logging@2.0.1: {}
 
-  accept@3.1.3:
-    dependencies:
-      boom: 7.3.0
-      hoek: 6.1.3
-
   accepts@1.3.3:
     dependencies:
       mime-types: 2.1.35
@@ -10558,10 +10176,6 @@ snapshots:
       fast-uri: 3.0.3
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
-
-  ammo@3.0.3:
-    dependencies:
-      hoek: 6.1.3
 
   ansi-colors@4.1.3: {}
 
@@ -10828,10 +10442,6 @@ snapshots:
 
   b4a@1.6.7: {}
 
-  b64@4.1.2:
-    dependencies:
-      hoek: 6.1.3
-
   babel-jest@29.7.0(@babel/core@7.26.0):
     dependencies:
       '@babel/core': 7.26.0
@@ -10993,17 +10603,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  boom@7.3.0:
-    dependencies:
-      hoek: 6.1.3
-
-  bounce@1.2.3:
-    dependencies:
-      boom: 7.3.0
-      hoek: 6.1.3
-
-  bourne@1.3.3: {}
-
   brace-expansion@1.1.11:
     dependencies:
       balanced-match: 1.0.2
@@ -11160,11 +10759,6 @@ snapshots:
       get-intrinsic: 1.2.4
       set-function-length: 1.2.2
 
-  call@5.0.3:
-    dependencies:
-      boom: 7.3.0
-      hoek: 6.1.3
-
   callsite@1.0.0: {}
 
   callsites@3.1.0: {}
@@ -11182,17 +10776,6 @@ snapshots:
   caniuse-lite@1.0.30001684: {}
 
   caseless@0.12.0: {}
-
-  catbox-memory@4.0.1:
-    dependencies:
-      boom: 7.3.0
-      hoek: 6.1.3
-
-  catbox@10.0.6:
-    dependencies:
-      boom: 7.3.0
-      hoek: 6.1.3
-      joi: 14.3.1
 
   chai-as-promised@8.0.1(chai@5.1.2):
     dependencies:
@@ -11511,10 +11094,6 @@ snapshots:
 
   content-type@1.0.5: {}
 
-  content@4.0.6:
-    dependencies:
-      boom: 7.3.0
-
   conventional-changelog-angular@7.0.0:
     dependencies:
       compare-func: 2.0.0
@@ -11671,10 +11250,6 @@ snapshots:
   crossws@0.3.1:
     dependencies:
       uncrypto: 0.1.3
-
-  cryptiles@4.1.3:
-    dependencies:
-      boom: 7.3.0
 
   cssauron@1.4.0:
     dependencies:
@@ -11908,7 +11483,7 @@ snapshots:
 
   dot-prop@9.0.0:
     dependencies:
-      type-fest: 4.28.1
+      type-fest: 4.29.0
 
   dotenv-expand@11.0.7:
     dependencies:
@@ -13111,27 +12686,6 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  hapi@18.1.0:
-    dependencies:
-      accept: 3.1.3
-      ammo: 3.0.3
-      boom: 7.3.0
-      bounce: 1.2.3
-      call: 5.0.3
-      catbox: 10.0.6
-      catbox-memory: 4.0.1
-      heavy: 6.1.2
-      hoek: 6.1.3
-      joi: 14.3.1
-      mimos: 4.0.2
-      podium: 3.2.0
-      shot: 4.0.7
-      somever: 2.0.0
-      statehood: 6.0.9
-      subtext: 6.0.12
-      teamwork: 3.2.0
-      topo: 3.0.3
-
   har-schema@2.0.0: {}
 
   har-validator@5.1.5:
@@ -13207,19 +12761,11 @@ snapshots:
 
   he@1.2.0: {}
 
-  heavy@6.1.2:
-    dependencies:
-      boom: 7.3.0
-      hoek: 6.1.3
-      joi: 14.3.1
-
   helmet@8.0.0: {}
 
   hexoid@2.0.0: {}
 
   highlight.js@10.7.3: {}
-
-  hoek@6.1.3: {}
 
   homedir-polyfill@1.0.3:
     dependencies:
@@ -13513,13 +13059,6 @@ snapshots:
 
   iron-webcrypto@1.2.1: {}
 
-  iron@5.0.6:
-    dependencies:
-      b64: 4.1.2
-      boom: 7.3.0
-      cryptiles: 4.1.3
-      hoek: 6.1.3
-
   is-absolute@1.0.0:
     dependencies:
       is-relative: 1.0.0
@@ -13795,10 +13334,6 @@ snapshots:
   isarray@1.0.0: {}
 
   isarray@2.0.5: {}
-
-  isemail@3.2.0:
-    dependencies:
-      punycode: 2.3.1
 
   isexe@2.0.0: {}
 
@@ -14194,12 +13729,6 @@ snapshots:
   jiti@1.21.6: {}
 
   jiti@2.4.0: {}
-
-  joi@14.3.1:
-    dependencies:
-      hoek: 6.1.3
-      isemail: 3.2.0
-      topo: 3.0.3
 
   js-levenshtein@1.1.6: {}
 
@@ -14854,11 +14383,6 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
-  mimos@4.0.2:
-    dependencies:
-      hoek: 6.1.3
-      mime-db: 1.53.0
-
   min-indent@1.0.1: {}
 
   minimalistic-assert@1.0.1: {}
@@ -15058,11 +14582,6 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  nigel@3.0.4:
-    dependencies:
-      hoek: 6.1.3
-      vise: 3.0.2
-
   nise@6.1.1:
     dependencies:
       '@sinonjs/commons': 3.0.1
@@ -15137,7 +14656,7 @@ snapshots:
       uncrypto: 0.1.3
       unctx: 2.3.1
       unenv: 1.10.0
-      unimport: 3.13.3(rollup@4.27.4)
+      unimport: 3.13.4(rollup@4.27.4)
       unstorage: 1.13.1(ioredis@5.4.1)
       untyped: 1.5.1
       unwasm: 0.3.9
@@ -15726,7 +15245,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.26.2
       index-to-position: 0.1.2
-      type-fest: 4.28.1
+      type-fest: 4.29.0
 
   parse-node-version@1.0.1: {}
 
@@ -15820,14 +15339,6 @@ snapshots:
 
   performance-now@2.1.0: {}
 
-  pez@4.0.5:
-    dependencies:
-      b64: 4.1.2
-      boom: 7.3.0
-      content: 4.0.6
-      hoek: 6.1.3
-      nigel: 3.0.4
-
   picocolors@1.1.1: {}
 
   picomatch@2.3.1: {}
@@ -15910,11 +15421,6 @@ snapshots:
       extend-shallow: 1.1.4
 
   pluralize@8.0.0: {}
-
-  podium@3.2.0:
-    dependencies:
-      hoek: 6.1.3
-      joi: 14.3.1
 
   posix-character-classes@0.1.1: {}
 
@@ -16729,11 +16235,6 @@ snapshots:
 
   shell-quote@1.8.1: {}
 
-  shot@4.0.7:
-    dependencies:
-      hoek: 6.1.3
-      joi: 14.3.1
-
   side-channel@1.0.6:
     dependencies:
       call-bind: 1.0.7
@@ -16883,11 +16384,6 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  somever@2.0.0:
-    dependencies:
-      bounce: 1.2.3
-      hoek: 6.1.3
-
   sonic-boom@3.8.1:
     dependencies:
       atomic-sleep: 1.0.0
@@ -17021,16 +16517,6 @@ snapshots:
       escape-string-regexp: 2.0.0
 
   standard-as-callback@2.1.0: {}
-
-  statehood@6.0.9:
-    dependencies:
-      boom: 7.3.0
-      bounce: 1.2.3
-      bourne: 1.3.3
-      cryptiles: 4.1.3
-      hoek: 6.1.3
-      iron: 5.0.6
-      joi: 14.3.1
 
   static-extend@0.1.2:
     dependencies:
@@ -17171,15 +16657,6 @@ snapshots:
     dependencies:
       minimist: 1.2.8
 
-  subtext@6.0.12:
-    dependencies:
-      boom: 7.3.0
-      bourne: 1.3.3
-      content: 4.0.6
-      hoek: 6.1.3
-      pez: 4.0.5
-      wreck: 14.2.0
-
   superagent@9.0.2:
     dependencies:
       component-emitter: 1.3.1
@@ -17245,8 +16722,6 @@ snapshots:
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
-
-  teamwork@3.2.0: {}
 
   teex@1.0.1:
     dependencies:
@@ -17359,10 +16834,6 @@ snapshots:
 
   token-stream@1.0.0: {}
 
-  topo@3.0.3:
-    dependencies:
-      hoek: 6.1.3
-
   touch@3.1.1: {}
 
   tough-cookie@2.5.0:
@@ -17453,7 +16924,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@4.28.1: {}
+  type-fest@4.29.0: {}
 
   type-is@1.6.18:
     dependencies:
@@ -17558,7 +17029,7 @@ snapshots:
 
   unicorn-magic@0.1.0: {}
 
-  unimport@3.13.3(rollup@4.27.4):
+  unimport@3.13.4(rollup@4.27.4):
     dependencies:
       '@rollup/pluginutils': 5.1.3(rollup@4.27.4)
       acorn: 8.14.0
@@ -17774,10 +17245,6 @@ snapshots:
       replace-ext: 2.0.0
       teex: 1.0.1
 
-  vise@3.0.2:
-    dependencies:
-      hoek: 6.1.3
-
   void-elements@3.1.0: {}
 
   walk-up-path@3.0.1: {}
@@ -17898,12 +17365,6 @@ snapshots:
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
-
-  wreck@14.2.0:
-    dependencies:
-      boom: 7.3.0
-      bourne: 1.3.3
-      hoek: 6.1.3
 
   write-file-atomic@2.4.3:
     dependencies:

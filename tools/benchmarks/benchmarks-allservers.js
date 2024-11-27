@@ -20,7 +20,7 @@ const BENCHMARK_PATH = join(process.cwd(), 'benchmarks');
 
 const LIBS = [
 	'cmmv-simple:5001', 'http:5002', 'express-simple:5003',
-	'fastify:5004', 'hapi:5005', 'koa:5006'
+	'fastify:5004'
 ];
 
 async function runBenchmarkOfLib(lib) {
