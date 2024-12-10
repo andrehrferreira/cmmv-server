@@ -1,7 +1,7 @@
 {
     "name": "@cmmv/compression",
     "version": "0.6.3",
-    "description": "CMMV (@compression)",
+    "description": "Gzip, Brotli, Deflate compression plugin for CMMV HTTP server",
     "publishConfig": {
         "access": "public"
     },

@@ -1,7 +1,7 @@
 {
     "name": "@cmmv/server",
     "version": "0.6.3",
-    "description": "CMMV (@server)",
+    "description": "HTTP, HTTPs and HTTP/2 server based on Express, Koa and Fastify for CMMV",
     "publishConfig": {
         "access": "public"
     },

@@ -1,7 +1,7 @@
 {
     "name": "@cmmv/cors",
     "version": "0.6.3",
-    "description": "CMMV (@cors)",
+    "description": "Cors plugin for CMMV HTTP server",
     "publishConfig": {
         "access": "public"
     },

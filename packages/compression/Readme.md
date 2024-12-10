@@ -30,8 +30,6 @@ $ pnpm add @cmmv/server
 Below is a simple example of how to create a new CMMV application:
 
 ```typescript
-//import { readFileSync } from "node:fs";
-
 import cmmv, { json, urlencoded, serverStatic } from '@cmmv/server';
 import etag from '@cmmv/etag';
 import cors from '@cmmv/cors';
@@ -39,15 +37,7 @@ import cookieParser from '@cmmv/cookie-parser';
 import compression from '@cmmv/compression';
 import helmet from '@cmmv/helmet';
 
-const app = cmmv({
-    /*http2: true,
-    https: {
-        key: readFileSync("./cert/private-key.pem"),
-        cert: readFileSync("./cert/certificate.pem"),
-        passphrase: "1234"
-    }*/
-});
-
+const app = cmmv();
 const host = '0.0.0.0';
 const port = 3000;
 
@@ -82,17 +72,8 @@ app.get('/', async (req, res) => {
     res.send('Hello World');
 });
 
-app.get('/json', async (req, res) => {
-    const schema = {
-        type: 'object',
-        properties: {
-            hello: {
-                type: 'string'
-            }
-        }
-    }
-    
-    res.json({ hello: 'world' }, schema);
+app.get('/json', async (req, res) => {    
+    res.json({ hello: 'world' });
 });
 
 app.get('/user/:id', async (req, res) => {
@@ -132,36 +113,36 @@ app.listen({ host, port })
 * [https://github.com/fastify/benchmarks](https://github.com/fastify/benchmarks)
 * Machine: linux x64 | 32 vCPUs | 128.0GB Mem
 * Node: v20.17.0
-* Run: Thu Oct 02 2024 15:23:41 GMT+0000 (Coordinated Universal Time)
+* Run: Thu Nov 26 2024 15:23:41 GMT+0000 (Coordinated Universal Time)
 * Method: ``autocannon -c 100 -d 40 -p 10 localhost:3000``
 
-|                          | Version  | Router | Requests/s | Latency (ms) | Throughput/Mb |
+| Framework                | Version  | Router | Requests/s | Latency (ms) | Throughput/Mb |
 |--------------------------|----------|--------|------------|--------------|---------------|
-| bare                     | v20.17.0 | ✗      | 45270.4    | 21.62        | 8.07          |
-| micro                    | 10.0.1   | ✗      | 44705.8    | 21.93        | 7.97          |
-| fastify                  | 5.0.0    | ✓      | 44547.8    | 22.01        | 7.99          |
-| connect                  | 3.7.0    | ✗      | 44174.4    | 22.18        | 7.88          |
-| polka                    | 0.5.2    | ✓      | 43791.2    | 22.37        | 7.81          |
-| rayo                     | 1.4.6    | ✓      | 43731.8    | 22.41        | 7.80          |
-| server-base-router       | 7.1.32   | ✓      | 43117.6    | 22.72        | 7.69          |
-| server-base              | 7.1.32   | ✗      | 42169.4    | 23.24        | 7.52          |
-| micro-route              | 2.5.0    | ✓      | 41600.0    | 23.55        | 7.42          |
-| connect-router           | 1.3.8    | ✓      | 41163.3    | 23.85        | 7.34          |
-| cmmv                     | 0.4.0    | ✓      | 40995.2    | 23.92        | 7.35          |
-| hono                     | 4.6.3    | ✓      | 39738.6    | 24.68        | 7.09          |
-| polkadot                 | 1.0.0    | ✗      | 37472.8    | 26.20        | 6.68          |
-| koa                      | 2.15.3   | ✗      | 37181.4    | 26.42        | 6.63          |
-| 0http                    | 3.5.3    | ✓      | 37101.6    | 26.47        | 6.62          |
-| take-five                | 2.0.0    | ✓      | 35171.4    | 27.95        | 12.65         |
-| h3                       | 1.13.0   | ✗      | 34667.4    | 28.35        | 6.18          |
-| koa-isomorphic-router    | 1.0.1    | ✓      | 34542.7    | 28.46        | 6.16          |
-| h3-router                | 1.13.0   | ✓      | 33551.0    | 29.31        | 5.98          |
-| restana                  | 4.9.9    | ✓      | 33532.8    | 29.36        | 5.98          |
-| koa-router               | 12.0.1   | ✓      | 33426.2    | 29.46        | 5.96          |
-| microrouter              | 3.1.3    | ✓      | 30049.2    | 32.79        | 5.36          |
-| hapi                     | 21.3.10  | ✓      | 30014.8    | 32.82        | 5.35          |
-| restify                  | 11.1.0   | ✓      | 28548.0    | 34.55        | 5.15          |
-| fastify-big-json         | 5.0.0    | ✓      | 11675.6    | 85.19        | 134.34        |
-| express                  | 5.0.1    | ✓      | 10058.2    | 98.82        | 1.79          |
-| express-with-middlewares | 5.0.1    | ✓      | 8826.8     | 112.63       | 3.28          |
+| bare                     | v20.17.0 | ✗      | 88267.6    | 10.87        | 15.74         |
+| fastify                  | 5.1.0    | ✓      | 87846.6    | 10.91        | 15.75         |
+| polka                    | 0.5.2    | ✓      | 87234.8    | 10.99        | 15.56         |
+| connect                  | 3.7.0    | ✗      | 86129.8    | 11.13        | 15.36         |
+| connect-router           | 1.3.8    | ✓      | 85804.8    | 11.16        | 15.30         |
+| server-base              | 7.1.32   | ✗      | 85724.8    | 11.18        | 15.29         |
+| rayo                     | 1.4.6    | ✓      | 85504.6    | 11.21        | 15.25         |
+| server-base-router       | 7.1.32   | ✓      | 84189.0    | 11.39        | 15.01         |
+| micro                    | 10.0.1   | ✗      | 81955.2    | 11.70        | 14.62         |
+| micro-route              | 2.5.0    | ✓      | 81153.6    | 11.82        | 14.47         |
+| cmmv                     | 0.6.2    | ✓      | 79041.6    | 12.16        | 14.17         |
+| koa                      | 2.15.3   | ✗      | 76639.6    | 12.54        | 13.67         |
+| polkadot                 | 1.0.0    | ✗      | 72702.4    | 13.25        | 12.96         |
+| koa-isomorphic-router    | 1.0.1    | ✓      | 72588.4    | 13.28        | 12.95         |
+| hono                     | 4.6.12   | ✓      | 72410.8    | 13.31        | 12.91         |
+| take-five                | 2.0.0    | ✓      | 71261.2    | 13.54        | 25.62         |
+| 0http                    | 3.5.3    | ✓      | 71047.6    | 13.58        | 12.67         |
+| restana                  | 4.9.9    | ✓      | 68919.6    | 14.01        | 12.29         |
+| koa-router               | 12.0.1   | ✓      | 67593.6    | 14.31        | 12.05         |
+| h3-router                | 1.13.0   | ✓      | 66985.2    | 14.44        | 11.95         |
+| microrouter              | 3.1.3    | ✓      | 62076.0    | 15.61        | 11.07         |
+| h3                       | 1.13.0   | ✗      | 60265.6    | 16.10        | 10.75         |
+| hapi                     | 21.3.12  | ✓      | 58199.2    | 16.68        | 10.38         |
+| restify                  | 11.1.0   | ✓      | 57493.6    | 16.89        | 10.36         |
+| fastify-big-json         | 5.1.0    | ✓      | 21931.2    | 45.09        | 252.32        |
+| express                  | 5.0.1    | ✓      | 21549.2    | 45.89        | 3.84          |
+| express-with-middlewares | 5.0.1    | ✓      | 18930.4    | 52.30        | 7.04          |
 | trpc-router              | 10.45.2  | ✓      | N/A        | N/A          | N/A           |

@@ -1,7 +1,7 @@
 {
     "name": "@cmmv/etag",
     "version": "0.6.3",
-    "description": "CMMV (@etag)",
+    "description": "ETAG plugin for CMMV HTTP server",
     "publishConfig": {
         "access": "public"
     },
