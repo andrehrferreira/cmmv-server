@@ -1748,7 +1748,10 @@ export default {
         done =
             done ||
             function (err, str) {
+                if (err) console.error(err);
+
                 if (err && typeof req.next === 'function') return req.next(err);
+
                 self.send(str);
             };
 
