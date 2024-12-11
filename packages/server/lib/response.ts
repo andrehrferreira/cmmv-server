@@ -1509,7 +1509,7 @@ export default {
             obj[key](req, this, next);
         } else if (obj.default) {
             obj.default(req, this, next);
-        } else {
+        } else if (typeof req.next === 'function') {
             next(
                 createError(406, {
                     types: normalizeTypes(keys).map(function (o) {
@@ -1748,7 +1748,7 @@ export default {
         done =
             done ||
             function (err, str) {
-                if (err) return req.next(err);
+                if (err && typeof req.next === 'function') return req.next(err);
                 self.send(str);
             };
 
