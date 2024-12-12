@@ -575,6 +575,10 @@ export default {
         return this.res.statusCode;
     },
 
+    set statusCode(status) {
+        this.res.statusCode = status;
+    },
+
     get statusCode() {
         return this.res.statusCode;
     },
