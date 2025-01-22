@@ -166,16 +166,16 @@ export const wrapThenable = (thenable, res, store?) => {
 };
 
 function safeWriteHead(response, statusCode) {
-    if (response.headersSent) return;
+    if (response.headersSent === true) return;
 
     try {
         response.res.writeHead(statusCode, response[kResponseHeaders]);
     } catch (err) {
-        if (err.code === 'ERR_HTTP_HEADERS_SENT') {
+        /*if (err.code === 'ERR_HTTP_HEADERS_SENT') {
             console.warn(
                 `Reply was already sent, did you forget to "return reply" in the "${response.request.url}" (${response.request.method}) route?`,
             );
-        }
+        }*/
     }
 }
 
