@@ -166,6 +166,8 @@ export const wrapThenable = (thenable, res, store?) => {
 };
 
 function safeWriteHead(response, statusCode) {
+    if (response.headersSent) return;
+
     try {
         response.res.writeHead(statusCode, response[kResponseHeaders]);
     } catch (err) {
@@ -254,39 +256,22 @@ function onSendHook(res, payload) {
 function onSendEnd(response, payload) {
     if (response.sent === true) return;
 
-    if (
-        response[kResponseTrailers] !== null &&
-        response[kResponseTrailers] !== undefined
-    ) {
-        const trailerHeaders = Object.keys(response[kResponseTrailers]);
+    // Optimized trailer processing
+    const trailers = response[kResponseTrailers];
+    if (trailers != null) {
         let header = '';
-
-        for (const trailerName of trailerHeaders) {
-            if (typeof response[kResponseTrailers][trailerName] !== 'function')
-                continue;
-            header += ' ';
-            header += trailerName;
+        for (const trailerName in trailers) {
+            if (typeof trailers[trailerName] !== 'function') continue;
+            header += `${trailerName} `;
         }
-
-        response.res.setHeader('Transfer-Encoding', 'chunked');
-        response.res.setHeader('Trailer', header.trim());
+        if (header) {
+            response.res.setHeader('Transfer-Encoding', 'chunked');
+            response.res.setHeader('Trailer', header.trim());
+        }
     }
 
-    if (toString.call(payload) === '[object Response]') {
-        if (typeof payload.status === 'number') response.code(payload.status);
-
-        if (
-            typeof payload.headers === 'object' &&
-            typeof payload.headers.forEach === 'function'
-        ) {
-            for (const [headerName, headerValue] of payload.headers)
-                response.res.setHeader(headerName, headerValue);
-        }
-
-        if (payload.body !== null) {
-            if (payload.bodyUsed) throw new CM_ERR_RES_BODY_CONSUMED();
-        }
-
+    if (payload && payload.body) {
+        if (payload.bodyUsed) throw new CM_ERR_RES_BODY_CONSUMED();
         payload = payload.body;
     }
 
@@ -294,15 +279,13 @@ function onSendEnd(response, payload) {
 
     if (statusCode === 304 || statusCode === 204) payload = null;
 
-    if (payload === undefined || payload === null) {
+    if (payload == null) {
         if (
             statusCode >= 200 &&
-            statusCode !== 204 &&
-            statusCode !== 304 &&
             response.request.method !== 'HEAD' &&
-            response[kResponseTrailers] !== null
+            trailers != null
         ) {
-            response[kResponseTrailers]['content-length'] = '0';
+            trailers['content-length'] = '0';
         }
 
         safeWriteHead(response, statusCode);
@@ -311,17 +294,11 @@ function onSendEnd(response, payload) {
     }
 
     if ((statusCode >= 100 && statusCode < 200) || statusCode === 204) {
-        // Responses without a content body must not send content-type
-        // or content-length headers.
-        // See https://www.rfc-editor.org/rfc/rfc9110.html#section-8.6.
         response.res.removeHeader('content-type');
         response.res.removeHeader('content-length');
         safeWriteHead(response, statusCode);
         sendTrailer(undefined, response);
-        if (typeof payload.resume === 'function') {
-            payload.on('error', noop);
-            payload.resume();
-        }
+        if (typeof payload.resume === 'function') payload.resume();
         return;
     }
 
@@ -338,23 +315,16 @@ function onSendEnd(response, payload) {
     if (typeof payload !== 'string' && !Buffer.isBuffer(payload))
         throw new CM_ERR_RES_INVALID_PAYLOAD_TYPE(typeof payload);
 
-    if (response[kResponseTrailers] === null) {
-        const contentLength = response[kResponseHeaders]['content-length'];
-
-        if (
-            !contentLength ||
-            (response.request.method.toLowerCase() !== 'head' &&
-                Number(contentLength) !== Buffer.byteLength(payload))
-        ) {
-            response[kResponseHeaders]['content-length'] =
-                '' + Buffer.byteLength(payload);
-        }
+    if (!response[kResponseHeaders]['content-length']) {
+        response[kResponseHeaders]['content-length'] =
+            Buffer.byteLength(payload).toString();
     }
 
     safeWriteHead(response, statusCode);
 
-    if (response.req.method.toLowerCase() !== 'head')
+    if (response.req.method.toLowerCase() !== 'head') {
         response.res.write(payload);
+    }
 
     response.res.end();
 }
@@ -1002,8 +972,8 @@ export default {
         field = field.toLowerCase();
         let value = this[kResponseHeaders][field];
 
-        if (value === undefined && this.res.hasHeader(field))
-            value = this.res.getHeader(field);
+        if (value === undefined)
+            if (this.res.hasHeader(field)) value = this.res.getHeader(field);
 
         return value;
     },
