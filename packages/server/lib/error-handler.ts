@@ -77,6 +77,8 @@ export const buildErrorHandler = (parent = rootErrorHandler, func) => {
 };
 
 function fallbackErrorHandler(error, res, cb) {
+    if (res.headersSent === true) return;
+
     const statusCode = res.statusCode;
     res[kResponseHeaders]['content-type'] =
         res[kResponseHeaders]['content-type'] ??

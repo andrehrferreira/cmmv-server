@@ -14,6 +14,7 @@ export const onRequestAbortHookRunner = (functions, request, cb) => {
         }
 
         let result;
+
         try {
             result = functions[i++](request, next);
         } catch (error) {
