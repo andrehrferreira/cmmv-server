@@ -41,6 +41,8 @@ export class HelmetMiddleware {
     }
 
     async onCall(request, response, payload, done) {
+        if (response.headersSent === true) return;
+
         if (this.options.contentSecurityPolicy !== false) {
             const cspDirectives =
                 this.options.contentSecurityPolicy &&
@@ -86,6 +88,7 @@ export class HelmetMiddleware {
                 reportOnly: cspReportOnly,
                 useDefaults: cspUseDefaults,
             };
+
             const mergedHelmetConfiguration = Object.assign(
                 Object.create(null),
                 this.options,
