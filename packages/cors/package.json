@@ -7,12 +7,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/andrehrferreira/cmmv-server.git"
+        "url": "git+https://github.com/cmmvio/cmmv-server.git"
     },
     "author": "Andre Ferreira",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/andrehrferreira/cmmv-server/issues"
+        "url": "https://github.com/cmmvio/cmmv-server/issues"
     },
     "keywords": [
         "cors",
