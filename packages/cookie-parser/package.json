@@ -1,6 +1,6 @@
 {
     "name": "@cmmv/cookie-parser",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "description": "Cookie parsing plugin for CMMV HTTP server",
     "publishConfig": {
         "access": "public"
