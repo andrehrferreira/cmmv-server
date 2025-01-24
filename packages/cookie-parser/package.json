@@ -1,18 +1,18 @@
 {
     "name": "@cmmv/cookie-parser",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "description": "Cookie parsing plugin for CMMV HTTP server",
     "publishConfig": {
         "access": "public"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/andrehrferreira/cmmv-server.git"
+        "url": "git+https://github.com/cmmvio/cmmv-server.git"
     },
     "author": "Andre Ferreira",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/andrehrferreira/cmmv-server/issues"
+        "url": "https://github.com/cmmvio/cmmv-server/issues"
     },
     "keywords": [
         "cmmv",

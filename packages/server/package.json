@@ -1,18 +1,18 @@
 {
     "name": "@cmmv/server",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "description": "HTTP, HTTPs and HTTP/2 server based on Express, Koa and Fastify for CMMV",
     "publishConfig": {
         "access": "public"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/andrehrferreira/cmmv-server.git"
+        "url": "git+https://github.com/cmmvio/cmmv-server.git"
     },
     "author": "Andre Ferreira",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/andrehrferreira/cmmv-server/issues"
+        "url": "https://github.com/cmmvio/cmmv-server/issues"
     },
     "keywords": [
         "cmmv",
@@ -28,8 +28,8 @@
     ],
     "homepage": "https://cmmv.io",
     "dependencies": {
-        "@cmmv/body-parser": "0.8.5",
-        "@cmmv/server-static": "0.8.5",
+        "@cmmv/body-parser": "0.8.6",
+        "@cmmv/server-static": "0.8.6",
         "@fastify/send": "^3.1.1",
         "accepts": "^1.3.8",
         "after": "^0.8.2",
