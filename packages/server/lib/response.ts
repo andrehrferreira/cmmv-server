@@ -275,6 +275,9 @@ function onSendEnd(response, payload) {
         payload = payload.body;
     }
 
+    for (const key in response[kResponseHeaders])
+        response.res.setHeader(key, response[kResponseHeaders][key]);
+
     const statusCode = response.res.statusCode;
 
     if (statusCode === 304 || statusCode === 204) payload = null;
