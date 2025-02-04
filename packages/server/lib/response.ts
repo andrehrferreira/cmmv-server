@@ -254,7 +254,7 @@ function onSendHook(res, payload) {
 }
 
 function onSendEnd(response, payload) {
-    if (response.sent === true) return;
+    if (response.headersSent === true) return;
 
     // Optimized trailer processing
     const trailers = response[kResponseTrailers];
@@ -792,7 +792,7 @@ export default {
      * @api public
      */
     remove(field) {
-        if (this.headerSent) return;
+        if (this.res.headersSent === true) return;
         this.res.removeHeader(field);
     },
 

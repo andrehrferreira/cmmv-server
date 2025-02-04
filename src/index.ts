@@ -29,7 +29,7 @@ process.on('SIGINT', async () => {
     const host = '0.0.0.0';
     const port = 3000;
 
-    /*app.use(serverStatic('public'));
+    app.use(serverStatic('public'));
     app.use(cors());
     app.use(etag({ algorithm: 'fnv1a' }));
     app.use(cookieParser());
@@ -49,12 +49,12 @@ process.on('SIGINT', async () => {
             },
         }),
     );
-    
+
     app.set('view engine', 'pug');
-    
+
     app.get('/view', (req, res) => {
         res.render('index', { title: 'Hey', message: 'Hello there!' });
-    });*/
+    });
 
     app.get('/', async (req, res) => {
         res.send('Hello World');
