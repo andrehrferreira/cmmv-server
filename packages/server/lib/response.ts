@@ -325,9 +325,8 @@ function onSendEnd(response, payload) {
 
     safeWriteHead(response, statusCode);
 
-    if (response.req.method.toLowerCase() !== 'head') {
+    if (response.req.method.toLowerCase() !== 'head')
         response.res.write(payload);
-    }
 
     response.res.end();
 }
@@ -1321,10 +1320,11 @@ export default {
             opts = {};
         }
 
-        if (!opts.root && !pathIsAbsolute(path))
+        if (!opts.root && !pathIsAbsolute(path)) {
             throw new TypeError(
                 'path must be absolute or specify root to res.sendFile',
             );
+        }
 
         const pathname = encodeURI(path);
         const file = send(req, pathname, opts);
