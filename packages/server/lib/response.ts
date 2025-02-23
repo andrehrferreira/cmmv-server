@@ -254,7 +254,7 @@ function onSendHook(res, payload) {
 }
 
 function onSendEnd(response, payload) {
-    if (response.sent === true) return;
+    if (response.headersSent === true) return;
 
     // Optimized trailer processing
     const trailers = response[kResponseTrailers];
@@ -274,6 +274,9 @@ function onSendEnd(response, payload) {
         if (payload.bodyUsed) throw new CM_ERR_RES_BODY_CONSUMED();
         payload = payload.body;
     }
+
+    for (const key in response[kResponseHeaders])
+        response.res.setHeader(key, response[kResponseHeaders][key]);
 
     const statusCode = response.res.statusCode;
 
@@ -322,9 +325,8 @@ function onSendEnd(response, payload) {
 
     safeWriteHead(response, statusCode);
 
-    if (response.req.method.toLowerCase() !== 'head') {
+    if (response.req.method.toLowerCase() !== 'head')
         response.res.write(payload);
-    }
 
     response.res.end();
 }
@@ -792,7 +794,7 @@ export default {
      * @api public
      */
     remove(field) {
-        if (this.headerSent) return;
+        if (this.res.headersSent === true) return;
         this.res.removeHeader(field);
     },
 
@@ -1318,10 +1320,11 @@ export default {
             opts = {};
         }
 
-        if (!opts.root && !pathIsAbsolute(path))
+        if (!opts.root && !pathIsAbsolute(path)) {
             throw new TypeError(
                 'path must be absolute or specify root to res.sendFile',
             );
+        }
 
         const pathname = encodeURI(path);
         const file = send(req, pathname, opts);
